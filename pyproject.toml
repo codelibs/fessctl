@@ -1,0 +1,9 @@
+[project]
+name = "fessctl"
+version = "0.1.0"
+description = "CLI tool to manage Fess using the admin API"
+authors = [{ name = "CodeLibs, Inc.", email = "info@codelibs.co" }]
+dependencies = ["httpx", "typer[all]"]
+
+[project.scripts]
+fessctl = "fessctl.cli:main"
