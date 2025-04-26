@@ -25,23 +25,32 @@ class FessAPIClient:
         self.timeout = 5.0
 
     def send_request(
-        self, action: Action, url: str, json: dict = None, params: dict = None, is_admin: bool = True
+        self,
+        action: Action,
+        url: str,
+        json: dict = None,
+        params: dict = None,
+        is_admin: bool = True,
     ) -> dict:
         headers = self.admin_api_headers if is_admin else self.search_api_headers
         if action == Action.CREATE:
             # TODO: use post in the future version
-            response = httpx.put(url, headers=headers,
-                                 json=json, params=params, timeout=self.timeout)
+            response = httpx.put(
+                url, headers=headers, json=json, params=params, timeout=self.timeout
+            )
         elif action == Action.EDIT:
             # TODO: use put in the future version
             response = httpx.post(
-                url, headers=headers, json=json, params=params, timeout=self.timeout)
+                url, headers=headers, json=json, params=params, timeout=self.timeout
+            )
         elif action == Action.DELETE:
             response = httpx.delete(
-                url, headers=headers, params=params, timeout=self.timeout)
+                url, headers=headers, params=params, timeout=self.timeout
+            )
         elif action == Action.LIST or action == Action.GET:
-            response = httpx.get(url, headers=headers,
-                                 params=params, timeout=self.timeout)
+            response = httpx.get(
+                url, headers=headers, params=params, timeout=self.timeout
+            )
         else:
             raise ValueError("Invalid action specified")
         # response.raise_for_status()
@@ -59,13 +68,15 @@ class FessAPIClient:
 
     # role
 
-    def create_role(self, name: str, attributes: Optional[Dict[str, str]] = None) -> dict:
+    def create_role(
+        self, name: str, attributes: Optional[Dict[str, str]] = None
+    ) -> dict:
         """
         Creates a new role with the specified name and optional attributes.
 
         Args:
             name (str): The name of the role to be created.
-            attributes (Optional[Dict[str, str]]): A dictionary of additional attributes 
+            attributes (Optional[Dict[str, str]]): A dictionary of additional attributes
                 to associate with the role. Defaults to None.
 
         Returns:
@@ -93,6 +104,19 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/role/setting/{role_id}"
         return self.send_request(Action.DELETE, url)
 
+    def get_role(self, role_id: str) -> dict:
+        """
+        Retrieves the details of a role by its ID.
+
+        Args:
+            role_id (str): The ID of the role to retrieve.
+
+        Returns:
+            dict: The response from the server containing role details.
+        """
+        url = f"{self.base_url}/api/admin/role/setting/{role_id}"
+        return self.send_request(Action.GET, url)
+
     def list_roles(self, page: int = 1, size: int = 100) -> dict:
         """
         Retrieve a paginated list of roles from the server.
@@ -108,6 +132,78 @@ class FessAPIClient:
             httpx.HTTPStatusError: If the HTTP request returns an error status code.
         """
         url = f"{self.base_url}/api/admin/role/settings"
+        params = {
+            "page": page,
+            "size": size,
+        }
+        return self.send_request(Action.LIST, url, params=params)
+
+    # group
+
+    def create_group(
+        self, name: str, attributes: Optional[Dict[str, str]] = None
+    ) -> dict:
+        """
+        Creates a new group with the specified name and optional attributes.
+
+        Args:
+            name (str): The name of the group to be created.
+            attributes (Optional[Dict[str, str]]): A dictionary of additional attributes
+                to associate with the group. Defaults to None.
+
+        Returns:
+            dict: The response from the server after attempting to create the group.
+        """
+        url = f"{self.base_url}/api/admin/group/setting"
+        data = {
+            "crudMode": 1,  # 1 indicates 'create'
+            "name": name,
+        }
+        if attributes:
+            data["attributes"] = attributes
+        return self.send_request(Action.CREATE, url, json=data)
+
+    def delete_group(self, group_id: str) -> dict:
+        """
+        Deletes a group by its ID.
+
+        Args:
+            group_id (str): The ID of the group to delete.
+
+        Returns:
+            dict: The response from the server after attempting to delete the group.
+        """
+        url = f"{self.base_url}/api/admin/group/setting/{group_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_group(self, group_id: str) -> dict:
+        """
+        Retrieves the details of a group by its ID.
+
+        Args:
+            group_id (str): The ID of the group to retrieve.
+
+        Returns:
+            dict: The response from the server containing group details.
+        """
+        url = f"{self.base_url}/api/admin/group/setting/{group_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_groups(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieve a paginated list of groups from the server.
+
+        Args:
+            page (int, optional): The page number to retrieve. Defaults to 1.
+            size (int, optional): The number of groups per page. Defaults to 100.
+
+        Returns:
+            dict: A dictionary containing the response data with the list of groups.
+
+        Raises:
+            httpx.HTTPStatusError: If the HTTP request returns an error status code.
+        """
+        url = f"{self.base_url}/api/admin/group/settings"
         params = {
             "page": page,
             "size": size,

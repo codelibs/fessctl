@@ -4,10 +4,12 @@ import typer
 import yaml
 
 from fessctl.api.client import FessAPIClient
+from fessctl.commands.group import group_app
 from fessctl.commands.role import role_app
 
 
 app = typer.Typer(no_args_is_help=True)
+app.add_typer(group_app, name="group")
 app.add_typer(role_app, name="role")
 
 
