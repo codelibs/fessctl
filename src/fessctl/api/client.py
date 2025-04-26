@@ -1,7 +1,7 @@
 import httpx
 from fessctl.config.settings import settings
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
 
 
 class Action(Enum):
@@ -204,6 +204,92 @@ class FessAPIClient:
             httpx.HTTPStatusError: If the HTTP request returns an error status code.
         """
         url = f"{self.base_url}/api/admin/group/settings"
+        params = {
+            "page": page,
+            "size": size,
+        }
+        return self.send_request(Action.LIST, url, params=params)
+
+    # user
+
+    def create_user(
+        self,
+        name: str,
+        password: Optional[str] = None,
+        confirm_password: Optional[str] = None,
+        attributes: Optional[Dict[str, str]] = None,
+        roles: Optional[List[str]] = None,
+        groups: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Creates a new user in the system with the specified details.
+
+        Args:
+            name (str): The name of the user to be created.
+            password (Optional[str], optional): The password for the user. Defaults to None.
+            confirm_password (Optional[str], optional): Confirmation of the password. Defaults to None.
+            attributes (Optional[Dict[str, str]], optional): Additional attributes for the user as key-value pairs. Defaults to None.
+            roles (Optional[List[str]], optional): A list of roles to assign to the user. Defaults to None.
+            groups (Optional[List[str]], optional): A list of groups to assign the user to. Defaults to None.
+
+        Returns:
+            dict: The response from the server after attempting to create the user.
+        """
+        url = f"{self.base_url}/api/admin/user/setting"
+        data = {
+            "crud_mode": 1,
+            "name": name,
+        }
+        if password:
+            data["password"] = password
+        if confirm_password:
+            data["confirm_password"] = confirm_password
+        if attributes:
+            data["attributes"] = attributes
+        if roles:
+            data["roles"] = roles
+        if groups:
+            data["groups"] = groups
+        return self.send_request(Action.CREATE, url, json=data)
+
+    def delete_user(self, user_id: str) -> dict:
+        """
+        Deletes a user by their ID.
+
+        Args:
+            user_id (str): The ID of the user to delete.
+
+        Returns:
+            dict: The response from the server after attempting to delete the user.
+        """
+        url = f"{self.base_url}/api/admin/user/setting/{user_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_user(self, user_id: str) -> dict:
+        """
+        Retrieves the details of a user by their ID.
+
+        Args:
+            user_id (str): The ID of the user to retrieve.
+
+        Returns:
+            dict: The response from the server containing user details.
+        """
+        url = f"{self.base_url}/api/admin/user/setting/{user_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_users(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a paginated list of users from the server.
+
+        Args:
+            page (int, optional): The page number to retrieve. Defaults to 1.
+            size (int, optional): The number of users per page. Defaults to 100.
+
+        Returns:
+            dict: A dictionary containing the response data from the server.
+        """
+        url = f"{self.base_url}/api/admin/user/settings"
         params = {
             "page": page,
             "size": size,

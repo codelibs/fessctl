@@ -9,24 +9,37 @@ from rich.table import Table
 from fessctl.api.client import FessAPIClient
 
 # Create a Typer sub-application for role commands
-role_app = typer.Typer()
+user_app = typer.Typer()
 
 
-@role_app.command("create")
-def create_role(
-    name: str = typer.Argument(..., help="Role name (max 100 characters)"),
+@user_app.command("create")
+def create_user_command(
+    name: str = typer.Argument(..., help="Username (max 100 characters)"),
+    password: str = typer.Argument(..., help="Password (max 100 characters)"),
     attributes: Optional[List[str]] = typer.Option(
         None,
         "--attribute",
         "-a",
-        help="Role attributes in key=value format. Can be specified multiple times.",
+        help="User attributes in key=value format. Can be specified multiple times.",
+    ),
+    roles: Optional[List[str]] = typer.Option(
+        None,
+        "--role",
+        "-r",
+        help="Roles to assign to the user. Can be specified multiple times.",
+    ),
+    groups: Optional[List[str]] = typer.Option(
+        None,
+        "--group",
+        "-g",
+        help="Groups to assign to the user. Can be specified multiple times.",
     ),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),
 ):
     """
-    Create a new role in Fess.
+    Create a new user in Fess.
     """
     client = FessAPIClient()
     attr_dict = {}
@@ -39,48 +52,56 @@ def create_role(
             attr_dict[key.strip()] = value.strip()
 
     try:
-        result = client.create_role(name=name, attributes=attr_dict)
+        result = client.create_user(
+            name=name,
+            password=password,
+            confirm_password=password,
+            attributes=attr_dict if attr_dict else None,
+            roles=roles,
+            groups=groups,
+        )
         status: int = result.get("response", {}).get("status", 1)
 
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
         elif output == "yaml":
+            import yaml
+
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
-                role_id = result.get("response", {}).get("id", None)
+                user_id = result.get("response", {}).get("id", None)
                 typer.secho(
-                    f"Role '{name}' created successfully with ID: {role_id}.",
+                    f"User '{name}' created successfully with ID: {user_id}.",
                     fg=typer.colors.GREEN,
                 )
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.secho(
-                    f"Failed to create role. {message} Status code: {status}",
+                    f"Failed to create user. {message} Status code: {status}",
                     fg=typer.colors.RED,
                 )
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error creating role: {e}", fg=typer.colors.RED)
+        typer.secho(f"Error creating user: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
 
-@role_app.command("delete")
-def delete_role(
-    role_id: str = typer.Argument(..., help="ID of the role to delete"),
+@user_app.command("delete")
+def delete_user_command(
+    user_id: str = typer.Argument(..., help="ID of the user to delete"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),
 ):
     """
-    Delete a role in Fess.
+    Delete a user from Fess.
     """
     client = FessAPIClient()
-
     try:
-        result = client.delete_role(role_id=role_id)
+        result = client.delete_user(user_id)
         status: int = result.get("response", {}).get("status", 1)
 
         if output == "json":
@@ -90,37 +111,36 @@ def delete_role(
         else:
             if status == 0:
                 typer.secho(
-                    f"Role with ID '{role_id}' deleted successfully.",
+                    f"User with ID '{user_id}' deleted successfully.",
                     fg=typer.colors.GREEN,
                 )
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.secho(
-                    f"Failed to delete role. {message} Status code: {status}",
+                    f"Failed to delete user. {message} Status code: {status}",
                     fg=typer.colors.RED,
                 )
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error deleting role: {e}", fg=typer.colors.RED)
+        typer.secho(f"Error deleting user: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
 
-@role_app.command("get")
-def get_role(
-    role_id: str = typer.Argument(..., help="ID of the role to retrieve"),
+@user_app.command("get")
+def get_user_command(
+    user_id: str = typer.Argument(..., help="ID of the user to retrieve"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),
 ):
     """
-    Retrieve details of a specific role in Fess.
+    Retrieve details of a user from Fess.
     """
     client = FessAPIClient()
-
     try:
-        result = client.get_role(role_id=role_id)
+        result = client.get_user(user_id)
         status: int = result.get("response", {}).get("status", 1)
 
         if output == "json":
@@ -129,40 +149,35 @@ def get_role(
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
-                role = result.get("response", {}).get("setting", {})
+                user_info = result.get("response", {}).get("setting", {})
                 console = Console()
-                table = Table(title=f"Role Details: {role.get('name', '-')}")
+                table = Table(title=f"User Details: {user_info.get('name', '-')}")
                 table.add_column("Field", style="cyan", no_wrap=True)
                 table.add_column("Value", style="magenta")
 
-                table.add_row("ID", role.get("id", "-"))
-                table.add_row("Name", role.get("name", "-"))
-                attributes = role.get("attributes", {})
-                attr_str = (
-                    "\n".join(f"{k}={v}" for k, v in attributes.items())
-                    if attributes
-                    else "-"
-                )
-                table.add_row("Attributes", attr_str)
-                table.add_row("Version", str(role.get("version_no", "-")))
-
+                table.add_row("ID", user_info.get("id", "-"))
+                table.add_row("Name", user_info.get("name", "-"))
+                table.add_row("Roles", "\n".join(user_info.get("roles", [])))
+                table.add_row("Groups", "\n".join(user_info.get("groups", [])))
+                table.add_row("Attributes", "\n".join(user_info.get("attributes", [])))
+                table.add_row("Version", str(user_info.get("version_no", "-")))
                 console.print(table)
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.secho(
-                    f"Failed to retrieve role. {message} Status code: {status}",
+                    f"Failed to retrieve user. {message} Status code: {status}",
                     fg=typer.colors.RED,
                 )
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving role: {e}", fg=typer.colors.RED)
+        typer.secho(f"Error retrieving user: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
 
-@role_app.command("list")
-def list_roles(
+@user_app.command("list")
+def list_users_command(
     page: int = typer.Option(1, "--page", "-p", help="Page number"),
     size: int = typer.Option(100, "--size", "-s", help="Page size"),
     output: str = typer.Option(
@@ -170,12 +185,12 @@ def list_roles(
     ),
 ):
     """
-    List roles in Fess.
+    List web authentication users in Fess.
     """
     client = FessAPIClient()
 
     try:
-        result = client.list_roles(page=page, size=size)
+        result = client.list_users(page=page, size=size)
         status: int = result.get("response", {}).get("status", 1)
 
         if output == "json":
@@ -184,38 +199,42 @@ def list_roles(
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
-                roles = result.get("response", {}).get("settings", [])
-                if not roles:
-                    typer.secho("No roles found.", fg=typer.colors.YELLOW)
+                users = result.get("response", {}).get("settings", [])
+                if not users:
+                    typer.secho(
+                        "No web authentication users found.", fg=typer.colors.YELLOW
+                    )
                 else:
                     console = Console()
-                    table = Table(title="Roles")
+                    table = Table(title="Web Authentication Users")
                     table.add_column("ID", style="cyan", no_wrap=True)
                     table.add_column("NAME", style="cyan", no_wrap=True)
+                    table.add_column("ROLES", style="cyan", no_wrap=False)
+                    table.add_column("GROUPS", style="cyan", no_wrap=False)
                     table.add_column("ATTRIBUTES", style="cyan", no_wrap=False)
                     table.add_column("VERSION", style="cyan", no_wrap=True)
-                    for role in roles:
+                    for user in users:
                         table.add_row(
-                            *[
-                                role.get("id", "-"),
-                                role.get("name", "-"),
-                                "\n".join(
-                                    f"{k}={v}"
-                                    for k, v in role.get("attributes", {}).items()
-                                ),
-                                str(role.get("version_no", "-")),
-                            ]
+                            user.get("id", "-"),
+                            user.get("name", "-"),
+                            "\n".join(user.get("roles", [])),
+                            "\n".join(user.get("groups", [])),
+                            "\n".join(
+                                f"{k}={v}"
+                                for k, v in user.get("attributes", {}).items()
+                            ),
+                            str(user.get("version_no", "-")),
                         )
                     console.print(table)
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.secho(
-                    f"Failed to list roles. {message} Status code: {status}",
+                    f"Failed to list web authentication users. {message} Status code: {status}",
                     fg=typer.colors.RED,
                 )
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error listing roles: {e}", fg=typer.colors.RED)
+        typer.secho(f"Error listing web authentication users: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)

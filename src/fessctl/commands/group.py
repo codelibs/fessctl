@@ -2,6 +2,7 @@ import json
 from typing import List, Optional
 
 import typer
+import yaml
 from rich.console import Console
 from rich.table import Table
 
@@ -44,8 +45,6 @@ def create_group(
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
         elif output == "yaml":
-            import yaml
-
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
@@ -87,8 +86,6 @@ def delete_group(
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
         elif output == "yaml":
-            import yaml
-
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
@@ -142,7 +139,7 @@ def get_group(
                 table.add_row("Name", group.get("name", "-"))
                 attributes = group.get("attributes", {})
                 attr_str = (
-                    ", ".join(f"{k}={v}" for k, v in attributes.items())
+                    "\n".join(f"{k}={v}" for k, v in attributes.items())
                     if attributes
                     else "-"
                 )
@@ -184,8 +181,6 @@ def list_groups(
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
         elif output == "yaml":
-            import yaml
-
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
@@ -204,7 +199,7 @@ def list_groups(
                             *[
                                 group.get("id", "-"),
                                 group.get("name", "-"),
-                                ", ".join(
+                                "\n".join(
                                     f"{k}={v}"
                                     for k, v in group.get("attributes", {}).items()
                                 ),
