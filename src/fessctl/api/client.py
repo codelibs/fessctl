@@ -1,0 +1,115 @@
+import httpx
+from fessctl.config.settings import settings
+from enum import Enum
+from typing import Optional, Dict
+
+
+class Action(Enum):
+    CREATE = "create"
+    EDIT = "edit"
+    DELETE = "delete"
+    LIST = "list"
+    GET = "get"
+
+
+class FessAPIClient:
+    def __init__(self):
+        self.base_url = settings.fess_endpoint
+        self.admin_api_headers = {
+            "Authorization": f"Bearer {settings.access_token}",
+            "Content-Type": "application/json",
+        }
+        self.search_api_headers = {
+            "Content-Type": "application/json",
+        }
+        self.timeout = 5.0
+
+    def send_request(
+        self, action: Action, url: str, json: dict = None, params: dict = None, is_admin: bool = True
+    ) -> dict:
+        headers = self.admin_api_headers if is_admin else self.search_api_headers
+        if action == Action.CREATE:
+            # TODO: use post in the future version
+            response = httpx.put(url, headers=headers,
+                                 json=json, params=params, timeout=self.timeout)
+        elif action == Action.EDIT:
+            # TODO: use put in the future version
+            response = httpx.post(
+                url, headers=headers, json=json, params=params, timeout=self.timeout)
+        elif action == Action.DELETE:
+            response = httpx.delete(
+                url, headers=headers, params=params, timeout=self.timeout)
+        elif action == Action.LIST or action == Action.GET:
+            response = httpx.get(url, headers=headers,
+                                 params=params, timeout=self.timeout)
+        else:
+            raise ValueError("Invalid action specified")
+        # response.raise_for_status()
+        return response.json()
+
+    def ping(self) -> dict:
+        """
+        Sends a GET request to the health endpoint of the API to check the service status.
+
+        Returns:
+            dict: The response from the health endpoint, typically containing service health information.
+        """
+        url = f"{self.base_url}/api/v1/health"
+        return self.send_request(Action.GET, url, is_admin=False)
+
+    # role
+
+    def create_role(self, name: str, attributes: Optional[Dict[str, str]] = None) -> dict:
+        """
+        Creates a new role with the specified name and optional attributes.
+
+        Args:
+            name (str): The name of the role to be created.
+            attributes (Optional[Dict[str, str]]): A dictionary of additional attributes 
+                to associate with the role. Defaults to None.
+
+        Returns:
+            dict: The response from the server after attempting to create the role.
+        """
+        url = f"{self.base_url}/api/admin/role/setting"
+        data = {
+            "crudMode": 1,  # 1 indicates 'create'
+            "name": name,
+        }
+        if attributes:
+            data["attributes"] = attributes
+        return self.send_request(Action.CREATE, url, json=data)
+
+    def delete_role(self, role_id: str) -> dict:
+        """
+        Deletes a role by its ID.
+
+        Args:
+            role_id (str): The ID of the role to delete.
+
+        Returns:
+            dict: The response from the server after attempting to delete the role.
+        """
+        url = f"{self.base_url}/api/admin/role/setting/{role_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def list_roles(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieve a paginated list of roles from the server.
+
+        Args:
+            page (int, optional): The page number to retrieve. Defaults to 1.
+            size (int, optional): The number of roles per page. Defaults to 100.
+
+        Returns:
+            dict: A dictionary containing the response data with the list of roles.
+
+        Raises:
+            httpx.HTTPStatusError: If the HTTP request returns an error status code.
+        """
+        url = f"{self.base_url}/api/admin/role/settings"
+        params = {
+            "page": page,
+            "size": size,
+        }
+        return self.send_request(Action.LIST, url, params=params)
