@@ -41,11 +41,11 @@ fessctl --help
 ## Example Commands
 
 ```bash
-fessctl crawl start --job-id default_crawler
-fessctl user create --username admin --password secret
-fessctl config export --output fess-settings.json
+export FESS_ACCESS_TOKEN=...
+fessctl ping
+fessctl user list
+fessctl webconfig create --name TestConfig --url https://test.config.com/
 ```
-
 
 ## License
 
