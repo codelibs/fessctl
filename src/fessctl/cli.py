@@ -7,12 +7,14 @@ from fessctl.api.client import FessAPIClient
 from fessctl.commands.group import group_app
 from fessctl.commands.role import role_app
 from fessctl.commands.user import user_app
+from fessctl.commands.webconfig import webconfig_app
 
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(group_app, name="group")
 app.add_typer(role_app, name="role")
 app.add_typer(user_app, name="user")
+app.add_typer(webconfig_app, name="webconfig")
 
 
 @app.command()

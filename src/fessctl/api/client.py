@@ -1,7 +1,7 @@
 import httpx
 from fessctl.config.settings import settings
 from enum import Enum
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 
 
 class Action(Enum):
@@ -66,7 +66,7 @@ class FessAPIClient:
         url = f"{self.base_url}/api/v1/health"
         return self.send_request(Action.GET, url, is_admin=False)
 
-    # role
+    # Role APIs
 
     def create_role(
         self, name: str, attributes: Optional[Dict[str, str]] = None
@@ -138,7 +138,7 @@ class FessAPIClient:
         }
         return self.send_request(Action.LIST, url, params=params)
 
-    # group
+    # Group APIs
 
     def create_group(
         self, name: str, attributes: Optional[Dict[str, str]] = None
@@ -210,7 +210,7 @@ class FessAPIClient:
         }
         return self.send_request(Action.LIST, url, params=params)
 
-    # user
+    # User APIs
 
     def create_user(
         self,
@@ -294,4 +294,42 @@ class FessAPIClient:
             "page": page,
             "size": size,
         }
+        return self.send_request(Action.LIST, url, params=params)
+
+    # WebConfig APIs
+
+    def create_webconfig(self, config: dict) -> dict:
+        """
+        Creates a new WebConfig.
+        """
+        url = f"{self.base_url}/api/admin/webconfig/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_webconfig(self, config: dict) -> dict:
+        """
+        Updates an existing WebConfig.
+        """
+        url = f"{self.base_url}/api/admin/webconfig/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_webconfig(self, config_id: str) -> dict:
+        """
+        Deletes a WebConfig by ID.
+        """
+        url = f"{self.base_url}/api/admin/webconfig/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_webconfig(self, config_id: str) -> dict:
+        """
+        Retrieves a WebConfig by ID.
+        """
+        url = f"{self.base_url}/api/admin/webconfig/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_webconfigs(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of WebConfigs.
+        """
+        url = f"{self.base_url}/api/admin/webconfig/settings"
+        params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
