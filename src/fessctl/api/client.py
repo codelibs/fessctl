@@ -371,3 +371,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/fileconfig/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # DataConfig APIs
+
+    def create_dataconfig(self, config: dict) -> dict:
+        """
+        Creates a new DataConfig.
+        """
+        url = f"{self.base_url}/api/admin/dataconfig/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_dataconfig(self, config: dict) -> dict:
+        """
+        Updates an existing DataConfig.
+        """
+        url = f"{self.base_url}/api/admin/dataconfig/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_dataconfig(self, config_id: str) -> dict:
+        """
+        Deletes a DataConfig by ID.
+        """
+        url = f"{self.base_url}/api/admin/dataconfig/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_dataconfig(self, config_id: str) -> dict:
+        """
+        Retrieves a DataConfig by ID.
+        """
+        url = f"{self.base_url}/api/admin/dataconfig/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_dataconfigs(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of DataConfigs.
+        """
+        url = f"{self.base_url}/api/admin/dataconfig/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)

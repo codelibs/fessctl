@@ -70,7 +70,8 @@ def create_webconfig(
         "--created-time",
         help="Created time in milliseconds (UTC)",
     ),
-    output: str = typer.Option("text", "--output", "-o", help="Output format"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
     """
     Create a new WebConfig.
@@ -101,11 +102,24 @@ def create_webconfig(
         "created_time": created_time,
     }
 
-    _handle_response(
-        client.create_webconfig(config),
-        output,
-        success_message="WebConfig created successfully.",
-    )
+    result = client.create_webconfig(config)
+    status: int = result.get("response", {}).get("status", 1)
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            config_id = result.get("response", {}).get("id", "")
+            typer.secho(
+                f"WebConfig '{config_id}' created successfully.", fg=typer.colors.GREEN)
+        else:
+            message: str = result.get("response", {}).get("message", "")
+            typer.secho(
+                f"Operation failed. {message} Status code: {status}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=status)
 
 
 @webconfig_app.command("update")
@@ -170,7 +184,8 @@ def update_webconfig(
         "--updated-time",
         help="Updated time in milliseconds (UTC)",
     ),
-    output: str = typer.Option("text", "--output", "-o", help="Output format"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
     """
     Update an existing WebConfig.
@@ -229,33 +244,63 @@ def update_webconfig(
     if virtual_hosts is not None:
         config["virtual_hosts"] = "\n".join(virtual_hosts)
 
-    _handle_response(
-        client.update_webconfig(config),
-        output,
-        success_message="WebConfig updated successfully.",
-    )
+    result = client.update_webconfig(config)
+    status: int = result.get("response", {}).get("status", 1)
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            config_id = result.get("response", {}).get("id", "")
+            typer.secho(
+                f"WebConfig '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+        else:
+            message: str = result.get("response", {}).get("message", "")
+            typer.secho(
+                f"Operation failed. {message} Status code: {status}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=status)
 
 
 @webconfig_app.command("delete")
 def delete_webconfig(
     config_id: str = typer.Argument(..., help="WebConfig ID"),
-    output: str = typer.Option("text", "--output", "-o", help="Output format"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
     """
     Delete a WebConfig by ID.
     """
     client = FessAPIClient()
-    _handle_response(
-        client.delete_webconfig(config_id),
-        output,
-        success_message=f"WebConfig '{config_id}' deleted successfully.",
-    )
+    result = client.delete_webconfig(config_id)
+    status = result.get("response", {}).get("status", 1)
+
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            typer.secho(
+                f"WebConfig '{config_id}' deleted successfully.",
+                fg=typer.colors.GREEN,
+            )
+        else:
+            message: str = result.get("response", {}).get("message", "")
+            typer.secho(
+                f"Failed to delete WebConfig. {message} Status code: {status}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=status)
 
 
 @webconfig_app.command("get")
 def get_webconfig(
     config_id: str = typer.Argument(..., help="WebConfig ID"),
-    output: str = typer.Option("text", "--output", "-o", help="Output format"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
     """
     Retrieve a WebConfig by ID.
@@ -341,7 +386,8 @@ def get_webconfig(
 def list_webconfigs(
     page: int = typer.Option(1, "--page", "-p", help="Page number"),
     size: int = typer.Option(100, "--size", "-s", help="Page size"),
-    output: str = typer.Option("text", "--output", "-o", help="Output format"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
     """
     List WebConfigs.
@@ -377,28 +423,6 @@ def list_webconfigs(
             message: str = result.get("response", {}).get("message", "")
             typer.secho(
                 f"Failed to list WebConfigs. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
-            raise typer.Exit(code=status)
-
-
-def _handle_response(result: dict, output: str, success_message: Optional[str] = None):
-    """
-    Handle API response output.
-    """
-    status: int = result.get("response", {}).get("status", 1)
-    if output == "json":
-        typer.echo(json.dumps(result, indent=2))
-    elif output == "yaml":
-        typer.echo(yaml.dump(result))
-    else:
-        if status == 0:
-            if success_message:
-                typer.secho(success_message, fg=typer.colors.GREEN)
-        else:
-            message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
                 fg=typer.colors.RED,
             )
             raise typer.Exit(code=status)
