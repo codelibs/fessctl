@@ -10,6 +10,8 @@ class Action(Enum):
     DELETE = "delete"
     LIST = "list"
     GET = "get"
+    START = "start"
+    STOP = "stop"
 
 
 class FessAPIClient:
@@ -50,6 +52,10 @@ class FessAPIClient:
         elif action == Action.LIST or action == Action.GET:
             response = httpx.get(
                 url, headers=headers, params=params, timeout=self.timeout
+            )
+        elif action == Action.START or action == Action.STOP:
+            response = httpx.post(
+                url, headers=headers, json=json, params=params, timeout=self.timeout
             )
         else:
             raise ValueError("Invalid action specified")
@@ -409,3 +415,55 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/dataconfig/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # Scheduler APIs
+
+    def create_scheduler(self, config: dict) -> dict:
+        """
+        Creates a new Scheduler.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_scheduler(self, config: dict) -> dict:
+        """
+        Updates an existing Scheduler.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_scheduler(self, scheduler_id: str) -> dict:
+        """
+        Deletes a Scheduler by ID.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/setting/{scheduler_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_scheduler(self, scheduler_id: str) -> dict:
+        """
+        Retrieves a Scheduler by ID.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/setting/{scheduler_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_schedulers(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of Schedulers.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
+    def start_scheduler(self, scheduler_id: str) -> dict:
+        """
+        Starts a Scheduler by ID.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/{scheduler_id}/start"
+        return self.send_request(Action.START, url)
+
+    def stop_scheduler(self, scheduler_id: str) -> dict:
+        """
+        Stops a Scheduler by ID.
+        """
+        url = f"{self.base_url}/api/admin/scheduler/{scheduler_id}/stop"
+        return self.send_request(Action.STOP, url)
