@@ -531,3 +531,27 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/accesstoken/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # CrawlingInfo APIs
+
+    def delete_crawlinginfo(self, crawlinginfo_id: str) -> dict:
+        """
+        Deletes a CrawlingInfo by ID.
+        """
+        url = f"{self.base_url}/api/admin/crawlinginfo/log/{crawlinginfo_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_crawlinginfo(self, crawlinginfo_id: str) -> dict:
+        """
+        Retrieves a CrawlingInfo by ID.
+        """
+        url = f"{self.base_url}/api/admin/crawlinginfo/log/{crawlinginfo_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_crawlinginfos(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of CrawlingInfos.
+        """
+        url = f"{self.base_url}/api/admin/crawlinginfo/logs"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
