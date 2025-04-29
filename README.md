@@ -1,6 +1,4 @@
-# FessCTL
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+# FessCTL [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 **fessctl** is a command-line interface (CLI) tool to manage [Fess](https://fess.codelibs.org/) via its Admin API.
 
@@ -32,19 +30,52 @@ source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 uv pip install -e src
 ```
 
-### Run CLI
+## Run CLI
 
 ```bash
 fessctl --help
 ```
 
-## Example Commands
+### Example Commands
 
 ```bash
 export FESS_ACCESS_TOKEN=...
 fessctl ping
 fessctl user list
 fessctl webconfig create --name TestConfig --url https://test.config.com/
+```
+
+## Docker Build and Run
+
+### Build Docker Image
+
+```bash
+docker build -t fessctl:latest .
+```
+
+### Run fessctl in Docker
+
+You need to provide the following environment variables when running:
+
+- FESS_ENDPOINT: The URL of your Fess server’s API endpoint. (Default: `http://localhost:8080`)
+- FESS_ACCESS_TOKEN: Your access token to authenticate with the Fess API.
+
+Example:
+
+```bash
+docker run --rm \
+  -e FESS_ENDPOINT=https://your-fess-server \
+  -e FESS_ACCESS_TOKEN=your_access_token_here \
+  fessctl --help
+```
+
+To run an actual command, for example:
+
+```bash
+docker run --rm \
+  -e FESS_ENDPOINT=https://your-fess-server \
+  -e FESS_ACCESS_TOKEN=your_access_token_here \
+  fessctl webconfig list
 ```
 
 ## License
