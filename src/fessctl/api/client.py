@@ -1,7 +1,9 @@
-import httpx
-from fessctl.config.settings import settings
 from enum import Enum
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
+
+import httpx
+
+from fessctl.config.settings import settings
 
 
 class Action(Enum):
@@ -467,3 +469,27 @@ class FessAPIClient:
         """
         url = f"{self.base_url}/api/admin/scheduler/{scheduler_id}/stop"
         return self.send_request(Action.STOP, url)
+
+    # JobLog APIs
+
+    def delete_joblog(self, joblog_id: str) -> dict:
+        """
+        Deletes a JobLog by ID.
+        """
+        url = f"{self.base_url}/api/admin/joblog/log/{joblog_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_joblog(self, joblog_id: str) -> dict:
+        """
+        Retrieves a JobLog by ID.
+        """
+        url = f"{self.base_url}/api/admin/joblog/log/{joblog_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_joblogs(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of JobLogs.
+        """
+        url = f"{self.base_url}/api/admin/joblog/logs"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)

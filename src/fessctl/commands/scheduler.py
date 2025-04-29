@@ -1,12 +1,14 @@
-from typing import List
 import datetime
 import json
+from typing import Optional
+
 import typer
 import yaml
-from typing import Optional, List
 from rich.console import Console
 from rich.table import Table
+
 from fessctl.api.client import FessAPIClient
+from fessctl.utils import to_utc_iso8601
 
 scheduler_app = typer.Typer()
 
@@ -220,8 +222,8 @@ def get_scheduler(
 
             table.add_row("id", str(scheduler.get("id", "-")))
             table.add_row("updated_by", str(scheduler.get("updated_by", "-")))
-            table.add_row("updated_time", str(
-                scheduler.get("updated_time", "-")))
+            table.add_row("updated_time", to_utc_iso8601(
+                scheduler.get("updated_time")))
             table.add_row("version_no", str(scheduler.get("version_no", "-")))
             table.add_row("crud_mode", str(scheduler.get("crud_mode", "-")))
             table.add_row("name", str(scheduler.get("name", "-")))
@@ -238,8 +240,8 @@ def get_scheduler(
             table.add_row("available", str(scheduler.get("available", "-")))
             table.add_row("sort_order", str(scheduler.get("sort_order", "-")))
             table.add_row("created_by", str(scheduler.get("created_by", "-")))
-            table.add_row("created_time", str(
-                scheduler.get("created_time", "-")))
+            table.add_row("created_time", to_utc_iso8601(
+                scheduler.get("created_time")))
 
             console.print(table)
         else:
@@ -298,6 +300,7 @@ def list_schedulers(
                 fg=typer.colors.RED,
             )
             raise typer.Exit(code=status)
+
 
 @scheduler_app.command("start")
 def start_scheduler(

@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.utils import to_utc_iso8601
 
 fileconfig_app = typer.Typer()
 
@@ -312,8 +313,8 @@ def get_fileconfig(
             # Output all public fields
             table.add_row("id", str(fileconfig.get("id", "-")))
             table.add_row("updated_by", str(fileconfig.get("updated_by", "-")))
-            table.add_row("updated_time", str(
-                fileconfig.get("updated_time", "-")))
+            table.add_row("updated_time", to_utc_iso8601(
+                fileconfig.get("updated_time")))
             table.add_row("version_no", str(fileconfig.get("version_no", "-")))
             table.add_row(
                 "label_type_ids", ", ".join(
@@ -357,8 +358,8 @@ def get_fileconfig(
                 fileconfig.get("virtual_hosts", "-")))
             table.add_row("sort_order", str(fileconfig.get("sort_order", "-")))
             table.add_row("created_by", str(fileconfig.get("created_by", "-")))
-            table.add_row("created_time", str(
-                fileconfig.get("created_time", "-")))
+            table.add_row("created_time", to_utc_iso8601(
+                fileconfig.get("created_time")))
 
             console.print(table)
         else:

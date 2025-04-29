@@ -1,12 +1,14 @@
-from typing import List
 import datetime
 import json
+from typing import List, Optional
+
 import typer
 import yaml
-from typing import Optional, List
 from rich.console import Console
 from rich.table import Table
+
 from fessctl.api.client import FessAPIClient
+from fessctl.utils import to_utc_iso8601
 
 webconfig_app = typer.Typer()
 
@@ -325,8 +327,8 @@ def get_webconfig(
             # Output all fields (public names)
             table.add_row("id", str(webconfig.get("id", "-")))
             table.add_row("updated_by", str(webconfig.get("updated_by", "-")))
-            table.add_row("updated_time", str(
-                webconfig.get("updated_time", "-")))
+            table.add_row("updated_time", to_utc_iso8601(
+                webconfig.get("updated_time")))
             table.add_row("version_no", str(webconfig.get("version_no", "-")))
             table.add_row(
                 "label_type_ids", "\n".join(
@@ -369,8 +371,8 @@ def get_webconfig(
                 webconfig.get("virtual_hosts", "-")))
             table.add_row("sort_order", str(webconfig.get("sort_order", "-")))
             table.add_row("created_by", str(webconfig.get("created_by", "-")))
-            table.add_row("created_time", str(
-                webconfig.get("created_time", "-")))
+            table.add_row("created_time", to_utc_iso8601(
+                webconfig.get("created_time")))
 
             console.print(table)
         else:
