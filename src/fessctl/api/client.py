@@ -493,3 +493,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/joblog/logs"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # AccessToken APIs
+
+    def create_accesstoken(self, config: dict) -> dict:
+        """
+        Creates a new AccessToken.
+        """
+        url = f"{self.base_url}/api/admin/accesstoken/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_accesstoken(self, config: dict) -> dict:
+        """
+        Updates an existing AccessToken.
+        """
+        url = f"{self.base_url}/api/admin/accesstoken/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_accesstoken(self, config_id: str) -> dict:
+        """
+        Deletes a AccessToken by ID.
+        """
+        url = f"{self.base_url}/api/admin/accesstoken/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_accesstoken(self, config_id: str) -> dict:
+        """
+        Retrieves a AccessToken by ID.
+        """
+        url = f"{self.base_url}/api/admin/accesstoken/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_accesstokens(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of AccessTokens.
+        """
+        url = f"{self.base_url}/api/admin/accesstoken/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
