@@ -555,3 +555,155 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/crawlinginfo/logs"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # WebAuth APIs
+
+    def create_webauth(self, config: dict) -> dict:
+        """
+        Creates a new WebAuth.
+        """
+        url = f"{self.base_url}/api/admin/webauth/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_webauth(self, config: dict) -> dict:
+        """
+        Updates an existing WebAuth.
+        """
+        url = f"{self.base_url}/api/admin/webauth/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_webauth(self, config_id: str) -> dict:
+        """
+        Deletes a WebAuth by ID.
+        """
+        url = f"{self.base_url}/api/admin/webauth/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_webauth(self, config_id: str) -> dict:
+        """
+        Retrieves a WebAuth by ID.
+        """
+        url = f"{self.base_url}/api/admin/webauth/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_webauths(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of WebAuths.
+        """
+        url = f"{self.base_url}/api/admin/webauth/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
+    # FileAuth APIs
+
+    def create_fileauth(self, config: dict) -> dict:
+        """
+        Creates a new FileAuth.
+        """
+        url = f"{self.base_url}/api/admin/fileauth/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_fileauth(self, config: dict) -> dict:
+        """
+        Updates an existing FileAuth.
+        """
+        url = f"{self.base_url}/api/admin/fileauth/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_fileauth(self, config_id: str) -> dict:
+        """
+        Deletes a FileAuth by ID.
+        """
+        url = f"{self.base_url}/api/admin/fileauth/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_fileauth(self, config_id: str) -> dict:
+        """
+        Retrieves a FileAuth by ID.
+        """
+        url = f"{self.base_url}/api/admin/fileauth/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_fileauths(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of FileAuths.
+        """
+        url = f"{self.base_url}/api/admin/fileauth/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
+    # BadWord APIs
+
+    def create_badword(self, config: dict) -> dict:
+        """
+        Creates a new BadWord.
+        """
+        url = f"{self.base_url}/api/admin/badword/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_badword(self, config: dict) -> dict:
+        """
+        Updates an existing BadWord.
+        """
+        url = f"{self.base_url}/api/admin/badword/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_badword(self, config_id: str) -> dict:
+        """
+        Deletes a BadWord by ID.
+        """
+        url = f"{self.base_url}/api/admin/badword/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_badword(self, config_id: str) -> dict:
+        """
+        Retrieves a BadWord by ID.
+        """
+        url = f"{self.base_url}/api/admin/badword/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_badwords(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of BadWords.
+        """
+        url = f"{self.base_url}/api/admin/badword/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
+    # BoostDoc APIs
+
+    def create_boostdoc(self, config: dict) -> dict:
+        """
+        Creates a new BoostDoc.
+        """
+        url = f"{self.base_url}/api/admin/boostdoc/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_boostdoc(self, config: dict) -> dict:
+        """
+        Updates an existing BoostDoc.
+        """
+        url = f"{self.base_url}/api/admin/boostdoc/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_boostdoc(self, config_id: str) -> dict:
+        """
+        Deletes a BoostDoc by ID.
+        """
+        url = f"{self.base_url}/api/admin/boostdoc/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_boostdoc(self, config_id: str) -> dict:
+        """
+        Retrieves a BoostDoc by ID.
+        """
+        url = f"{self.base_url}/api/admin/boostdoc/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_boostdocs(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of BoostDocs.
+        """
+        url = f"{self.base_url}/api/admin/boostdoc/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)

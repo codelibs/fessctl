@@ -5,27 +5,37 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.commands.accesstoken import accesstoken_app
+# from fessctl.commands.backup import backup_app
+from fessctl.commands.badword import badword_app
+from fessctl.commands.boostdoc import boostdoc_app
 from fessctl.commands.crawlinginfo import crawlinginfo_app
 from fessctl.commands.dataconfig import dataconfig_app
+from fessctl.commands.fileauth import fileauth_app
 from fessctl.commands.fileconfig import fileconfig_app
 from fessctl.commands.group import group_app
 from fessctl.commands.joblog import joblog_app
 from fessctl.commands.role import role_app
 from fessctl.commands.scheduler import scheduler_app
 from fessctl.commands.user import user_app
+from fessctl.commands.webauth import webauth_app
 from fessctl.commands.webconfig import webconfig_app
 
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(accesstoken_app, name="accesstoken")
+# app.add_typer(backup_app, name="backup")
+app.add_typer(badword_app, name="badword")
+app.add_typer(boostdoc_app, name="boostdoc")
 app.add_typer(crawlinginfo_app, name="crawlinginfo")
 app.add_typer(dataconfig_app, name="dataconfig")
+app.add_typer(fileauth_app, name="fileauth")
 app.add_typer(fileconfig_app, name="fileconfig")
 app.add_typer(group_app, name="group")
 app.add_typer(joblog_app, name="joblog")
 app.add_typer(role_app, name="role")
 app.add_typer(scheduler_app, name="scheduler")
 app.add_typer(user_app, name="user")
+app.add_typer(webauth_app, name="webauth")
 app.add_typer(webconfig_app, name="webconfig")
 
 
