@@ -155,7 +155,7 @@ def delete_elevateword(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
     """
-    Delete a ElevateWord by ID.
+    Delete an ElevateWord by ID.
     """
     client = FessAPIClient()
     result = client.delete_elevateword(config_id)
