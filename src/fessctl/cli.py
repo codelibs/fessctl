@@ -11,6 +11,7 @@ from fessctl.commands.boostdoc import boostdoc_app
 from fessctl.commands.crawlinginfo import crawlinginfo_app
 from fessctl.commands.dataconfig import dataconfig_app
 from fessctl.commands.duplicatehost import duplicatehost_app
+from fessctl.commands.elevateword import elevateword_app
 from fessctl.commands.fileauth import fileauth_app
 from fessctl.commands.fileconfig import fileconfig_app
 from fessctl.commands.group import group_app
@@ -30,6 +31,7 @@ app.add_typer(boostdoc_app, name="boostdoc")
 app.add_typer(crawlinginfo_app, name="crawlinginfo")
 app.add_typer(dataconfig_app, name="dataconfig")
 app.add_typer(duplicatehost_app, name="duplicatehost")
+app.add_typer(elevateword_app, name="elevateword")
 app.add_typer(fileauth_app, name="fileauth")
 app.add_typer(fileconfig_app, name="fileconfig")
 app.add_typer(group_app, name="group")

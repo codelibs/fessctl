@@ -745,3 +745,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/duplicatehost/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # ElevateWord APIs
+
+    def create_elevateword(self, config: dict) -> dict:
+        """
+        Creates a new ElevateWord.
+        """
+        url = f"{self.base_url}/api/admin/elevateword/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_elevateword(self, config: dict) -> dict:
+        """
+        Updates an existing ElevateWord.
+        """
+        url = f"{self.base_url}/api/admin/elevateword/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_elevateword(self, config_id: str) -> dict:
+        """
+        Deletes a ElevateWord by ID.
+        """
+        url = f"{self.base_url}/api/admin/elevateword/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_elevateword(self, config_id: str) -> dict:
+        """
+        Retrieves a ElevateWord by ID.
+        """
+        url = f"{self.base_url}/api/admin/elevateword/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_elevatewords(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of ElevateWords.
+        """
+        url = f"{self.base_url}/api/admin/elevateword/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
