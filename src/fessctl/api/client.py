@@ -707,3 +707,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/boostdoc/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # DuplicateHost APIs
+
+    def create_duplicatehost(self, config: dict) -> dict:
+        """
+        Creates a new DuplicateHost.
+        """
+        url = f"{self.base_url}/api/admin/duplicatehost/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_duplicatehost(self, config: dict) -> dict:
+        """
+        Updates an existing DuplicateHost.
+        """
+        url = f"{self.base_url}/api/admin/duplicatehost/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_duplicatehost(self, config_id: str) -> dict:
+        """
+        Deletes a DuplicateHost by ID.
+        """
+        url = f"{self.base_url}/api/admin/duplicatehost/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_duplicatehost(self, config_id: str) -> dict:
+        """
+        Retrieves a DuplicateHost by ID.
+        """
+        url = f"{self.base_url}/api/admin/duplicatehost/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_duplicatehosts(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of DuplicateHosts.
+        """
+        url = f"{self.base_url}/api/admin/duplicatehost/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
