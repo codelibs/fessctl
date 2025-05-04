@@ -821,3 +821,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/keymatch/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # LabelType APIs
+
+    def create_labeltype(self, config: dict) -> dict:
+        """
+        Creates a new LabelType.
+        """
+        url = f"{self.base_url}/api/admin/labeltype/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_labeltype(self, config: dict) -> dict:
+        """
+        Updates an existing LabelType.
+        """
+        url = f"{self.base_url}/api/admin/labeltype/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_labeltype(self, config_id: str) -> dict:
+        """
+        Deletes a LabelType by ID.
+        """
+        url = f"{self.base_url}/api/admin/labeltype/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_labeltype(self, config_id: str) -> dict:
+        """
+        Retrieves a LabelType by ID.
+        """
+        url = f"{self.base_url}/api/admin/labeltype/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_labeltypes(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of LabelTypes.
+        """
+        url = f"{self.base_url}/api/admin/labeltype/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
