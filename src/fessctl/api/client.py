@@ -783,3 +783,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/elevateword/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # KeyMatch APIs
+
+    def create_keymatch(self, config: dict) -> dict:
+        """
+        Creates a new KeyMatch.
+        """
+        url = f"{self.base_url}/api/admin/keymatch/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_keymatch(self, config: dict) -> dict:
+        """
+        Updates an existing KeyMatch.
+        """
+        url = f"{self.base_url}/api/admin/keymatch/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_keymatch(self, config_id: str) -> dict:
+        """
+        Deletes a KeyMatch by ID.
+        """
+        url = f"{self.base_url}/api/admin/keymatch/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_keymatch(self, config_id: str) -> dict:
+        """
+        Retrieves a KeyMatch by ID.
+        """
+        url = f"{self.base_url}/api/admin/keymatch/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_keymatchs(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of KeyMatchs.
+        """
+        url = f"{self.base_url}/api/admin/keymatch/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
