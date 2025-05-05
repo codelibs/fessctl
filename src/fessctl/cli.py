@@ -25,6 +25,7 @@ from fessctl.commands.labeltype import labeltype_app
 from fessctl.commands.pathmap import pathmap_app
 # from fessctl.commands.plugin  import plugin_app
 from fessctl.commands.role import role_app
+from fessctl.commands.relatedcontent import relatedcontent_app
 # from fessctl.commands.searchlist import searchlist_app
 from fessctl.commands.scheduler import scheduler_app
 # from fessctl.commands.stats import stats_app
@@ -58,6 +59,7 @@ app.add_typer(labeltype_app, name="labeltype")
 app.add_typer(pathmap_app, name="pathmap")
 # app.add_typer(plugin_app, name="plugin")
 app.add_typer(role_app, name="role")
+app.add_typer(relatedcontent_app, name="relatedcontent")
 # app.add_typer(searchlist_app, name="searchlist")
 app.add_typer(scheduler_app, name="scheduler")
 # app.add_typer(stats_app, name="stats")

@@ -897,3 +897,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/pathmap/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # RelatedContent APIs
+
+    def create_relatedcontent(self, config: dict) -> dict:
+        """
+        Creates a new RelatedContent.
+        """
+        url = f"{self.base_url}/api/admin/relatedcontent/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_relatedcontent(self, config: dict) -> dict:
+        """
+        Updates an existing RelatedContent.
+        """
+        url = f"{self.base_url}/api/admin/relatedcontent/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_relatedcontent(self, config_id: str) -> dict:
+        """
+        Deletes a RelatedContent by ID.
+        """
+        url = f"{self.base_url}/api/admin/relatedcontent/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_relatedcontent(self, config_id: str) -> dict:
+        """
+        Retrieves a RelatedContent by ID.
+        """
+        url = f"{self.base_url}/api/admin/relatedcontent/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_relatedcontents(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of RelatedContents.
+        """
+        url = f"{self.base_url}/api/admin/relatedcontent/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
