@@ -935,3 +935,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/relatedcontent/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # RelatedQuery APIs
+
+    def create_relatedquery(self, config: dict) -> dict:
+        """
+        Creates a new RelatedQuery.
+        """
+        url = f"{self.base_url}/api/admin/relatedquery/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_relatedquery(self, config: dict) -> dict:
+        """
+        Updates an existing RelatedQuery.
+        """
+        url = f"{self.base_url}/api/admin/relatedquery/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_relatedquery(self, config_id: str) -> dict:
+        """
+        Deletes a RelatedQuery by ID.
+        """
+        url = f"{self.base_url}/api/admin/relatedquery/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_relatedquery(self, config_id: str) -> dict:
+        """
+        Retrieves a RelatedQuery by ID.
+        """
+        url = f"{self.base_url}/api/admin/relatedquery/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_relatedqueries(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of RelatedQueries.
+        """
+        url = f"{self.base_url}/api/admin/relatedquery/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
