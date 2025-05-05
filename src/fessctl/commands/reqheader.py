@@ -67,7 +67,7 @@ def create_reqheader(
 
 @reqheader_app.command("update")
 def update_reqheader(
-    config_id: str = typer.Argument(..., help="ReqHeader ID"),
+    reqheader_id: str = typer.Argument(..., help="ReqHeader ID"),
     name: Optional[str] = typer.Option(
         None, "--name", help="Name of the request header"),
     value: Optional[str] = typer.Option(
@@ -87,11 +87,11 @@ def update_reqheader(
     Update an existing ReqHeader.
     """
     client = FessAPIClient()
-    result = client.get_reqheader(config_id)
+    result = client.get_reqheader(reqheader_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
         typer.secho(
-            f"ReqHeader '{config_id}' not found. {message}", fg=typer.colors.RED)
+            f"ReqHeader '{reqheader_id}' not found. {message}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -116,7 +116,7 @@ def update_reqheader(
     else:
         if status == 0:
             typer.secho(
-                f"ReqHeader '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+                f"ReqHeader '{reqheader_id}' updated successfully.", fg=typer.colors.GREEN)
         else:
             message = result.get("response", {}).get("message", "")
             typer.secho(
@@ -128,7 +128,7 @@ def update_reqheader(
 
 @reqheader_app.command("delete")
 def delete_reqheader(
-    config_id: str = typer.Argument(..., help="ReqHeader ID"),
+    reqheader_id: str = typer.Argument(..., help="ReqHeader ID"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -136,7 +136,7 @@ def delete_reqheader(
     Delete a ReqHeader by ID.
     """
     client = FessAPIClient()
-    result = client.delete_reqheader(config_id)
+    result = client.delete_reqheader(reqheader_id)
     status = result.get("response", {}).get("status", 1)
 
     if output == "json":
@@ -146,7 +146,7 @@ def delete_reqheader(
     else:
         if status == 0:
             typer.secho(
-                f"ReqHeader '{config_id}' deleted successfully.",
+                f"ReqHeader '{reqheader_id}' deleted successfully.",
                 fg=typer.colors.GREEN,
             )
         else:
@@ -160,7 +160,7 @@ def delete_reqheader(
 
 @reqheader_app.command("get")
 def get_reqheader(
-    config_id: str = typer.Argument(..., help="ReqHeader ID"),
+    reqheader_id: str = typer.Argument(..., help="ReqHeader ID"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):
@@ -168,7 +168,7 @@ def get_reqheader(
     Retrieve a ReqHeader by ID.
     """
     client = FessAPIClient()
-    result = client.get_reqheader(config_id)
+    result = client.get_reqheader(reqheader_id)
     status = result.get("response", {}).get("status", 1)
 
     if output == "json":
