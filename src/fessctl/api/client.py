@@ -859,3 +859,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/labeltype/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # PathMap APIs
+
+    def create_pathmap(self, config: dict) -> dict:
+        """
+        Creates a new PathMap.
+        """
+        url = f"{self.base_url}/api/admin/pathmap/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_pathmap(self, config: dict) -> dict:
+        """
+        Updates an existing PathMap.
+        """
+        url = f"{self.base_url}/api/admin/pathmap/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_pathmap(self, config_id: str) -> dict:
+        """
+        Deletes a PathMap by ID.
+        """
+        url = f"{self.base_url}/api/admin/pathmap/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_pathmap(self, config_id: str) -> dict:
+        """
+        Retrieves a PathMap by ID.
+        """
+        url = f"{self.base_url}/api/admin/pathmap/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_pathmaps(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of PathMaps.
+        """
+        url = f"{self.base_url}/api/admin/pathmap/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
