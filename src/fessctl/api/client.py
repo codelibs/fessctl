@@ -973,3 +973,41 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/relatedquery/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    # ReqHeader APIs
+
+    def create_reqheader(self, config: dict) -> dict:
+        """
+        Creates a new ReqHeader.
+        """
+        url = f"{self.base_url}/api/admin/reqheader/setting"
+        return self.send_request(Action.CREATE, url, json=config)
+
+    def update_reqheader(self, config: dict) -> dict:
+        """
+        Updates an existing ReqHeader.
+        """
+        url = f"{self.base_url}/api/admin/reqheader/setting"
+        return self.send_request(Action.EDIT, url, json=config)
+
+    def delete_reqheader(self, config_id: str) -> dict:
+        """
+        Deletes a ReqHeader by ID.
+        """
+        url = f"{self.base_url}/api/admin/reqheader/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_reqheader(self, config_id: str) -> dict:
+        """
+        Retrieves a ReqHeader by ID.
+        """
+        url = f"{self.base_url}/api/admin/reqheader/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_reqheaders(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of ReqHeaders.
+        """
+        url = f"{self.base_url}/api/admin/reqheader/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
