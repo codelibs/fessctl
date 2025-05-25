@@ -43,7 +43,7 @@ def create_accesstoken(
     """
     Create a new AccessToken.
     """
-    client = FessAPIClient(Settings())(Settings())
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
