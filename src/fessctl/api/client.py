@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import httpx
 
-from fessctl.config.settings import settings
+from fessctl.config.settings import Settings
 
 
 class Action(Enum):
@@ -17,7 +17,7 @@ class Action(Enum):
 
 
 class FessAPIClient:
-    def __init__(self):
+    def __init__(self, settings: Settings):
         self.base_url = settings.fess_endpoint
         self.admin_api_headers = {
             "Authorization": f"Bearer {settings.access_token}",

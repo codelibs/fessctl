@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 dataconfig_app = typer.Typer()
@@ -43,7 +44,7 @@ def create_dataconfig(
     """
     Create a new DataConfig.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -114,7 +115,7 @@ def update_dataconfig(
     """
     Update an existing DataConfig.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_dataconfig(config_id)
 
     if result.get("response", {}).get("status", 1) != 0:
@@ -180,7 +181,7 @@ def delete_dataconfig(
     """
     Delete a DataConfig by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_dataconfig(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -212,7 +213,7 @@ def get_dataconfig(
     """
     Retrieve a DataConfig by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_dataconfig(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -275,7 +276,7 @@ def list_dataconfigs(
     """
     List DataConfigs.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_dataconfigs(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 boostdoc_app = typer.Typer()
@@ -32,7 +33,7 @@ def create_boostdoc(
     """
     Create a new BoostDoc.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -83,7 +84,7 @@ def update_boostdoc(
     """
     Update an existing BoostDoc.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_boostdoc(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -130,7 +131,7 @@ def delete_boostdoc(
     """
     Delete a BoostDoc by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_boostdoc(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -162,7 +163,7 @@ def get_boostdoc(
     """
     Retrieve a BoostDoc by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_boostdoc(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -211,7 +212,7 @@ def list_boostdocs(
     """
     List BoostDocs.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_boostdocs(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

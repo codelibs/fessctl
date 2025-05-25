@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 scheduler_app = typer.Typer()
@@ -39,7 +40,7 @@ def create_scheduler(
     """
     Create a new Scheduler.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -107,7 +108,7 @@ def update_scheduler(
     """
     Update an existing Scheduler.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_scheduler(scheduler_id)
 
     if result.get("response", {}).get("status", 1) != 0:
@@ -171,7 +172,7 @@ def delete_scheduler(
     """
     Delete a Scheduler by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_scheduler(scheduler_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -203,7 +204,7 @@ def get_scheduler(
     """
     Retrieve a Scheduler by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_scheduler(scheduler_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -263,7 +264,7 @@ def list_schedulers(
     """
     List Schedulers.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_schedulers(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 
@@ -311,7 +312,7 @@ def start_scheduler(
     """
     Start a Scheduler by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.start_scheduler(scheduler_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -343,7 +344,7 @@ def stop_scheduler(
     """
     Stop a Scheduler by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.stop_scheduler(scheduler_id)
     status = result.get("response", {}).get("status", 1)
 

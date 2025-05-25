@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 crawlinginfo_app = typer.Typer()
@@ -21,7 +22,7 @@ def delete_crawlinginfo(
     """
     Delete a CrawlingInfo by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_crawlinginfo(crawlinginfo_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -54,7 +55,7 @@ def get_crawlinginfo(
     """
     Retrieve a CrawlingInfo by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_crawlinginfo(crawlinginfo_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -74,9 +75,11 @@ def get_crawlinginfo(
 
             # output all fields according to new schema
             table.add_row("id", str(crawlinginfo.get("id", "-")))
-            table.add_row("session_id", str(crawlinginfo.get("session_id", "-")))
+            table.add_row("session_id", str(
+                crawlinginfo.get("session_id", "-")))
             table.add_row(
-                "created_time", to_utc_iso8601(crawlinginfo.get("created_time"))
+                "created_time", to_utc_iso8601(
+                    crawlinginfo.get("created_time"))
             )
             # TODO add missing fields
 
@@ -101,7 +104,7 @@ def list_crawlinginfos(
     """
     List CrawlingInfos.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_crawlinginfos(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
     if output == "json":

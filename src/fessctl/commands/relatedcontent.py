@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 relatedcontent_app = typer.Typer()
@@ -31,7 +32,7 @@ def create_relatedcontent(
     """
     Create a new RelatedContent.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     config = {
         "crud_mode": 1,
         "term": term,
@@ -83,7 +84,7 @@ def update_relatedcontent(
     """
     Update an existing RelatedContent.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_relatedcontent(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -133,7 +134,7 @@ def delete_relatedcontent(
     """
     Delete a RelatedContent by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_relatedcontent(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -165,7 +166,7 @@ def get_relatedcontent(
     """
     Retrieve a RelatedContent by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_relatedcontent(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -223,7 +224,7 @@ def list_relatedcontents(
     """
     List RelatedContents.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_relatedcontents(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

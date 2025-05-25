@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 reqheader_app = typer.Typer()
@@ -33,7 +34,7 @@ def create_reqheader(
     """
     Create a new ReqHeader.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,           # constant for create
@@ -86,7 +87,7 @@ def update_reqheader(
     """
     Update an existing ReqHeader.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_reqheader(reqheader_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -135,7 +136,7 @@ def delete_reqheader(
     """
     Delete a ReqHeader by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_reqheader(reqheader_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -167,7 +168,7 @@ def get_reqheader(
     """
     Retrieve a ReqHeader by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_reqheader(reqheader_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -226,7 +227,7 @@ def list_reqheaders(
     """
     List ReqHeaders.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_reqheaders(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

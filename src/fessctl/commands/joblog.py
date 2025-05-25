@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 joblog_app = typer.Typer()
@@ -20,7 +21,7 @@ def delete_joblog(
     """
     Delete a JobLog by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_joblog(joblog_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -52,7 +53,7 @@ def get_joblog(
     """
     Retrieve a JobLog by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_joblog(joblog_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -102,7 +103,7 @@ def list_joblogs(
     """
     List JobLogs.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_joblogs(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
     if output == "json":

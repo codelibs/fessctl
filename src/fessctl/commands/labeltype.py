@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 labeltype_app = typer.Typer()
@@ -39,7 +40,7 @@ def create_labeltype(
     """
     Create a new LabelType.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -112,7 +113,7 @@ def update_labeltype(
     """
     Update an existing LabelType.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_labeltype(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -169,7 +170,7 @@ def delete_labeltype(
     """
     Delete a LabelType by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_labeltype(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -201,7 +202,7 @@ def get_labeltype(
     """
     Retrieve a LabelType by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_labeltype(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -259,7 +260,7 @@ def list_labeltypes(
     """
     List LabelTypes.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_labeltypes(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

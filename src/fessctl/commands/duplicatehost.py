@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 duplicatehost_app = typer.Typer()
@@ -15,7 +16,8 @@ duplicatehost_app = typer.Typer()
 
 @duplicatehost_app.command("create")
 def create_duplicatehost(
-    regular_name: str = typer.Option(..., "--regular-name", help="Regular host name"),
+    regular_name: str = typer.Option(...,
+                                     "--regular-name", help="Regular host name"),
     duplicate_host_name: str = typer.Option(
         ..., "--duplicate-host-name", help="Duplicate host name"
     ),
@@ -35,7 +37,7 @@ def create_duplicatehost(
     """
     Create a new DuplicateHost.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -93,7 +95,7 @@ def update_duplicatehost(
     """
     Update an existing DuplicateHost.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_duplicatehost(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -147,7 +149,7 @@ def delete_duplicatehost(
     """
     Delete a DuplicateHost by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_duplicatehost(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -180,7 +182,7 @@ def get_duplicatehost(
     """
     Retrieve a DuplicateHost by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_duplicatehost(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -200,21 +202,29 @@ def get_duplicatehost(
 
             # 正しい public name ベースのフィールドのみを表示
             table.add_row("id", str(duplicatehost.get("id", "-")))
-            table.add_row("regular_name", str(duplicatehost.get("regular_name", "-")))
+            table.add_row("regular_name", str(
+                duplicatehost.get("regular_name", "-")))
             table.add_row(
                 "duplicate_host_name",
                 str(duplicatehost.get("duplicate_host_name", "-")),
             )
-            table.add_row("sort_order", str(duplicatehost.get("sort_order", "-")))
-            table.add_row("version_no", str(duplicatehost.get("version_no", "-")))
-            table.add_row("crud_mode", str(duplicatehost.get("crud_mode", "-")))
-            table.add_row("updated_by", str(duplicatehost.get("updated_by", "-")))
+            table.add_row("sort_order", str(
+                duplicatehost.get("sort_order", "-")))
+            table.add_row("version_no", str(
+                duplicatehost.get("version_no", "-")))
+            table.add_row("crud_mode", str(
+                duplicatehost.get("crud_mode", "-")))
+            table.add_row("updated_by", str(
+                duplicatehost.get("updated_by", "-")))
             table.add_row(
-                "updated_time", to_utc_iso8601(duplicatehost.get("updated_time"))
+                "updated_time", to_utc_iso8601(
+                    duplicatehost.get("updated_time"))
             )
-            table.add_row("created_by", str(duplicatehost.get("created_by", "-")))
+            table.add_row("created_by", str(
+                duplicatehost.get("created_by", "-")))
             table.add_row(
-                "created_time", to_utc_iso8601(duplicatehost.get("created_time"))
+                "created_time", to_utc_iso8601(
+                    duplicatehost.get("created_time"))
             )
 
             console.print(table)
@@ -238,7 +248,7 @@ def list_duplicatehosts(
     """
     List DuplicateHosts.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_duplicatehosts(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

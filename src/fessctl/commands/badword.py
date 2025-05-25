@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 badword_app = typer.Typer()
@@ -30,7 +31,7 @@ def create_badword(
     """
     Create a new BadWord.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -75,7 +76,7 @@ def update_badword(
     """
     Update an existing BadWord.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_badword(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -124,7 +125,7 @@ def delete_badword(
     """
     Delete a BadWord by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_badword(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -156,7 +157,7 @@ def get_badword(
     """
     Retrieve a BadWord by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_badword(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -205,7 +206,7 @@ def list_badwords(
     """
     List BadWords.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_badwords(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 
