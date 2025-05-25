@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 relatedquery_app = typer.Typer()
@@ -32,7 +33,7 @@ def create_relatedquery(
     """
     Create a new RelatedQuery.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -84,7 +85,7 @@ def update_relatedquery(
     """
     Update an existing RelatedQuery.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_relatedquery(config_id)
 
     if result.get("response", {}).get("status", 1) != 0:
@@ -136,7 +137,7 @@ def delete_relatedquery(
     """
     Delete a RelatedQuery by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_relatedquery(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -168,7 +169,7 @@ def get_relatedquery(
     """
     Retrieve a RelatedQuery by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_relatedquery(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -222,7 +223,7 @@ def list_relatedqueries(
     """
     List RelatedQueries.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_relatedqueries(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

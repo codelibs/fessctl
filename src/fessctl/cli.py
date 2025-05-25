@@ -4,6 +4,7 @@ import typer
 import yaml
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.commands.accesstoken import accesstoken_app
 # from fessctl.commands.backup import backup_app
 from fessctl.commands.badword import badword_app
@@ -84,7 +85,7 @@ def ping(
     """
     Check the health status of the Fess server.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     try:
         result = client.ping()
         status = result.get("data", {}).get("status", "unknown")

@@ -7,6 +7,8 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
+
 
 # Create a Typer sub-application for role commands
 role_app = typer.Typer()
@@ -28,12 +30,13 @@ def create_role(
     """
     Create a new role in Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     attr_dict = {}
     if attributes:
         for attr in attributes:
             if "=" not in attr:
-                typer.secho(f"Invalid attribute format: {attr}", fg=typer.colors.RED)
+                typer.secho(
+                    f"Invalid attribute format: {attr}", fg=typer.colors.RED)
                 raise typer.Exit(code=1)
             key, value = attr.split("=", 1)
             attr_dict[key.strip()] = value.strip()
@@ -77,7 +80,7 @@ def delete_role(
     """
     Delete a role in Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     try:
         result = client.delete_role(role_id=role_id)
@@ -117,7 +120,7 @@ def get_role(
     """
     Retrieve details of a specific role in Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     try:
         result = client.get_role(role_id=role_id)
@@ -172,7 +175,7 @@ def list_roles(
     """
     List roles in Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     try:
         result = client.list_roles(page=page, size=size)

@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 accesstoken_app = typer.Typer()
@@ -16,7 +17,8 @@ accesstoken_app = typer.Typer()
 @accesstoken_app.command("create")
 def create_accesstoken(
     name: str = typer.Option(..., "--name", help="AccessToken name"),
-    token: Optional[str] = typer.Option(None, "--token", help="Access token string"),
+    token: Optional[str] = typer.Option(
+        None, "--token", help="Access token string"),
     permissions: Optional[List[str]] = typer.Option(
         [], "--permission", help="Access permissions"
     ),
@@ -41,7 +43,7 @@ def create_accesstoken(
     """
     Create a new AccessToken.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())(Settings())
 
     config = {
         "crud_mode": 1,
@@ -80,8 +82,10 @@ def create_accesstoken(
 @accesstoken_app.command("update")
 def update_accesstoken(
     accesstoken_id: str = typer.Argument(..., help="AccessToken ID"),
-    name: Optional[str] = typer.Option(None, "--name", help="AccessToken name"),
-    token: Optional[str] = typer.Option(None, "--token", help="Access token string"),
+    name: Optional[str] = typer.Option(
+        None, "--name", help="AccessToken name"),
+    token: Optional[str] = typer.Option(
+        None, "--token", help="Access token string"),
     permissions: Optional[List[str]] = typer.Option(
         None, "--permission", help="Access permissions"
     ),
@@ -104,7 +108,7 @@ def update_accesstoken(
     """
     Update an existing AccessToken.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_accesstoken(accesstoken_id)
 
     if result.get("response", {}).get("status", 1) != 0:
@@ -164,7 +168,7 @@ def delete_accesstoken(
     """
     Delete a AccessToken by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_accesstoken(accesstoken_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -197,7 +201,7 @@ def get_accesstoken(
     """
     Retrieve an AccessToken by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_accesstoken(accesstoken_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -209,23 +213,29 @@ def get_accesstoken(
         if status == 0:
             accesstoken = result.get("response", {}).get("setting", {})
             console = Console()
-            table = Table(title=f"AccessToken Details: {accesstoken.get('name', '-')}")
+            table = Table(
+                title=f"AccessToken Details: {accesstoken.get('name', '-')}")
             table.add_column("Field", style="cyan", no_wrap=True)
             table.add_column("Value", style="magenta")
 
             # Output each field according to the latest AccessToken schema
             table.add_row("id", str(accesstoken.get("id", "-")))
-            table.add_row("updated_by", str(accesstoken.get("updated_by", "-")))
+            table.add_row("updated_by", str(
+                accesstoken.get("updated_by", "-")))
             table.add_row(
                 "updated_time", to_utc_iso8601(accesstoken.get("updated_time"))
             )
-            table.add_row("version_no", str(accesstoken.get("version_no", "-")))
+            table.add_row("version_no", str(
+                accesstoken.get("version_no", "-")))
             table.add_row("name", str(accesstoken.get("name", "-")))
             table.add_row("token", str(accesstoken.get("token", "-")))
-            table.add_row("permissions", str(accesstoken.get("permissions", "-")))
-            table.add_row("parameter_name", str(accesstoken.get("parameter_name", "-")))
+            table.add_row("permissions", str(
+                accesstoken.get("permissions", "-")))
+            table.add_row("parameter_name", str(
+                accesstoken.get("parameter_name", "-")))
             table.add_row("expires", str(accesstoken.get("expires", "-")))
-            table.add_row("created_by", str(accesstoken.get("created_by", "-")))
+            table.add_row("created_by", str(
+                accesstoken.get("created_by", "-")))
             table.add_row(
                 "created_time", to_utc_iso8601(accesstoken.get("created_time"))
             )
@@ -251,7 +261,7 @@ def list_accesstokens(
     """
     List AccessTokens.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_accesstokens(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

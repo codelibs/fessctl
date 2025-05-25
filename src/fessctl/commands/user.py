@@ -7,6 +7,8 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
+
 
 # Create a Typer sub-application for role commands
 user_app = typer.Typer()
@@ -41,12 +43,13 @@ def create_user_command(
     """
     Create a new user in Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     attr_dict = {}
     if attributes:
         for attr in attributes:
             if "=" not in attr:
-                typer.secho(f"Invalid attribute format: {attr}", fg=typer.colors.RED)
+                typer.secho(
+                    f"Invalid attribute format: {attr}", fg=typer.colors.RED)
                 raise typer.Exit(code=1)
             key, value = attr.split("=", 1)
             attr_dict[key.strip()] = value.strip()
@@ -99,7 +102,7 @@ def delete_user_command(
     """
     Delete a user from Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     try:
         result = client.delete_user(user_id)
         status: int = result.get("response", {}).get("status", 1)
@@ -138,7 +141,7 @@ def get_user_command(
     """
     Retrieve details of a user from Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     try:
         result = client.get_user(user_id)
         status: int = result.get("response", {}).get("status", 1)
@@ -151,7 +154,8 @@ def get_user_command(
             if status == 0:
                 user_info = result.get("response", {}).get("setting", {})
                 console = Console()
-                table = Table(title=f"User Details: {user_info.get('name', '-')}")
+                table = Table(
+                    title=f"User Details: {user_info.get('name', '-')}")
                 table.add_column("Field", style="cyan", no_wrap=True)
                 table.add_column("Value", style="magenta")
 
@@ -159,7 +163,8 @@ def get_user_command(
                 table.add_row("Name", user_info.get("name", "-"))
                 table.add_row("Roles", "\n".join(user_info.get("roles", [])))
                 table.add_row("Groups", "\n".join(user_info.get("groups", [])))
-                table.add_row("Attributes", "\n".join(user_info.get("attributes", [])))
+                table.add_row("Attributes", "\n".join(
+                    user_info.get("attributes", [])))
                 table.add_row("Version", str(user_info.get("version_no", "-")))
                 console.print(table)
             else:
@@ -187,7 +192,7 @@ def list_users_command(
     """
     List web authentication users in Fess.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     try:
         result = client.list_users(page=page, size=size)
@@ -236,5 +241,6 @@ def list_users_command(
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error listing web authentication users: {e}", fg=typer.colors.RED)
+        typer.secho(
+            f"Error listing web authentication users: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)

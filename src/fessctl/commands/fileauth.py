@@ -1,6 +1,6 @@
 import datetime
 import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 import yaml
@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 fileauth_app = typer.Typer()
@@ -40,7 +41,7 @@ def create_fileauth(
     """
     Create a new FileAuth.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -108,7 +109,7 @@ def update_fileauth(
     """
     Update an existing FileAuth.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_fileauth(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -162,7 +163,7 @@ def delete_fileauth(
     """
     Delete a FileAuth by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_fileauth(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -194,7 +195,7 @@ def get_fileauth(
     """
     Retrieve a FileAuth by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_fileauth(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -250,7 +251,7 @@ def list_fileauths(
     """
     List FileAuths.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_fileauths(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 elevateword_app = typer.Typer()
@@ -37,7 +38,7 @@ def create_elevateword(
     """
     Create a new ElevateWord.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
@@ -102,7 +103,7 @@ def update_elevateword(
     """
     Update an existing ElevateWord.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_elevateword(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -157,7 +158,7 @@ def delete_elevateword(
     """
     Delete an ElevateWord by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_elevateword(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -189,7 +190,7 @@ def get_elevateword(
     """
     Retrieve an ElevateWord by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_elevateword(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -250,7 +251,7 @@ def list_elevatewords(
     """
     List ElevateWords.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_elevatewords(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 

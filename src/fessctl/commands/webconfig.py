@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 webconfig_app = typer.Typer()
@@ -78,7 +79,7 @@ def create_webconfig(
     """
     Create a new WebConfig.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     config = {
         "crud_mode": 1,
         "name": name,
@@ -192,7 +193,7 @@ def update_webconfig(
     """
     Update an existing WebConfig.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_webconfig(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -275,7 +276,7 @@ def delete_webconfig(
     """
     Delete a WebConfig by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_webconfig(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -307,7 +308,7 @@ def get_webconfig(
     """
     Retrieve a WebConfig by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_webconfig(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -394,7 +395,7 @@ def list_webconfigs(
     """
     List WebConfigs.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_webconfigs(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
     if output == "json":

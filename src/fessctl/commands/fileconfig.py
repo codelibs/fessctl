@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
+from fessctl.config.settings import Settings
 from fessctl.utils import to_utc_iso8601
 
 fileconfig_app = typer.Typer()
@@ -71,7 +72,7 @@ def create_fileconfig(
     """
     Create a new FileConfig.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     config = {
         "crud_mode": 1,
         "name": name,
@@ -179,7 +180,7 @@ def update_fileconfig(
     """
     Update an existing FileConfig.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_fileconfig(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
@@ -260,7 +261,7 @@ def delete_fileconfig(
     """
     Delete a FileConfig by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.delete_fileconfig(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -293,7 +294,7 @@ def get_fileconfig(
     """
     Retrieve a FileConfig by ID.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.get_fileconfig(config_id)
     status = result.get("response", {}).get("status", 1)
 
@@ -381,7 +382,7 @@ def list_fileconfigs(
     """
     List FileConfigs.
     """
-    client = FessAPIClient()
+    client = FessAPIClient(Settings())
     result = client.list_fileconfigs(page=page, size=size)
     status = result.get("response", {}).get("status", 1)
 
