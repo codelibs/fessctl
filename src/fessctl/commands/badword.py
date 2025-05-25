@@ -31,7 +31,7 @@ def create_badword(
     """
     Create a new BadWord.
     """
-    client = FessAPIClient(Settings())(Settings())
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
