@@ -33,7 +33,7 @@ def create_boostdoc(
     """
     Create a new BoostDoc.
     """
-    client = FessAPIClient(Settings())(Settings())
+    client = FessAPIClient(Settings())
 
     config = {
         "crud_mode": 1,
