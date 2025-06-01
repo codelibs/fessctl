@@ -92,12 +92,25 @@ class FessAPIClient:
         """
         url = f"{self.base_url}/api/admin/role/setting"
         data = {
-            "crudMode": 1,  # 1 indicates 'create'
+            "crud_mode": 1,  # 1 indicates 'create'
             "name": name,
         }
         if attributes:
             data["attributes"] = attributes
         return self.send_request(Action.CREATE, url, json=data)
+
+    def update_role(self, config: dict) -> dict:
+        """
+        Updates an existing role with the provided configuration.
+
+        Args:
+            config (dict): A dictionary containing the role configuration to update.
+
+        Returns:
+            dict: The response from the server after attempting to update the role.
+        """
+        url = f"{self.base_url}/api/admin/role/setting"
+        return self.send_request(Action.EDIT, url, json=config)
 
     def delete_role(self, role_id: str) -> dict:
         """
@@ -164,12 +177,23 @@ class FessAPIClient:
         """
         url = f"{self.base_url}/api/admin/group/setting"
         data = {
-            "crudMode": 1,  # 1 indicates 'create'
+            "crud_mode": 1,  # 1 indicates 'create'
             "name": name,
         }
         if attributes:
             data["attributes"] = attributes
         return self.send_request(Action.CREATE, url, json=data)
+
+    def update_group(self, config: dict) -> dict:
+        """
+        Updates an existing group with the provided configuration.
+        Args:
+            config (dict): A dictionary containing the group configuration to update.
+        Returns:
+            dict: The response from the server after attempting to update the group.
+        """
+        url = f"{self.base_url}/api/admin/group/setting"
+        return self.send_request(Action.EDIT, url, json=config)
 
     def delete_group(self, group_id: str) -> dict:
         """
@@ -259,6 +283,19 @@ class FessAPIClient:
         if groups:
             data["groups"] = groups
         return self.send_request(Action.CREATE, url, json=data)
+
+    def update_user(self, config: dict) -> dict:
+        """
+        Updates an existing user with the provided configuration.
+
+        Args:
+            config (dict): A dictionary containing the user configuration to update.
+
+        Returns:
+            dict: The response from the server after attempting to update the user.
+        """
+        url = f"{self.base_url}/api/admin/user/setting"
+        return self.send_request(Action.EDIT, url, json=config)
 
     def delete_user(self, user_id: str) -> dict:
         """

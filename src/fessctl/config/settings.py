@@ -1,8 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 
 
 @dataclass(frozen=True)
 class Settings:
-    fess_endpoint: str = os.getenv("FESS_ENDPOINT", "http://localhost:8080")
-    access_token: str = os.getenv("FESS_ACCESS_TOKEN")
+    fess_endpoint: str = field(default_factory=lambda: os.getenv(
+        "FESS_ENDPOINT", "http://localhost:8080"))
+    access_token: str = field(
+        default_factory=lambda: os.getenv("FESS_ACCESS_TOKEN", None))

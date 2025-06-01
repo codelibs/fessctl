@@ -1,3 +1,4 @@
+import datetime
 import json
 from typing import List, Optional
 
@@ -8,7 +9,7 @@ from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-
+from fessctl.utils import encode_to_urlsafe_base64
 
 # Create a Typer sub-application for role commands
 role_app = typer.Typer()
@@ -70,6 +71,74 @@ def create_role(
         raise typer.Exit(code=1)
 
 
+@role_app.command("update")
+def update_role(
+    role_id: str = typer.Argument(..., help="ID of the role to update"),
+    attributes: Optional[List[str]] = typer.Option(
+        None, "--attribute", "-a", help="Attributes in key=value format"
+    ),
+    updated_by: str = typer.Option("admin", "--updated-by", help="Updated by"),
+    updated_time: int = typer.Option(
+        int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000),
+        "--updated-time",
+        help="Updated time in milliseconds (UTC)"
+    ),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format: text, json, yaml"
+    ),
+):
+    """
+    Update an existing role.
+    """
+    client = FessAPIClient(Settings())
+
+    result = client.get_role(role_id=role_id)
+    if result.get("response", {}).get("status", 1) != 0:
+        message: str = result.get("response", {}).get("message", "")
+        typer.secho(
+            f"Role with ID '{role_id}' not found. {message}",
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(code=1)
+
+    config = result.get("response", {}).get("setting", {})
+    config["crud_mode"] = 2
+    config["updated_by"] = updated_by
+    config["updated_time"] = updated_time
+
+    if attributes is not None:
+        attr_dict = {}
+        for attr in attributes:
+            if "=" not in attr:
+                typer.secho(
+                    f"Invalid attribute format: {attr}", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+            key, value = attr.split("=", 1)
+            attr_dict[key.strip()] = value.strip()
+        config["attributes"] = attr_dict
+
+    result = client.update_role(config)
+    status = result.get("response", {}).get("status", 1)
+
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            typer.secho(
+                f"Role '{role_id}' updated successfully.",
+                fg=typer.colors.GREEN,
+            )
+        else:
+            message = result.get("response", {}).get("message", "")
+            typer.secho(
+                f"Failed to update role. {message} Status code: {status}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=status)
+
+
 @role_app.command("delete")
 def delete_role(
     role_id: str = typer.Argument(..., help="ID of the role to delete"),
@@ -108,6 +177,16 @@ def delete_role(
     except Exception as e:
         typer.secho(f"Error deleting role: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+
+@role_app.command("getbyname")
+def get_role_by_name(
+    name: str = typer.Argument(..., help="Name of the role to retrieve"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format: text, json, yaml"
+    ),
+):
+    get_role(encode_to_urlsafe_base64(name), output=output)
 
 
 @role_app.command("get")
