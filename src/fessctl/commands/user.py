@@ -1,3 +1,4 @@
+import datetime
 import json
 from typing import List, Optional
 
@@ -8,14 +9,14 @@ from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-
+from fessctl.utils import encode_to_urlsafe_base64
 
 # Create a Typer sub-application for role commands
 user_app = typer.Typer()
 
 
 @user_app.command("create")
-def create_user_command(
+def create_user(
     name: str = typer.Argument(..., help="Username (max 100 characters)"),
     password: str = typer.Argument(..., help="Password (max 100 characters)"),
     attributes: Optional[List[str]] = typer.Option(
@@ -92,8 +93,111 @@ def create_user_command(
         raise typer.Exit(code=1)
 
 
+@user_app.command("update")
+def update_user(
+    user_id: str = typer.Argument(..., help="ID of the user to update"),
+    password: Optional[str] = typer.Option(
+        None, "--password", "-p", help="Password (max 100 characters)"
+    ),
+    attributes: Optional[List[str]] = typer.Option(
+        None,
+        "--attribute",
+        "-a",
+        help="User attributes in key=value format. Can be specified multiple times.",
+    ),
+    roles: Optional[List[str]] = typer.Option(
+        None,
+        "--role",
+        "-r",
+        help="Roles to assign to the user. Can be specified multiple times.",
+    ),
+    groups: Optional[List[str]] = typer.Option(
+        None,
+        "--group",
+        "-g",
+        help="Groups to assign to the user. Can be specified multiple times.",
+    ),
+    updated_by: str = typer.Option("admin", "--updated-by", help="Updated by"),
+    updated_time: int = typer.Option(
+        int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000),
+        "--updated-time",
+        help="Updated time in milliseconds (UTC)",
+    ),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format: text, json, yaml"
+    ),
+):
+    """
+    Update an existing user in Fess.
+    """
+    client = FessAPIClient(Settings())
+
+    # 1) Fetch existing user
+    result = client.get_user(user_id)
+    status = result.get("response", {}).get("status", 1)
+    if status != 0:
+        message: str = result.get("response", {}).get("message", "")
+        typer.secho(
+            f"User with ID '{user_id}' not found. {message}", fg=typer.colors.RED
+        )
+        raise typer.Exit(code=1)
+
+    # 2) Merge existing setting into config
+    config = result["response"].get("setting", {})
+    config["crud_mode"] = 2
+    config["updated_by"] = updated_by
+    config["updated_time"] = updated_time
+
+    # 3) Override with provided options
+    if attributes is not None:
+        attr_dict = {}
+        for attr in attributes:
+            if "=" not in attr:
+                typer.secho(
+                    f"Invalid attribute format: {attr}", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+            key, value = attr.split("=", 1)
+            attr_dict[key.strip()] = value.strip()
+        config["attributes"] = attr_dict
+
+    if password is not None:
+        if len(password) > 100:
+            typer.secho(
+                "Password must be 100 characters or less.", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        config["password"] = password
+        config["confirm_password"] = password
+
+    if roles is not None:
+        config["roles"] = roles
+
+    if groups is not None:
+        config["groups"] = groups
+
+    # 4) Send update request
+    update_resp = client.update_user(config)
+    status = update_resp.get("response", {}).get("status", 1)
+
+    # 5) Render output
+    if output == "json":
+        typer.echo(json.dumps(update_resp, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(update_resp))
+    else:
+        if status == 0:
+            typer.secho(
+                f"User '{user_id}' updated successfully.", fg=typer.colors.GREEN)
+        else:
+            message: str = update_resp.get("response", {}).get("message", "")
+            typer.secho(
+                f"Failed to update user. {message} Status code: {status}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=status)
+
+
 @user_app.command("delete")
-def delete_user_command(
+def delete_user(
     user_id: str = typer.Argument(..., help="ID of the user to delete"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
@@ -131,8 +235,18 @@ def delete_user_command(
         raise typer.Exit(code=1)
 
 
+@user_app.command("getbyname")
+def get_user_by_name(
+    name: str = typer.Argument(..., help="Name of the user to retrieve"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format: text, json, yaml"
+    ),
+):
+    get_user(encode_to_urlsafe_base64(name), output=output)
+
+
 @user_app.command("get")
-def get_user_command(
+def get_user(
     user_id: str = typer.Argument(..., help="ID of the user to retrieve"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
@@ -182,7 +296,7 @@ def get_user_command(
 
 
 @user_app.command("list")
-def list_users_command(
+def list_users(
     page: int = typer.Option(1, "--page", "-p", help="Page number"),
     size: int = typer.Option(100, "--size", "-s", help="Page size"),
     output: str = typer.Option(

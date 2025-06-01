@@ -1,0 +1,2 @@
+{"index":{"_index":"fess_config","_type":"access_token","_id":"admin-api"}}
+{"updatedTime":0,"updatedBy":"admin","createdBy":"admin","permissions":["Radmin-api"],"name":"Admin API","createdTime":0,"token":"CHANGEME"}

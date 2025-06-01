@@ -3,12 +3,34 @@ name = "fessctl"
 version = "0.1.0"
 description = "CLI tool to manage Fess using the admin API"
 authors = [{ name = "CodeLibs, Inc.", email = "info@codelibs.co" }]
+requires-python = ">=3.13"
 dependencies = [
     "httpx==0.28.1",
     "pyyaml==6.0.2",
     "rich==14.0.0",
-    "typer[all]==0.15.2",
+    "typer[all]==0.16.0",
 ]
 
 [project.scripts]
 fessctl = "fessctl.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.1.0",
+    "testcontainers>=3.9.0",
+    "requests>=2.28.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-s"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

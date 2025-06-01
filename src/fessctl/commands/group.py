@@ -1,3 +1,4 @@
+import datetime
 import json
 from typing import List, Optional
 
@@ -8,6 +9,7 @@ from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
+from fessctl.utils import encode_to_urlsafe_base64
 
 
 # Create a Typer sub-application for group commands
@@ -70,6 +72,74 @@ def create_group(
         raise typer.Exit(code=1)
 
 
+@group_app.command("update")
+def update_group(
+    group_id: str = typer.Argument(..., help="ID of the group to update"),
+    attributes: Optional[List[str]] = typer.Option(
+        None, "--attribute", "-a", help="Attributes in key=value format"
+    ),
+    updated_by: str = typer.Option("admin", "--updated-by", help="Updated by"),
+    updated_time: int = typer.Option(
+        int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000),
+        "--updated-time",
+        help="Updated time in milliseconds (UTC)"
+    ),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format: text, json, yaml"
+    ),
+):
+    """
+    Update an existing group.
+    """
+    client = FessAPIClient(Settings())
+
+    result = client.get_group(group_id=group_id)
+    if result.get("response", {}).get("status", 1) != 0:
+        message: str = result.get("response", {}).get("message", "")
+        typer.secho(
+            f"Group with ID '{group_id}' not found. {message}",
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(code=1)
+
+    config = result.get("response", {}).get("setting", {})
+    config["crud_mode"] = 2
+    config["updated_by"] = updated_by
+    config["updated_time"] = updated_time
+
+    if attributes is not None:
+        attr_dict = {}
+        for attr in attributes:
+            if "=" not in attr:
+                typer.secho(
+                    f"Invalid attribute format: {attr}", fg=typer.colors.RED)
+                raise typer.Exit(code=1)
+            key, value = attr.split("=", 1)
+            attr_dict[key.strip()] = value.strip()
+        config["attributes"] = attr_dict
+
+    result = client.update_group(config)
+    status = result.get("response", {}).get("status", 1)
+
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            typer.secho(
+                f"Group '{group_id}' updated successfully.",
+                fg=typer.colors.GREEN,
+            )
+        else:
+            message = result.get("response", {}).get("message", "")
+            typer.secho(
+                f"Failed to update group. {message} Status code: {status}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=status)
+
+
 @group_app.command("delete")
 def delete_group(
     group_id: str = typer.Argument(..., help="ID of the group to delete"),
@@ -108,6 +178,16 @@ def delete_group(
     except Exception as e:
         typer.secho(f"Error deleting group: {e}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+
+@group_app.command("getbyname")
+def get_group_by_name(
+    name: str = typer.Argument(..., help="Name of the group to retrieve"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format: text, json, yaml"
+    ),
+):
+    get_group(encode_to_urlsafe_base64(name), output=output)
 
 
 @group_app.command("get")
