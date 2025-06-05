@@ -16,6 +16,21 @@ class Action(Enum):
     STOP = "stop"
 
 
+class FessAPIClientError(Exception):
+    """
+    Exception raised when an HTTP request to Fess fails or the response cannot be parsed as JSON.
+    Contains the HTTP status code and the raw response content.
+    """
+
+    def __init__(self, status_code: int, content: str, message: str = None):
+        self.status_code = status_code
+        self.content = content
+        if message:
+            super().__init__(message)
+        else:
+            super().__init__(f"HTTP {status_code} Error: {content}")
+
+
 class FessAPIClient:
     def __init__(self, settings: Settings):
         self.base_url = settings.fess_endpoint
@@ -37,32 +52,48 @@ class FessAPIClient:
         is_admin: bool = True,
     ) -> dict:
         headers = self.admin_api_headers if is_admin else self.search_api_headers
-        if action == Action.CREATE:
-            # TODO: use post in the future version
-            response = httpx.put(
-                url, headers=headers, json=json, params=params, timeout=self.timeout
-            )
-        elif action == Action.EDIT:
-            # TODO: use put in the future version
-            response = httpx.post(
-                url, headers=headers, json=json, params=params, timeout=self.timeout
-            )
-        elif action == Action.DELETE:
-            response = httpx.delete(
-                url, headers=headers, params=params, timeout=self.timeout
-            )
-        elif action == Action.LIST or action == Action.GET:
-            response = httpx.get(
-                url, headers=headers, params=params, timeout=self.timeout
-            )
-        elif action == Action.START or action == Action.STOP:
-            response = httpx.post(
-                url, headers=headers, json=json, params=params, timeout=self.timeout
-            )
-        else:
-            raise ValueError("Invalid action specified")
+        try:
+            if action == Action.CREATE:
+                # TODO: use post in the future version
+                response = httpx.put(
+                    url, headers=headers, json=json, params=params, timeout=self.timeout
+                )
+            elif action == Action.EDIT:
+                # TODO: use put in the future version
+                response = httpx.post(
+                    url, headers=headers, json=json, params=params, timeout=self.timeout
+                )
+            elif action == Action.DELETE:
+                response = httpx.delete(
+                    url, headers=headers, params=params, timeout=self.timeout
+                )
+            elif action == Action.LIST or action == Action.GET:
+                response = httpx.get(
+                    url, headers=headers, params=params, timeout=self.timeout
+                )
+            elif action == Action.START or action == Action.STOP:
+                response = httpx.post(
+                    url, headers=headers, json=json, params=params, timeout=self.timeout
+                )
+            else:
+                raise ValueError("Invalid action specified")
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=str(e),
+                message=f"Request to {url} failed: {e}"
+            ) from e
         # response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError as e:
+            raw = response.text
+            code = response.status_code
+            raise FessAPIClientError(
+                status_code=code,
+                content=raw,
+                message=f"Invalid JSON in response from {url}: {raw}"
+            ) from e
 
     def ping(self) -> dict:
         """
