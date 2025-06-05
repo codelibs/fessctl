@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -47,7 +48,7 @@ class FessAPIClient:
         self,
         action: Action,
         url: str,
-        json: dict = None,
+        json_data: dict = None,
         params: dict = None,
         is_admin: bool = True,
     ) -> dict:
@@ -56,12 +57,12 @@ class FessAPIClient:
             if action == Action.CREATE:
                 # TODO: use post in the future version
                 response = httpx.put(
-                    url, headers=headers, json=json, params=params, timeout=self.timeout
+                    url, headers=headers, json=json_data, params=params, timeout=self.timeout
                 )
             elif action == Action.EDIT:
                 # TODO: use put in the future version
                 response = httpx.post(
-                    url, headers=headers, json=json, params=params, timeout=self.timeout
+                    url, headers=headers, json=json_data, params=params, timeout=self.timeout
                 )
             elif action == Action.DELETE:
                 response = httpx.delete(
@@ -73,7 +74,7 @@ class FessAPIClient:
                 )
             elif action == Action.START or action == Action.STOP:
                 response = httpx.post(
-                    url, headers=headers, json=json, params=params, timeout=self.timeout
+                    url, headers=headers, json=json_data, params=params, timeout=self.timeout
                 )
             else:
                 raise ValueError("Invalid action specified")
@@ -86,7 +87,7 @@ class FessAPIClient:
         # response.raise_for_status()
         try:
             return response.json()
-        except json.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError as e:
             raw = response.text
             code = response.status_code
             raise FessAPIClientError(
@@ -128,7 +129,7 @@ class FessAPIClient:
         }
         if attributes:
             data["attributes"] = attributes
-        return self.send_request(Action.CREATE, url, json=data)
+        return self.send_request(Action.CREATE, url, json_data=data)
 
     def update_role(self, config: dict) -> dict:
         """
@@ -141,7 +142,7 @@ class FessAPIClient:
             dict: The response from the server after attempting to update the role.
         """
         url = f"{self.base_url}/api/admin/role/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_role(self, role_id: str) -> dict:
         """
@@ -213,7 +214,7 @@ class FessAPIClient:
         }
         if attributes:
             data["attributes"] = attributes
-        return self.send_request(Action.CREATE, url, json=data)
+        return self.send_request(Action.CREATE, url, json_data=data)
 
     def update_group(self, config: dict) -> dict:
         """
@@ -224,7 +225,7 @@ class FessAPIClient:
             dict: The response from the server after attempting to update the group.
         """
         url = f"{self.base_url}/api/admin/group/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_group(self, group_id: str) -> dict:
         """
@@ -313,7 +314,7 @@ class FessAPIClient:
             data["roles"] = roles
         if groups:
             data["groups"] = groups
-        return self.send_request(Action.CREATE, url, json=data)
+        return self.send_request(Action.CREATE, url, json_data=data)
 
     def update_user(self, config: dict) -> dict:
         """
@@ -326,7 +327,7 @@ class FessAPIClient:
             dict: The response from the server after attempting to update the user.
         """
         url = f"{self.base_url}/api/admin/user/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_user(self, user_id: str) -> dict:
         """
@@ -379,14 +380,14 @@ class FessAPIClient:
         Creates a new WebConfig.
         """
         url = f"{self.base_url}/api/admin/webconfig/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_webconfig(self, config: dict) -> dict:
         """
         Updates an existing WebConfig.
         """
         url = f"{self.base_url}/api/admin/webconfig/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_webconfig(self, config_id: str) -> dict:
         """
@@ -417,14 +418,14 @@ class FessAPIClient:
         Creates a new FileConfig.
         """
         url = f"{self.base_url}/api/admin/fileconfig/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_fileconfig(self, config: dict) -> dict:
         """
         Updates an existing FileConfig.
         """
         url = f"{self.base_url}/api/admin/fileconfig/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_fileconfig(self, config_id: str) -> dict:
         """
@@ -455,14 +456,14 @@ class FessAPIClient:
         Creates a new DataConfig.
         """
         url = f"{self.base_url}/api/admin/dataconfig/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_dataconfig(self, config: dict) -> dict:
         """
         Updates an existing DataConfig.
         """
         url = f"{self.base_url}/api/admin/dataconfig/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_dataconfig(self, config_id: str) -> dict:
         """
@@ -493,14 +494,14 @@ class FessAPIClient:
         Creates a new Scheduler.
         """
         url = f"{self.base_url}/api/admin/scheduler/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_scheduler(self, config: dict) -> dict:
         """
         Updates an existing Scheduler.
         """
         url = f"{self.base_url}/api/admin/scheduler/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_scheduler(self, scheduler_id: str) -> dict:
         """
@@ -569,14 +570,14 @@ class FessAPIClient:
         Creates a new AccessToken.
         """
         url = f"{self.base_url}/api/admin/accesstoken/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_accesstoken(self, config: dict) -> dict:
         """
         Updates an existing AccessToken.
         """
         url = f"{self.base_url}/api/admin/accesstoken/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_accesstoken(self, config_id: str) -> dict:
         """
@@ -631,14 +632,14 @@ class FessAPIClient:
         Creates a new WebAuth.
         """
         url = f"{self.base_url}/api/admin/webauth/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_webauth(self, config: dict) -> dict:
         """
         Updates an existing WebAuth.
         """
         url = f"{self.base_url}/api/admin/webauth/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_webauth(self, config_id: str) -> dict:
         """
@@ -669,14 +670,14 @@ class FessAPIClient:
         Creates a new FileAuth.
         """
         url = f"{self.base_url}/api/admin/fileauth/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_fileauth(self, config: dict) -> dict:
         """
         Updates an existing FileAuth.
         """
         url = f"{self.base_url}/api/admin/fileauth/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_fileauth(self, config_id: str) -> dict:
         """
@@ -707,14 +708,14 @@ class FessAPIClient:
         Creates a new BadWord.
         """
         url = f"{self.base_url}/api/admin/badword/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_badword(self, config: dict) -> dict:
         """
         Updates an existing BadWord.
         """
         url = f"{self.base_url}/api/admin/badword/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_badword(self, config_id: str) -> dict:
         """
@@ -745,14 +746,14 @@ class FessAPIClient:
         Creates a new BoostDoc.
         """
         url = f"{self.base_url}/api/admin/boostdoc/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_boostdoc(self, config: dict) -> dict:
         """
         Updates an existing BoostDoc.
         """
         url = f"{self.base_url}/api/admin/boostdoc/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_boostdoc(self, config_id: str) -> dict:
         """
@@ -783,14 +784,14 @@ class FessAPIClient:
         Creates a new DuplicateHost.
         """
         url = f"{self.base_url}/api/admin/duplicatehost/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_duplicatehost(self, config: dict) -> dict:
         """
         Updates an existing DuplicateHost.
         """
         url = f"{self.base_url}/api/admin/duplicatehost/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_duplicatehost(self, config_id: str) -> dict:
         """
@@ -821,14 +822,14 @@ class FessAPIClient:
         Creates a new ElevateWord.
         """
         url = f"{self.base_url}/api/admin/elevateword/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_elevateword(self, config: dict) -> dict:
         """
         Updates an existing ElevateWord.
         """
         url = f"{self.base_url}/api/admin/elevateword/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_elevateword(self, config_id: str) -> dict:
         """
@@ -859,14 +860,14 @@ class FessAPIClient:
         Creates a new KeyMatch.
         """
         url = f"{self.base_url}/api/admin/keymatch/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_keymatch(self, config: dict) -> dict:
         """
         Updates an existing KeyMatch.
         """
         url = f"{self.base_url}/api/admin/keymatch/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_keymatch(self, config_id: str) -> dict:
         """
@@ -897,14 +898,14 @@ class FessAPIClient:
         Creates a new LabelType.
         """
         url = f"{self.base_url}/api/admin/labeltype/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_labeltype(self, config: dict) -> dict:
         """
         Updates an existing LabelType.
         """
         url = f"{self.base_url}/api/admin/labeltype/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_labeltype(self, config_id: str) -> dict:
         """
@@ -935,14 +936,14 @@ class FessAPIClient:
         Creates a new PathMap.
         """
         url = f"{self.base_url}/api/admin/pathmap/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_pathmap(self, config: dict) -> dict:
         """
         Updates an existing PathMap.
         """
         url = f"{self.base_url}/api/admin/pathmap/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_pathmap(self, config_id: str) -> dict:
         """
@@ -973,14 +974,14 @@ class FessAPIClient:
         Creates a new RelatedContent.
         """
         url = f"{self.base_url}/api/admin/relatedcontent/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_relatedcontent(self, config: dict) -> dict:
         """
         Updates an existing RelatedContent.
         """
         url = f"{self.base_url}/api/admin/relatedcontent/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_relatedcontent(self, config_id: str) -> dict:
         """
@@ -1011,14 +1012,14 @@ class FessAPIClient:
         Creates a new RelatedQuery.
         """
         url = f"{self.base_url}/api/admin/relatedquery/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_relatedquery(self, config: dict) -> dict:
         """
         Updates an existing RelatedQuery.
         """
         url = f"{self.base_url}/api/admin/relatedquery/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_relatedquery(self, config_id: str) -> dict:
         """
@@ -1049,14 +1050,14 @@ class FessAPIClient:
         Creates a new ReqHeader.
         """
         url = f"{self.base_url}/api/admin/reqheader/setting"
-        return self.send_request(Action.CREATE, url, json=config)
+        return self.send_request(Action.CREATE, url, json_data=config)
 
     def update_reqheader(self, config: dict) -> dict:
         """
         Updates an existing ReqHeader.
         """
         url = f"{self.base_url}/api/admin/reqheader/setting"
-        return self.send_request(Action.EDIT, url, json=config)
+        return self.send_request(Action.EDIT, url, json_data=config)
 
     def delete_reqheader(self, config_id: str) -> dict:
         """
