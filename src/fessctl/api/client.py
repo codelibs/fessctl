@@ -23,13 +23,10 @@ class FessAPIClientError(Exception):
     Contains the HTTP status code and the raw response content.
     """
 
-    def __init__(self, status_code: int, content: str, message: str = None):
+    def __init__(self, status_code: int, content: str):
         self.status_code = status_code
         self.content = content
-        if message:
-            super().__init__(message)
-        else:
-            super().__init__(f"HTTP {status_code} Error: {content}")
+        super().__init__(f"HTTP {status_code} Error: {content}")
 
 
 class FessAPIClient:
@@ -43,27 +40,44 @@ class FessAPIClient:
             "Content-Type": "application/json",
         }
         self.timeout = 5.0
+        self._major_version, self._minor_version = self._parse_version(
+            settings.fess_version)
+
+    def _parse_version(self, version: str) -> tuple[int, int]:
+        try:
+            major_str, minor_str, *_ = version.split(".")
+            return int(major_str), int(minor_str)
+        except Exception as e:
+            raise ValueError(f"Invalid version format: '{version}'") from e
 
     def send_request(
         self,
         action: Action,
         url: str,
-        json_data: dict = None,
-        params: dict = None,
+        json_data: dict | None = None,
+        params: dict | None = None,
         is_admin: bool = True,
     ) -> dict:
         headers = self.admin_api_headers if is_admin else self.search_api_headers
         try:
             if action == Action.CREATE:
-                # TODO: use post in the future version
-                response = httpx.put(
-                    url, headers=headers, json=json_data, params=params, timeout=self.timeout
-                )
+                if self._major_version <= 14:
+                    response = httpx.put(
+                        url, headers=headers, json=json_data, params=params, timeout=self.timeout
+                    )
+                else:
+                    response = httpx.post(
+                        url, headers=headers, json=json_data, params=params, timeout=self.timeout
+                    )
             elif action == Action.EDIT:
-                # TODO: use put in the future version
-                response = httpx.post(
-                    url, headers=headers, json=json_data, params=params, timeout=self.timeout
-                )
+                if self._major_version <= 14:
+                    response = httpx.post(
+                        url, headers=headers, json=json_data, params=params, timeout=self.timeout
+                    )
+                else:
+                    response = httpx.put(
+                        url, headers=headers, json=json_data, params=params, timeout=self.timeout
+                    )
             elif action == Action.DELETE:
                 response = httpx.delete(
                     url, headers=headers, params=params, timeout=self.timeout
@@ -81,8 +95,7 @@ class FessAPIClient:
         except httpx.RequestError as e:
             raise FessAPIClientError(
                 status_code=-1,
-                content=str(e),
-                message=f"Request to {url} failed: {e}"
+                content=str(e)
             ) from e
         # response.raise_for_status()
         try:
@@ -92,8 +105,7 @@ class FessAPIClient:
             code = response.status_code
             raise FessAPIClientError(
                 status_code=code,
-                content=raw,
-                message=f"Invalid JSON in response from {url}: {raw}"
+                content=raw
             ) from e
 
     def ping(self) -> dict:
