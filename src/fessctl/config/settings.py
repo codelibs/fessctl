@@ -6,5 +6,7 @@ import os
 class Settings:
     fess_endpoint: str = field(default_factory=lambda: os.getenv(
         "FESS_ENDPOINT", "http://localhost:8080"))
-    access_token: str = field(
+    access_token: str | None = field(
         default_factory=lambda: os.getenv("FESS_ACCESS_TOKEN", None))
+    fess_version: str = field(
+        default_factory=lambda: os.getenv("FESS_VERSION", "14.19.0"))
