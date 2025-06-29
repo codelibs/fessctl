@@ -238,7 +238,7 @@ def get_fileauth(
                 f"Failed to retrieve FileAuth. {message} Status code: {status}",
                 fg=typer.colors.RED,
             )
-            raise typer.Exit(code=status)
+            raise typer.Exit(code=1)
 
 
 @fileauth_app.command("list")

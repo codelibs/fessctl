@@ -369,7 +369,7 @@ def get_fileconfig(
                 f"Failed to retrieve FileConfig. {message} Status code: {status}",
                 fg=typer.colors.RED,
             )
-            raise typer.Exit(code=status)
+            raise typer.Exit(code=1)
 
 
 @fileconfig_app.command("list")
