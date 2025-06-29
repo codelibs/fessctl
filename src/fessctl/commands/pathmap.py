@@ -51,7 +51,7 @@ def create_path(
     if user_agent is not None:
         config["user_agent"] = user_agent
 
-    result = client.create_path(config)
+    result = client.create_pathmap(config)
     status: int = result.get("response", {}).get("status", 1)
 
     if output == "json":

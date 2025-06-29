@@ -238,7 +238,7 @@ def get_elevateword(
                 f"Failed to retrieve ElevateWord. {message} Status code: {status}",
                 fg=typer.colors.RED,
             )
-            raise typer.Exit(code=status)
+            raise typer.Exit(code=1)
 
 
 @elevateword_app.command("list")
