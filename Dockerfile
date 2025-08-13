@@ -12,9 +12,9 @@ WORKDIR /build
 ENV PATH="/root/.local/bin:$PATH"
 
 COPY pyproject.toml ./
+COPY src/ src/
 RUN uv pip install . --system --target /build/python
 
-COPY src/ src/
 COPY README.md ./
 
 FROM python:3.13-slim
