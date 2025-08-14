@@ -12,9 +12,9 @@ WORKDIR /build
 ENV PATH="/root/.local/bin:$PATH"
 
 COPY pyproject.toml ./
+COPY src/ src/
 RUN uv pip install . --system --target /build/python
 
-COPY src/ src/
 COPY README.md ./
 
 FROM python:3.13-slim
@@ -27,7 +27,6 @@ RUN addgroup --system fessctl && adduser --system --group fessctl
 WORKDIR /app
 
 COPY --from=builder /build/python /app/
-COPY --from=builder /build/src/fessctl /app/fessctl
 
 RUN chown -R fessctl:fessctl /app
 
