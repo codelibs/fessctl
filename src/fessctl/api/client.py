@@ -87,9 +87,14 @@ class FessAPIClient:
                     url, headers=headers, params=params, timeout=self.timeout
                 )
             elif action == Action.START or action == Action.STOP:
-                response = httpx.post(
-                    url, headers=headers, json=json_data, params=params, timeout=self.timeout
-                )
+                if self._major_version <= 14:
+                    response = httpx.post(
+                        url, headers=headers, json=json_data, params=params, timeout=self.timeout
+                    )
+                else:
+                    response = httpx.put(
+                        url, headers=headers, json=json_data, params=params, timeout=self.timeout
+                    )
             else:
                 raise ValueError("Invalid action specified")
         except httpx.RequestError as e:
