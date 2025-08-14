@@ -27,7 +27,6 @@ RUN addgroup --system fessctl && adduser --system --group fessctl
 WORKDIR /app
 
 COPY --from=builder /build/python /app/
-COPY --from=builder /build/src/fessctl /app/fessctl
 
 RUN chown -R fessctl:fessctl /app
 
