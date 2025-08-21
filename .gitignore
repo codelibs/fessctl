@@ -135,6 +135,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.serena/
 
 # Spyder project settings
 .spyderproject

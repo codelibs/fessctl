@@ -11,7 +11,16 @@ from testcontainers.compose import DockerCompose
 def fess_service():
     project_root = Path(__file__).resolve().parent
     print(f"Project root: {project_root}")
-    compose = DockerCompose(str(project_root), "compose.yaml", pull=True)
+    
+    # Determine which compose file to use based on FESS_VERSION
+    fess_version = os.getenv("FESS_VERSION", "15.1.0")
+    if fess_version.startswith("15."):
+        compose_file = "compose-fess15.yaml"
+    else:
+        compose_file = "compose-fess14.yaml"
+    
+    print(f"Using compose file: {compose_file} for Fess version: {fess_version}")
+    compose = DockerCompose(str(project_root), compose_file, pull=True)
     compose.start()
 
     host = compose.get_service_host("fessctl_fess01", 8080)

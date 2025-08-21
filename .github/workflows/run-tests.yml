@@ -9,8 +9,15 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fess-version:
+          - fess_version: "14.19.2"
+            opensearch_version: "2.19.1"
+          - fess_version: "15.1.0"
+            opensearch_version: "3.1.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -23,5 +30,8 @@ jobs:
       run: pip install uv
     - name: Install dependencies
       run: uv sync --extra dev
-    - name: Run tests
+    - name: Run tests with Fess ${{ matrix.fess-version.fess_version }} & OpenSearch ${{ matrix.fess-version.opensearch_version }}
+      env:
+        FESS_VERSION: ${{ matrix.fess-version.fess_version }}
+        OPENSEARCH_VERSION: ${{ matrix.fess-version.opensearch_version }}
       run: uv run pytest tests
