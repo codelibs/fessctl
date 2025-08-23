@@ -40,6 +40,7 @@ fessctl --help
 
 ```bash
 export FESS_ACCESS_TOKEN=...
+export FESS_VERSION=15.1.0
 fessctl ping
 fessctl user list
 fessctl webconfig create --name TestConfig --url https://test.config.com/
@@ -57,8 +58,9 @@ docker build -t fessctl:latest .
 
 You need to provide the following environment variables when running:
 
-- FESS_ENDPOINT: The URL of your Fess server’s API endpoint. (Default: `http://localhost:8080`)
+- FESS_ENDPOINT: The URL of your Fess server's API endpoint. (Default: `http://localhost:8080`)
 - FESS_ACCESS_TOKEN: Your access token to authenticate with the Fess API.
+- FESS_VERSION: Your Fess server version for API compatibility. (Default: `15.1.0`)
 
 Example:
 
@@ -66,6 +68,7 @@ Example:
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
+  -e FESS_VERSION=15.1.0 \
   fessctl --help
 ```
 
@@ -75,6 +78,7 @@ To run an actual command, for example:
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
+  -e FESS_VERSION=15.1.0 \
   fessctl webconfig list
 ```
 
