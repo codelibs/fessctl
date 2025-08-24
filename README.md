@@ -13,15 +13,67 @@ Fess is an open-source enterprise search server based on OpenSearch.
 
 (Currently under development, more features and improvements are on the way. Stay tuned for updates!)
 
-## Installation
+## Installation and Usage
 
-### Requirements
+There are three ways to use fessctl:
 
+### Method 1: Using Pre-built Docker Image
+
+The easiest way to get started is using the pre-built Docker image:
+
+```bash
+docker run --rm \
+  -e FESS_ENDPOINT=https://your-fess-server \
+  -e FESS_ACCESS_TOKEN=your_access_token_here \
+  -e FESS_VERSION=15.1.0 \
+  ghcr.io/codelibs/fessctl:0.1.0 --help
+```
+
+Run actual commands:
+
+```bash
+docker run --rm \
+  -e FESS_ENDPOINT=https://your-fess-server \
+  -e FESS_ACCESS_TOKEN=your_access_token_here \
+  -e FESS_VERSION=15.1.0 \
+  ghcr.io/codelibs/fessctl:0.1.0 ping
+
+docker run --rm \
+  -e FESS_ENDPOINT=https://your-fess-server \
+  -e FESS_ACCESS_TOKEN=your_access_token_here \
+  -e FESS_VERSION=15.1.0 \
+  ghcr.io/codelibs/fessctl:0.1.0 user list
+```
+
+### Method 2: Building Your Own Docker Image
+
+Clone the repository and build the Docker image locally:
+
+```bash
+git clone https://github.com/your-org/fessctl.git
+cd fessctl
+docker build -t fessctl:latest .
+```
+
+Then run with your custom image:
+
+```bash
+docker run --rm \
+  -e FESS_ENDPOINT=https://your-fess-server \
+  -e FESS_ACCESS_TOKEN=your_access_token_here \
+  -e FESS_VERSION=15.1.0 \
+  fessctl:latest --help
+```
+
+### Method 3: Install from Source with pip
+
+For development or when you need to modify the source code:
+
+#### Requirements
 - Python 3.13+
 - [`uv`](https://github.com/astral-sh/uv) (recommended for environment setup)
 
-### Setup
-
+#### Setup
 ```bash
 git clone https://github.com/your-org/fessctl.git
 cd fessctl
@@ -30,57 +82,25 @@ source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 uv pip install -e src
 ```
 
-## Run CLI
-
+#### Usage
 ```bash
-fessctl --help
-```
-
-### Example Commands
-
-```bash
-export FESS_ACCESS_TOKEN=...
+export FESS_ACCESS_TOKEN=your_access_token_here
+export FESS_ENDPOINT=https://your-fess-server
 export FESS_VERSION=15.1.0
+
+fessctl --help
 fessctl ping
 fessctl user list
 fessctl webconfig create --name TestConfig --url https://test.config.com/
 ```
 
-## Docker Build and Run
+## Environment Variables
 
-### Build Docker Image
+All three methods require the following environment variables:
 
-```bash
-docker build -t fessctl:latest .
-```
-
-### Run fessctl in Docker
-
-You need to provide the following environment variables when running:
-
-- FESS_ENDPOINT: The URL of your Fess server's API endpoint. (Default: `http://localhost:8080`)
-- FESS_ACCESS_TOKEN: Your access token to authenticate with the Fess API.
-- FESS_VERSION: Your Fess server version for API compatibility. (Default: `15.1.0`)
-
-Example:
-
-```bash
-docker run --rm \
-  -e FESS_ENDPOINT=https://your-fess-server \
-  -e FESS_ACCESS_TOKEN=your_access_token_here \
-  -e FESS_VERSION=15.1.0 \
-  fessctl --help
-```
-
-To run an actual command, for example:
-
-```bash
-docker run --rm \
-  -e FESS_ENDPOINT=https://your-fess-server \
-  -e FESS_ACCESS_TOKEN=your_access_token_here \
-  -e FESS_VERSION=15.1.0 \
-  fessctl webconfig list
-```
+- `FESS_ENDPOINT`: The URL of your Fess server's API endpoint (default: `http://localhost:8080`)
+- `FESS_ACCESS_TOKEN`: Bearer token for API authentication (required)
+- `FESS_VERSION`: Target Fess version for API compatibility (default: `15.1.0`)
 
 ## License
 
