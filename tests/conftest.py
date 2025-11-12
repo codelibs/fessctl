@@ -13,7 +13,7 @@ def fess_service():
     print(f"Project root: {project_root}")
     
     # Determine which compose file to use based on FESS_VERSION
-    fess_version = os.getenv("FESS_VERSION", "15.1.0")
+    fess_version = os.getenv("FESS_VERSION", "15.3.2")
     if fess_version.startswith("15."):
         compose_file = "compose-fess15.yaml"
     else:
