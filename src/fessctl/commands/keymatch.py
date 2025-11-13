@@ -183,43 +183,49 @@ def get_keymatch(
     Retrieve a KeyMatch by ID.
     """
     client = FessAPIClient(Settings())
-    result = client.get_keymatch(config_id)
-    status = result.get("response", {}).get("status", 1)
+    try:
+        result = client.get_keymatch(config_id)
+        status = result.get("response", {}).get("status", 1)
 
-    if output == "json":
-        typer.echo(json.dumps(result, indent=2))
-    elif output == "yaml":
-        typer.echo(yaml.dump(result))
-    else:
-        if status == 0:
-            keymatch = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(title=f"KeyMatch Details: {keymatch.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            table.add_row("id", str(keymatch.get("id", "-")))
-            table.add_row("term", str(keymatch.get("term", "-")))
-            table.add_row("query", str(keymatch.get("query", "-")))
-            table.add_row("max_size", str(keymatch.get("max_size", "-")))
-            table.add_row("boost", str(keymatch.get("boost", "-")))
-            table.add_row("virtual_host", str(
-                keymatch.get("virtual_host", "-")))
-            table.add_row("version_no", str(keymatch.get("version_no", "-")))
-            table.add_row("crud_mode", str(keymatch.get("crud_mode", "-")))
-            table.add_row("created_by", str(keymatch.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                keymatch.get("created_time")))
-            table.add_row("updated_by", str(keymatch.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                keymatch.get("updated_time")))
-
-            console.print(table)
+        if output == "json":
+            typer.echo(json.dumps(result, indent=2))
+        elif output == "yaml":
+            typer.echo(yaml.dump(result))
         else:
-            message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve KeyMatch. {message} Status code: {status}", fg=typer.colors.RED)
-            raise typer.Exit(code=status)
+            if status == 0:
+                keymatch = result.get("response", {}).get("setting", {})
+                console = Console()
+                table = Table(title=f"KeyMatch Details: {keymatch.get('id', '-')}")
+                table.add_column("Field", style="cyan", no_wrap=True)
+                table.add_column("Value", style="magenta")
+
+                table.add_row("id", str(keymatch.get("id", "-")))
+                table.add_row("term", str(keymatch.get("term", "-")))
+                table.add_row("query", str(keymatch.get("query", "-")))
+                table.add_row("max_size", str(keymatch.get("max_size", "-")))
+                table.add_row("boost", str(keymatch.get("boost", "-")))
+                table.add_row("virtual_host", str(
+                    keymatch.get("virtual_host", "-")))
+                table.add_row("version_no", str(keymatch.get("version_no", "-")))
+                table.add_row("crud_mode", str(keymatch.get("crud_mode", "-")))
+                table.add_row("created_by", str(keymatch.get("created_by", "-")))
+                table.add_row("created_time", to_utc_iso8601(
+                    keymatch.get("created_time")))
+                table.add_row("updated_by", str(keymatch.get("updated_by", "-")))
+                table.add_row("updated_time", to_utc_iso8601(
+                    keymatch.get("updated_time")))
+
+                console.print(table)
+            else:
+                message: str = result.get("response", {}).get("message", "")
+                typer.secho(
+                    f"Failed to retrieve KeyMatch. {message} Status code: {status}", fg=typer.colors.RED)
+                raise typer.Exit(code=status)
+    except typer.Exit:
+        raise
+    except Exception as e:
+        typer.secho(f"Error retrieving keymatch: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
 
 
 @keymatch_app.command("list")

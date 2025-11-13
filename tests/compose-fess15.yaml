@@ -1,11 +1,11 @@
 services:
   fessctl_fess01:
-    image: ghcr.io/codelibs/fess:${FESS_VERSION:-15.1.0}
+    image: ghcr.io/codelibs/fess:${FESS_VERSION:-15.3.2}
     container_name: fessctl_fess01
     environment:
       - "SEARCH_ENGINE_HTTP_URL=http://fessctl_search01:9200"
       - "FESS_DICTIONARY_PATH=${FESS_DICTIONARY_PATH:-/usr/share/opensearch/config/dictionary/}"
-#      - "FESS_PLUGINS=fess-ds-csv:${FESS_VERSION:-15.1.0}"
+#      - "FESS_PLUGINS=fess-ds-csv:${FESS_VERSION:-15.3.2}"
     volumes:
 #      - fessctl_fess01_plugin:/usr/share/fess/app/WEB-INF/plugin
       - ./resources/access_token.bulk:/usr/share/fess/app/WEB-INF/classes/fess_indices/fess_config.access_token/access_token.bulk
@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     
   fessctl_search01:
-    image: ghcr.io/codelibs/fess-opensearch:${OPENSEARCH_VERSION:-3.1.0}
+    image: ghcr.io/codelibs/fess-opensearch:${OPENSEARCH_VERSION:-3.3.2}
     container_name: fessctl_search01
     environment:
       - node.name=fessctl_search01

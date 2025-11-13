@@ -295,81 +295,87 @@ def get_fileconfig(
     Retrieve a FileConfig by ID.
     """
     client = FessAPIClient(Settings())
-    result = client.get_fileconfig(config_id)
-    status = result.get("response", {}).get("status", 1)
+    try:
+        result = client.get_fileconfig(config_id)
+        status = result.get("response", {}).get("status", 1)
 
-    if output == "json":
-        typer.echo(json.dumps(result, indent=2))
-    elif output == "yaml":
-        typer.echo(yaml.dump(result))
-    else:
-        if status == 0:
-            fileconfig = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"FileConfig Details: {fileconfig.get('name', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # Output all public fields
-            table.add_row("id", str(fileconfig.get("id", "-")))
-            table.add_row("updated_by", str(fileconfig.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                fileconfig.get("updated_time")))
-            table.add_row("version_no", str(fileconfig.get("version_no", "-")))
-            table.add_row(
-                "label_type_ids", ", ".join(
-                    fileconfig.get("label_type_ids", []))
-            )
-            table.add_row("crud_mode", str(fileconfig.get("crud_mode", "-")))
-            table.add_row("name", str(fileconfig.get("name", "-")))
-            table.add_row("description", str(
-                fileconfig.get("description", "-")))
-            table.add_row("paths", str(fileconfig.get("paths", "-")))
-            table.add_row("included_paths", str(
-                fileconfig.get("included_paths", "-")))
-            table.add_row("excluded_paths", str(
-                fileconfig.get("excluded_paths", "-")))
-            table.add_row(
-                "included_doc_paths", str(
-                    fileconfig.get("included_doc_paths", "-"))
-            )
-            table.add_row(
-                "excluded_doc_paths", str(
-                    fileconfig.get("excluded_doc_paths", "-"))
-            )
-            table.add_row(
-                "config_parameter", str(
-                    fileconfig.get("config_parameter", "-"))
-            )
-            table.add_row("depth", str(fileconfig.get("depth", "-")))
-            table.add_row(
-                "max_access_count", str(
-                    fileconfig.get("max_access_count", "-"))
-            )
-            table.add_row("num_of_thread", str(
-                fileconfig.get("num_of_thread", "-")))
-            table.add_row("interval_time", str(
-                fileconfig.get("interval_time", "-")))
-            table.add_row("boost", str(fileconfig.get("boost", "-")))
-            table.add_row("available", str(fileconfig.get("available", "-")))
-            table.add_row("permissions", str(
-                fileconfig.get("permissions", "-")))
-            table.add_row("virtual_hosts", str(
-                fileconfig.get("virtual_hosts", "-")))
-            table.add_row("sort_order", str(fileconfig.get("sort_order", "-")))
-            table.add_row("created_by", str(fileconfig.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                fileconfig.get("created_time")))
-
-            console.print(table)
+        if output == "json":
+            typer.echo(json.dumps(result, indent=2))
+        elif output == "yaml":
+            typer.echo(yaml.dump(result))
         else:
-            message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve FileConfig. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
-            raise typer.Exit(code=1)
+            if status == 0:
+                fileconfig = result.get("response", {}).get("setting", {})
+                console = Console()
+                table = Table(
+                    title=f"FileConfig Details: {fileconfig.get('name', '-')}")
+                table.add_column("Field", style="cyan", no_wrap=True)
+                table.add_column("Value", style="magenta")
+
+                # Output all public fields
+                table.add_row("id", str(fileconfig.get("id", "-")))
+                table.add_row("updated_by", str(fileconfig.get("updated_by", "-")))
+                table.add_row("updated_time", to_utc_iso8601(
+                    fileconfig.get("updated_time")))
+                table.add_row("version_no", str(fileconfig.get("version_no", "-")))
+                table.add_row(
+                    "label_type_ids", ", ".join(
+                        fileconfig.get("label_type_ids", []))
+                )
+                table.add_row("crud_mode", str(fileconfig.get("crud_mode", "-")))
+                table.add_row("name", str(fileconfig.get("name", "-")))
+                table.add_row("description", str(
+                    fileconfig.get("description", "-")))
+                table.add_row("paths", str(fileconfig.get("paths", "-")))
+                table.add_row("included_paths", str(
+                    fileconfig.get("included_paths", "-")))
+                table.add_row("excluded_paths", str(
+                    fileconfig.get("excluded_paths", "-")))
+                table.add_row(
+                    "included_doc_paths", str(
+                        fileconfig.get("included_doc_paths", "-"))
+                )
+                table.add_row(
+                    "excluded_doc_paths", str(
+                        fileconfig.get("excluded_doc_paths", "-"))
+                )
+                table.add_row(
+                    "config_parameter", str(
+                        fileconfig.get("config_parameter", "-"))
+                )
+                table.add_row("depth", str(fileconfig.get("depth", "-")))
+                table.add_row(
+                    "max_access_count", str(
+                        fileconfig.get("max_access_count", "-"))
+                )
+                table.add_row("num_of_thread", str(
+                    fileconfig.get("num_of_thread", "-")))
+                table.add_row("interval_time", str(
+                    fileconfig.get("interval_time", "-")))
+                table.add_row("boost", str(fileconfig.get("boost", "-")))
+                table.add_row("available", str(fileconfig.get("available", "-")))
+                table.add_row("permissions", str(
+                    fileconfig.get("permissions", "-")))
+                table.add_row("virtual_hosts", str(
+                    fileconfig.get("virtual_hosts", "-")))
+                table.add_row("sort_order", str(fileconfig.get("sort_order", "-")))
+                table.add_row("created_by", str(fileconfig.get("created_by", "-")))
+                table.add_row("created_time", to_utc_iso8601(
+                    fileconfig.get("created_time")))
+
+                console.print(table)
+            else:
+                message: str = result.get("response", {}).get("message", "")
+                typer.secho(
+                    f"Failed to retrieve FileConfig. {message} Status code: {status}",
+                    fg=typer.colors.RED,
+                )
+                raise typer.Exit(code=status)
+    except typer.Exit:
+        raise
+    except Exception as e:
+        typer.secho(f"Error retrieving fileconfig: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
 
 
 @fileconfig_app.command("list")

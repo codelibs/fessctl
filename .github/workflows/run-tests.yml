@@ -16,8 +16,8 @@ jobs:
         fess-version:
           - fess_version: "14.19.2"
             opensearch_version: "2.19.1"
-          - fess_version: "15.1.0"
-            opensearch_version: "3.1.0"
+          - fess_version: "15.3.2"
+            opensearch_version: "3.3.2"
 
     steps:
     - uses: actions/checkout@v4

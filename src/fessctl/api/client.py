@@ -30,7 +30,7 @@ class FessAPIClientError(Exception):
 
 
 class FessAPIClient:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, timeout: float = 5.0):
         self.base_url = settings.fess_endpoint
         self.admin_api_headers = {
             "Authorization": f"Bearer {settings.access_token}",
@@ -39,7 +39,7 @@ class FessAPIClient:
         self.search_api_headers = {
             "Content-Type": "application/json",
         }
-        self.timeout = 5.0
+        self.timeout = timeout
         self._major_version, self._minor_version = self._parse_version(
             settings.fess_version)
 
@@ -100,17 +100,17 @@ class FessAPIClient:
         except httpx.RequestError as e:
             raise FessAPIClientError(
                 status_code=-1,
-                content=str(e)
+                content=f"Network error: {str(e)}"
             ) from e
-        # response.raise_for_status()
+
+        # Parse JSON response - Fess API returns JSON even for errors
         try:
             return response.json()
         except json.decoder.JSONDecodeError as e:
-            raw = response.text
-            code = response.status_code
+            # If JSON parsing fails, raise an exception with HTTP status info
             raise FessAPIClientError(
-                status_code=code,
-                content=raw
+                status_code=response.status_code,
+                content=f"Invalid JSON response (HTTP {response.status_code}): {response.text}"
             ) from e
 
     def ping(self) -> dict:
