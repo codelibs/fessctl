@@ -103,25 +103,14 @@ class FessAPIClient:
                 content=f"Network error: {str(e)}"
             ) from e
 
-        # Check HTTP status code
-        if response.status_code >= 400:
-            try:
-                error_json = response.json()
-                error_message = error_json.get("response", {}).get("message", response.text)
-            except json.decoder.JSONDecodeError:
-                error_message = response.text
-            raise FessAPIClientError(
-                status_code=response.status_code,
-                content=f"HTTP {response.status_code} error: {error_message}"
-            )
-
-        # Parse JSON response
+        # Parse JSON response - Fess API returns JSON even for errors
         try:
             return response.json()
         except json.decoder.JSONDecodeError as e:
+            # If JSON parsing fails, raise an exception with HTTP status info
             raise FessAPIClientError(
                 status_code=response.status_code,
-                content=f"Invalid JSON response: {response.text}"
+                content=f"Invalid JSON response (HTTP {response.status_code}): {response.text}"
             ) from e
 
     def ping(self) -> dict:
