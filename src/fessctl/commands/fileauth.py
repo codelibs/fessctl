@@ -196,49 +196,55 @@ def get_fileauth(
     Retrieve a FileAuth by ID.
     """
     client = FessAPIClient(Settings())
-    result = client.get_fileauth(config_id)
-    status = result.get("response", {}).get("status", 1)
+    try:
+        result = client.get_fileauth(config_id)
+        status = result.get("response", {}).get("status", 1)
 
-    if output == "json":
-        typer.echo(json.dumps(result, indent=2))
-    elif output == "yaml":
-        typer.echo(yaml.dump(result))
-    else:
-        if status == 0:
-            fileauth = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(title=f"FileAuth Details: {fileauth.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # Output fields (FileAuth public name fields only)
-            table.add_row("id", str(fileauth.get("id", "-")))
-            table.add_row("updated_by", str(fileauth.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                fileauth.get("updated_time")))
-            table.add_row("version_no", str(fileauth.get("version_no", "-")))
-            table.add_row("crud_mode", str(fileauth.get("crud_mode", "-")))
-            table.add_row("hostname", str(fileauth.get("hostname", "-")))
-            table.add_row("port", str(fileauth.get("port", "-")))
-            table.add_row("protocol_scheme", str(
-                fileauth.get("protocol_scheme", "-")))
-            table.add_row("username", str(fileauth.get("username", "-")))
-            table.add_row("password", str(fileauth.get("password", "-")))
-            table.add_row("parameters", str(fileauth.get("parameters", "-")))
-            table.add_row("file_config_id", str(
-                fileauth.get("file_config_id", "-")))
-            table.add_row("created_by", str(fileauth.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                fileauth.get("created_time")))
-
-            console.print(table)
+        if output == "json":
+            typer.echo(json.dumps(result, indent=2))
+        elif output == "yaml":
+            typer.echo(yaml.dump(result))
         else:
-            message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve FileAuth. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
-            raise typer.Exit(code=1)
+            if status == 0:
+                fileauth = result.get("response", {}).get("setting", {})
+                console = Console()
+                table = Table(title=f"FileAuth Details: {fileauth.get('id', '-')}")
+                table.add_column("Field", style="cyan", no_wrap=True)
+                table.add_column("Value", style="magenta")
+
+                # Output fields (FileAuth public name fields only)
+                table.add_row("id", str(fileauth.get("id", "-")))
+                table.add_row("updated_by", str(fileauth.get("updated_by", "-")))
+                table.add_row("updated_time", to_utc_iso8601(
+                    fileauth.get("updated_time")))
+                table.add_row("version_no", str(fileauth.get("version_no", "-")))
+                table.add_row("crud_mode", str(fileauth.get("crud_mode", "-")))
+                table.add_row("hostname", str(fileauth.get("hostname", "-")))
+                table.add_row("port", str(fileauth.get("port", "-")))
+                table.add_row("protocol_scheme", str(
+                    fileauth.get("protocol_scheme", "-")))
+                table.add_row("username", str(fileauth.get("username", "-")))
+                table.add_row("password", str(fileauth.get("password", "-")))
+                table.add_row("parameters", str(fileauth.get("parameters", "-")))
+                table.add_row("file_config_id", str(
+                    fileauth.get("file_config_id", "-")))
+                table.add_row("created_by", str(fileauth.get("created_by", "-")))
+                table.add_row("created_time", to_utc_iso8601(
+                    fileauth.get("created_time")))
+
+                console.print(table)
+            else:
+                message: str = result.get("response", {}).get("message", "")
+                typer.secho(
+                    f"Failed to retrieve FileAuth. {message} Status code: {status}",
+                    fg=typer.colors.RED,
+                )
+                raise typer.Exit(code=status)
+    except typer.Exit:
+        raise
+    except Exception as e:
+        typer.secho(f"Error retrieving fileauth: {e}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
 
 
 @fileauth_app.command("list")
