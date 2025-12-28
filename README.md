@@ -25,7 +25,7 @@ The easiest way to get started is using the pre-built Docker image:
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
-  -e FESS_VERSION=15.3.2 \
+  -e FESS_VERSION=15.4.0 \
   ghcr.io/codelibs/fessctl:0.1.0 --help
 ```
 
@@ -35,13 +35,13 @@ Run actual commands:
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
-  -e FESS_VERSION=15.3.2 \
+  -e FESS_VERSION=15.4.0 \
   ghcr.io/codelibs/fessctl:0.1.0 ping
 
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
-  -e FESS_VERSION=15.3.2 \
+  -e FESS_VERSION=15.4.0 \
   ghcr.io/codelibs/fessctl:0.1.0 user list
 ```
 
@@ -61,7 +61,7 @@ Then run with your custom image:
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
-  -e FESS_VERSION=15.3.2 \
+  -e FESS_VERSION=15.4.0 \
   fessctl:latest --help
 ```
 
@@ -86,7 +86,7 @@ uv pip install -e src
 ```bash
 export FESS_ACCESS_TOKEN=your_access_token_here
 export FESS_ENDPOINT=https://your-fess-server
-export FESS_VERSION=15.3.2
+export FESS_VERSION=15.4.0
 
 fessctl --help
 fessctl ping
@@ -100,7 +100,7 @@ All three methods require the following environment variables:
 
 - `FESS_ENDPOINT`: The URL of your Fess server's API endpoint (default: `http://localhost:8080`)
 - `FESS_ACCESS_TOKEN`: Bearer token for API authentication (required)
-- `FESS_VERSION`: Target Fess version for API compatibility (default: `15.3.2`)
+- `FESS_VERSION`: Target Fess version for API compatibility (default: `15.4.0`)
 
 ## License
 
