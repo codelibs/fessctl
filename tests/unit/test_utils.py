@@ -51,11 +51,12 @@ class TestToUtcIso8601:
         assert "T" in result
 
     def test_with_large_epoch(self):
-        """Test with a large epoch value (year 2050)."""
-        # 2050-06-15T10:30:00Z = 2539424200000 ms
+        """Test with a large epoch value (future date)."""
+        # Use a known epoch and verify format is correct
+        # 2539424200000 ms converts to 2050-06-21T11:36:40Z
         epoch_millis = 2539424200000
         result = to_utc_iso8601(epoch_millis)
-        assert result == "2050-06-15T10:30:00Z"
+        assert result == "2050-06-21T11:36:40Z"
 
 
 class TestEncodeToUrlsafeBase64:
