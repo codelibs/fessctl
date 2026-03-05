@@ -4,12 +4,15 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    to_utc_iso8601,
+)
 
 pathmap_app = typer.Typer()
 
@@ -61,12 +64,10 @@ def create_path(
     else:
         if status == 0:
             path_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"Path Mapping '{path_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"Path Mapping '{path_id}' created successfully.", "PathMap", "create", path_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create Path Mapping. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create Path Mapping. {message} Status code: {status}", "PathMap", "create"))
             raise typer.Exit(code=status)
 
 
@@ -98,8 +99,7 @@ def update_pathmap(
     result = client.get_pathmap(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"PathMap with ID '{config_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"PathMap with ID '{config_id}' not found. {message}", "PathMap", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -127,12 +127,10 @@ def update_pathmap(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"PathMap '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"PathMap '{config_id}' updated successfully.", "PathMap", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update PathMap. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update PathMap. {message} Status code: {status}", "PathMap", "update"))
             raise typer.Exit(code=status)
 
 
@@ -155,16 +153,10 @@ def delete_pathmap(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"PathMap '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"PathMap '{config_id}' deleted successfully.", "PathMap", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete PathMap. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete PathMap. {message} Status code: {status}", "PathMap", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -188,35 +180,28 @@ def get_pathmap(
     else:
         if status == 0:
             pathmap = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(title=f"PathMap Details: {pathmap.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # 正しい PathMap パラメータ出力
-            table.add_row("id", str(pathmap.get("id", "-")))
-            table.add_row("regex", str(pathmap.get("regex", "-")))
-            table.add_row("replacement", str(pathmap.get("replacement", "-")))
-            table.add_row("process_type", str(
-                pathmap.get("process_type", "-")))
-            table.add_row("sort_order", str(pathmap.get("sort_order", "-")))
-            table.add_row("user_agent", str(pathmap.get("user_agent", "-")))
-            table.add_row("version_no", str(pathmap.get("version_no", "-")))
-            table.add_row("crud_mode", str(pathmap.get("crud_mode", "-")))
-            table.add_row("updated_by", str(pathmap.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                pathmap.get("updated_time")))
-            table.add_row("created_by", str(pathmap.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                pathmap.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"PathMap Details: {pathmap.get('id', '-')}",
+                pathmap,
+                [
+                    ("id", "id"),
+                    ("regex", "regex"),
+                    ("replacement", "replacement"),
+                    ("process_type", "process_type"),
+                    ("sort_order", "sort_order"),
+                    ("user_agent", "user_agent"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve PathMap. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve PathMap. {message} Status code: {status}", "PathMap", "get"))
             raise typer.Exit(code=status)
 
 
@@ -242,31 +227,14 @@ def list_pathmaps(
         if status == 0:
             pathmaps = result.get("response", {}).get("settings", [])
             if not pathmaps:
-                typer.secho("No PathMaps found.", fg=typer.colors.YELLOW)
+                typer.echo("No PathMaps found.")
             else:
-                console = Console()
-                table = Table(title="PathMaps")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("REGEX", style="magenta")
-                table.add_column("REPLACEMENT", style="green")
-                table.add_column("PROCESS TYPE", style="blue")
-                table.add_column("SORT ORDER", justify="right")
-                table.add_column("USER AGENT", style="yellow")
-
-                for pathmap in pathmaps:
-                    table.add_row(
-                        pathmap.get("id", "-"),
-                        pathmap.get("regex", "-"),
-                        pathmap.get("replacement", "-"),
-                        pathmap.get("process_type", "-"),
-                        str(pathmap.get("sort_order", "-")),
-                        pathmap.get("user_agent", "-"),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("PathMaps", pathmaps, [
+                    ("ID", "id"), ("REGEX", "regex"),
+                    ("REPLACEMENT", "replacement"), ("PROCESS TYPE", "process_type"),
+                    ("SORT ORDER", "sort_order"), ("USER AGENT", "user_agent"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list PathMaps. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list PathMaps. {message} Status code: {status}", "PathMap", "list"))
             raise typer.Exit(code=status)

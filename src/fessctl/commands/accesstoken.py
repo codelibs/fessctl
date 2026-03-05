@@ -4,12 +4,10 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 accesstoken_app = typer.Typer()
 
@@ -66,16 +64,10 @@ def create_accesstoken(
     else:
         if status == 0:
             accesstoken_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"AccessToken '{accesstoken_id}' created successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"AccessToken '{accesstoken_id}' created successfully.", "AccessToken", "create", accesstoken_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "AccessToken", "create"))
             raise typer.Exit(code=status)
 
 
@@ -113,10 +105,7 @@ def update_accesstoken(
 
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"AccessToken with ID '{accesstoken_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"AccessToken with ID '{accesstoken_id}' not found. {message}", "AccessToken", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -145,16 +134,10 @@ def update_accesstoken(
     else:
         if status == 0:
             accesstoken_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"AccessToken '{accesstoken_id}' updated successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"AccessToken '{accesstoken_id}' updated successfully.", "AccessToken", "update", accesstoken_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update AccessToken. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to update AccessToken. {message} Status code: {status}", "AccessToken", "update"))
             raise typer.Exit(code=status)
 
 
@@ -178,16 +161,10 @@ def delete_accesstoken(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"AccessToken '{accesstoken_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"AccessToken '{accesstoken_id}' deleted successfully.", "AccessToken", "delete", accesstoken_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete AccessToken. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete AccessToken. {message} Status code: {status}", "AccessToken", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -212,41 +189,27 @@ def get_accesstoken(
     else:
         if status == 0:
             accesstoken = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"AccessToken Details: {accesstoken.get('name', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # Output each field according to the latest AccessToken schema
-            table.add_row("id", str(accesstoken.get("id", "-")))
-            table.add_row("updated_by", str(
-                accesstoken.get("updated_by", "-")))
-            table.add_row(
-                "updated_time", to_utc_iso8601(accesstoken.get("updated_time"))
-            )
-            table.add_row("version_no", str(
-                accesstoken.get("version_no", "-")))
-            table.add_row("name", str(accesstoken.get("name", "-")))
-            table.add_row("token", str(accesstoken.get("token", "-")))
-            table.add_row("permissions", str(
-                accesstoken.get("permissions", "-")))
-            table.add_row("parameter_name", str(
-                accesstoken.get("parameter_name", "-")))
-            table.add_row("expires", str(accesstoken.get("expires", "-")))
-            table.add_row("created_by", str(
-                accesstoken.get("created_by", "-")))
-            table.add_row(
-                "created_time", to_utc_iso8601(accesstoken.get("created_time"))
-            )
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"AccessToken Details: {accesstoken.get('name', '-')}",
+                accesstoken,
+                [
+                    ("id", "id"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("version_no", "version_no"),
+                    ("name", "name"),
+                    ("token", "token"),
+                    ("permissions", "permissions"),
+                    ("parameter_name", "parameter_name"),
+                    ("expires", "expires"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve AccessToken. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve AccessToken. {message} Status code: {status}", "AccessToken", "get"))
             raise typer.Exit(code=status)
 
 
@@ -273,26 +236,12 @@ def list_accesstokens(
         if status == 0:
             accesstokens = result.get("response", {}).get("settings", [])
             if not accesstokens:
-                typer.secho("No AccessTokens found.", fg=typer.colors.YELLOW)
+                typer.echo("No AccessTokens found.")
             else:
-                console = Console()
-                table = Table(title="AccessTokens")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("NAME", style="cyan", no_wrap=True)
-                table.add_column("EXPIRES", style="cyan", no_wrap=True)
-                table.add_column("PERMISSIONS", style="cyan", no_wrap=False)
-                for accesstoken in accesstokens:
-                    table.add_row(
-                        accesstoken.get("id", "-"),
-                        accesstoken.get("name", "-"),
-                        accesstoken.get("expires", "-"),
-                        accesstoken.get("permissions", "-"),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("AccessTokens", accesstokens, [
+                    ("ID", "id"), ("NAME", "name"), ("EXPIRES", "expires"), ("PERMISSIONS", "permissions"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list AccessTokens. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list AccessTokens. {message} Status code: {status}", "AccessToken", "list"))
             raise typer.Exit(code=status)

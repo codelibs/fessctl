@@ -5,6 +5,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
+from fessctl.utils import format_result_markdown, output_error
 from fessctl.commands.accesstoken import accesstoken_app
 # from fessctl.commands.backup import backup_app
 from fessctl.commands.badword import badword_app
@@ -97,25 +98,17 @@ def ping(
             typer.echo(yaml.dump(result))
         else:
             if status == "green" and not timed_out:
-                typer.secho(
-                    "Fess server is healthy (status: green).", fg=typer.colors.GREEN
-                )
+                typer.echo(format_result_markdown(True, "Fess server is healthy (status: green).", "Server", "ping"))
             elif status == "yellow":
-                typer.secho(
-                    f"Fess server status: {status} (timed_out: {timed_out})",
-                    fg=typer.colors.YELLOW,
-                )
+                typer.echo(format_result_markdown(True, f"Fess server status: {status} (timed_out: {timed_out})", "Server", "ping"))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Fess server status: {status} (timed_out: {timed_out}) {message}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Fess server status: {status} (timed_out: {timed_out}) {message}", "Server", "ping"))
                 raise typer.Exit(code=1)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(str(e), fg=typer.colors.RED)
+        output_error(output, e, "Server", "ping")
         raise typer.Exit(code=1)
 
 

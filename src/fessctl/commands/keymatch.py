@@ -4,12 +4,16 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    output_error,
+    to_utc_iso8601,
+)
 
 keymatch_app = typer.Typer()
 
@@ -62,12 +66,10 @@ def create_keymatch(
     else:
         if status == 0:
             keymatch_id = result.get("response", {}).get("id", "-")
-            typer.secho(
-                f"KeyMatch '{keymatch_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"KeyMatch '{keymatch_id}' created successfully.", "KeyMatch", "create", keymatch_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create KeyMatch. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create KeyMatch. {message} Status code: {status}", "KeyMatch", "create"))
             raise typer.Exit(code=status)
 
 
@@ -101,8 +103,7 @@ def update_keymatch(
     result = client.get_keymatch(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"KeyMatch with ID '{config_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"KeyMatch with ID '{config_id}' not found. {message}", "KeyMatch", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -132,12 +133,10 @@ def update_keymatch(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"KeyMatch '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"KeyMatch '{config_id}' updated successfully.", "KeyMatch", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update KeyMatch. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update KeyMatch. {message} Status code: {status}", "KeyMatch", "update"))
             raise typer.Exit(code=status)
 
 
@@ -160,16 +159,10 @@ def delete_keymatch(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"KeyMatch '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"KeyMatch '{config_id}' deleted successfully.", "KeyMatch", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete KeyMatch. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete KeyMatch. {message} Status code: {status}", "KeyMatch", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -194,37 +187,33 @@ def get_keymatch(
         else:
             if status == 0:
                 keymatch = result.get("response", {}).get("setting", {})
-                console = Console()
-                table = Table(title=f"KeyMatch Details: {keymatch.get('id', '-')}")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                table.add_row("id", str(keymatch.get("id", "-")))
-                table.add_row("term", str(keymatch.get("term", "-")))
-                table.add_row("query", str(keymatch.get("query", "-")))
-                table.add_row("max_size", str(keymatch.get("max_size", "-")))
-                table.add_row("boost", str(keymatch.get("boost", "-")))
-                table.add_row("virtual_host", str(
-                    keymatch.get("virtual_host", "-")))
-                table.add_row("version_no", str(keymatch.get("version_no", "-")))
-                table.add_row("crud_mode", str(keymatch.get("crud_mode", "-")))
-                table.add_row("created_by", str(keymatch.get("created_by", "-")))
-                table.add_row("created_time", to_utc_iso8601(
-                    keymatch.get("created_time")))
-                table.add_row("updated_by", str(keymatch.get("updated_by", "-")))
-                table.add_row("updated_time", to_utc_iso8601(
-                    keymatch.get("updated_time")))
-
-                console.print(table)
+                typer.echo(format_detail_markdown(
+                    f"KeyMatch Details: {keymatch.get('id', '-')}",
+                    keymatch,
+                    [
+                        ("id", "id"),
+                        ("term", "term"),
+                        ("query", "query"),
+                        ("max_size", "max_size"),
+                        ("boost", "boost"),
+                        ("virtual_host", "virtual_host"),
+                        ("version_no", "version_no"),
+                        ("crud_mode", "crud_mode"),
+                        ("created_by", "created_by"),
+                        ("created_time", "created_time"),
+                        ("updated_by", "updated_by"),
+                        ("updated_time", "updated_time"),
+                    ],
+                    transforms={"created_time": to_utc_iso8601, "updated_time": to_utc_iso8601},
+                ))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to retrieve KeyMatch. {message} Status code: {status}", fg=typer.colors.RED)
+                typer.echo(format_result_markdown(False, f"Failed to retrieve KeyMatch. {message} Status code: {status}", "KeyMatch", "get"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving keymatch: {e}", fg=typer.colors.RED)
+        output_error(output, e, "KeyMatch", "get")
         raise typer.Exit(code=1)
 
 
@@ -250,33 +239,19 @@ def list_keymatchs(
         if status == 0:
             keymatchs = result.get("response", {}).get("settings", [])
             if not keymatchs:
-                typer.secho("No KeyMatchs found.", fg=typer.colors.YELLOW)
+                typer.echo("No KeyMatchs found.")
             else:
-                console = Console()
-                table = Table(title="KeyMatchs")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("TERM", style="green")
-                table.add_column("QUERY", style="magenta")
-                table.add_column("BOOST", style="yellow")
-                table.add_column("MAX SIZE", style="blue")
-                table.add_column("UPDATED BY", style="white")
-                table.add_column("UPDATED TIME", style="white")
-
+                display_items = []
                 for km in keymatchs:
-                    table.add_row(
-                        km.get("id", "-"),
-                        km.get("term", "-"),
-                        km.get("query", "-"),
-                        str(km.get("boost", "-")),
-                        str(km.get("max_size", "-")),
-                        km.get("updated_by", "-"),
-                        to_utc_iso8601(km.get("updated_time")),
-                    )
-                console.print(table)
+                    d = dict(km)
+                    d["updated_time_display"] = to_utc_iso8601(km.get("updated_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("KeyMatchs", display_items, [
+                    ("ID", "id"), ("TERM", "term"), ("QUERY", "query"),
+                    ("BOOST", "boost"), ("MAX SIZE", "max_size"),
+                    ("UPDATED BY", "updated_by"), ("UPDATED TIME", "updated_time_display"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list KeyMatchs. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list KeyMatchs. {message} Status code: {status}", "KeyMatch", "list"))
             raise typer.Exit(code=status)

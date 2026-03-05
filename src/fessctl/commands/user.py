@@ -4,12 +4,10 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import encode_to_urlsafe_base64
+from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, output_error
 
 # Create a Typer sub-application for role commands
 user_app = typer.Typer()
@@ -69,27 +67,19 @@ def create_user(
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
         elif output == "yaml":
-            import yaml
-
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
                 user_id = result.get("response", {}).get("id", None)
-                typer.secho(
-                    f"User '{name}' created successfully with ID: {user_id}.",
-                    fg=typer.colors.GREEN,
-                )
+                typer.echo(format_result_markdown(True, f"User '{name}' created successfully with ID: {user_id}.", "User", "create", user_id or ""))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to create user. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to create user. {message} Status code: {status}", "User", "create"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error creating user: {e}", fg=typer.colors.RED)
+        output_error(output, e, "User", "create")
         raise typer.Exit(code=1)
 
 
@@ -137,9 +127,7 @@ def update_user(
     status = result.get("response", {}).get("status", 1)
     if status != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"User with ID '{user_id}' not found. {message}", fg=typer.colors.RED
-        )
+        typer.echo(format_result_markdown(False, f"User with ID '{user_id}' not found. {message}", "User", "update"))
         raise typer.Exit(code=1)
 
     # 2) Merge existing setting into config
@@ -185,14 +173,10 @@ def update_user(
         typer.echo(yaml.dump(update_resp))
     else:
         if status == 0:
-            typer.secho(
-                f"User '{user_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"User '{user_id}' updated successfully.", "User", "update", user_id))
         else:
             message: str = update_resp.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update user. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to update user. {message} Status code: {status}", "User", "update"))
             raise typer.Exit(code=status)
 
 
@@ -217,21 +201,15 @@ def delete_user(
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
-                typer.secho(
-                    f"User with ID '{user_id}' deleted successfully.",
-                    fg=typer.colors.GREEN,
-                )
+                typer.echo(format_result_markdown(True, f"User with ID '{user_id}' deleted successfully.", "User", "delete", user_id))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to delete user. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to delete user. {message} Status code: {status}", "User", "delete"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error deleting user: {e}", fg=typer.colors.RED)
+        output_error(output, e, "User", "delete")
         raise typer.Exit(code=1)
 
 
@@ -267,31 +245,34 @@ def get_user(
         else:
             if status == 0:
                 user_info = result.get("response", {}).get("setting", {})
-                console = Console()
-                table = Table(
-                    title=f"User Details: {user_info.get('name', '-')}")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                table.add_row("ID", user_info.get("id", "-"))
-                table.add_row("Name", user_info.get("name", "-"))
-                table.add_row("Roles", "\n".join(user_info.get("roles", [])))
-                table.add_row("Groups", "\n".join(user_info.get("groups", [])))
-                table.add_row("Attributes", "\n".join(
-                    user_info.get("attributes", [])))
-                table.add_row("Version", str(user_info.get("version_no", "-")))
-                console.print(table)
+                data = dict(user_info)
+                data["roles_display"] = "\n".join(user_info.get("roles", []))
+                data["groups_display"] = "\n".join(user_info.get("groups", []))
+                attrs = user_info.get("attributes", {})
+                if isinstance(attrs, dict):
+                    data["attributes_display"] = "\n".join(f"{k}={v}" for k, v in attrs.items())
+                else:
+                    data["attributes_display"] = "\n".join(str(a) for a in attrs)
+                typer.echo(format_detail_markdown(
+                    f"User Details: {user_info.get('name', '-')}",
+                    data,
+                    [
+                        ("ID", "id"),
+                        ("Name", "name"),
+                        ("Roles", "roles_display"),
+                        ("Groups", "groups_display"),
+                        ("Attributes", "attributes_display"),
+                        ("Version", "version_no"),
+                    ],
+                ))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to retrieve user. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to retrieve user. {message} Status code: {status}", "User", "get"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving user: {e}", fg=typer.colors.RED)
+        output_error(output, e, "User", "get")
         raise typer.Exit(code=1)
 
 
@@ -320,41 +301,32 @@ def list_users(
             if status == 0:
                 users = result.get("response", {}).get("settings", [])
                 if not users:
-                    typer.secho(
-                        "No web authentication users found.", fg=typer.colors.YELLOW
-                    )
+                    typer.echo("No web authentication users found.")
                 else:
-                    console = Console()
-                    table = Table(title="Web Authentication Users")
-                    table.add_column("ID", style="cyan", no_wrap=True)
-                    table.add_column("NAME", style="cyan", no_wrap=True)
-                    table.add_column("ROLES", style="cyan", no_wrap=False)
-                    table.add_column("GROUPS", style="cyan", no_wrap=False)
-                    table.add_column("ATTRIBUTES", style="cyan", no_wrap=False)
-                    table.add_column("VERSION", style="cyan", no_wrap=True)
-                    for user in users:
-                        table.add_row(
-                            user.get("id", "-"),
-                            user.get("name", "-"),
-                            "\n".join(user.get("roles", [])),
-                            "\n".join(user.get("groups", [])),
-                            "\n".join(
-                                f"{k}={v}"
-                                for k, v in user.get("attributes", {}).items()
-                            ),
-                            str(user.get("version_no", "-")),
+                    display_items = []
+                    for item in users:
+                        d = dict(item)
+                        d["roles_display"] = "\n".join(item.get("roles", []))
+                        d["groups_display"] = "\n".join(item.get("groups", []))
+                        d["attributes_display"] = "\n".join(
+                            f"{k}={v}"
+                            for k, v in item.get("attributes", {}).items()
                         )
-                    console.print(table)
+                        display_items.append(d)
+                    typer.echo(format_list_markdown("Web Authentication Users", display_items, [
+                        ("ID", "id"),
+                        ("NAME", "name"),
+                        ("ROLES", "roles_display"),
+                        ("GROUPS", "groups_display"),
+                        ("ATTRIBUTES", "attributes_display"),
+                        ("VERSION", "version_no"),
+                    ]))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to list web authentication users. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to list web authentication users. {message} Status code: {status}", "User", "list"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(
-            f"Error listing web authentication users: {e}", fg=typer.colors.RED)
+        output_error(output, e, "User", "list")
         raise typer.Exit(code=1)

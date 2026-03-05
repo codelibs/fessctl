@@ -4,12 +4,10 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 scheduler_app = typer.Typer()
 
@@ -65,14 +63,10 @@ def create_scheduler(
     else:
         if status == 0:
             scheduler_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"Scheduler '{scheduler_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"Scheduler '{scheduler_id}' created successfully.", "Scheduler", "create", scheduler_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "Scheduler", "create"))
             raise typer.Exit(code=status)
 
 
@@ -113,10 +107,7 @@ def update_scheduler(
 
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"Scheduler with ID '{scheduler_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"Scheduler with ID '{scheduler_id}' not found. {message}", "Scheduler", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -152,14 +143,10 @@ def update_scheduler(
     else:
         if status == 0:
             scheduler_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"Scheduler '{scheduler_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"Scheduler '{scheduler_id}' updated successfully.", "Scheduler", "update", scheduler_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "Scheduler", "update"))
             raise typer.Exit(code=status)
 
 
@@ -182,16 +169,10 @@ def delete_scheduler(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"Scheduler '{scheduler_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"Scheduler '{scheduler_id}' deleted successfully.", "Scheduler", "delete", scheduler_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete Scheduler. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete Scheduler. {message} Status code: {status}", "Scheduler", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -215,42 +196,32 @@ def get_scheduler(
     else:
         if status == 0:
             scheduler = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"Scheduler Details: {scheduler.get('name', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            table.add_row("id", str(scheduler.get("id", "-")))
-            table.add_row("updated_by", str(scheduler.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                scheduler.get("updated_time")))
-            table.add_row("version_no", str(scheduler.get("version_no", "-")))
-            table.add_row("crud_mode", str(scheduler.get("crud_mode", "-")))
-            table.add_row("name", str(scheduler.get("name", "-")))
-            table.add_row("target", str(scheduler.get("target", "-")))
-            table.add_row("cron_expression", str(
-                scheduler.get("cron_expression", "-")))
-            table.add_row("script_type", str(
-                scheduler.get("script_type", "-")))
-            table.add_row("script_data", str(
-                scheduler.get("script_data", "-")))
-            table.add_row("crawler", str(scheduler.get("crawler", "-")))
-            table.add_row("job_logging", str(
-                scheduler.get("job_logging", "-")))
-            table.add_row("available", str(scheduler.get("available", "-")))
-            table.add_row("sort_order", str(scheduler.get("sort_order", "-")))
-            table.add_row("created_by", str(scheduler.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                scheduler.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"Scheduler Details: {scheduler.get('name', '-')}",
+                scheduler,
+                [
+                    ("id", "id"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("name", "name"),
+                    ("target", "target"),
+                    ("cron_expression", "cron_expression"),
+                    ("script_type", "script_type"),
+                    ("script_data", "script_data"),
+                    ("crawler", "crawler"),
+                    ("job_logging", "job_logging"),
+                    ("available", "available"),
+                    ("sort_order", "sort_order"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve Scheduler. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve Scheduler. {message} Status code: {status}", "Scheduler", "get"))
             raise typer.Exit(code=status)
 
 
@@ -276,30 +247,15 @@ def list_schedulers(
         if status == 0:
             schedulers = result.get("response", {}).get("settings", [])
             if not schedulers:
-                typer.secho("No Schedulers found.", fg=typer.colors.YELLOW)
+                typer.echo("No Schedulers found.")
             else:
-                console = Console()
-                table = Table(title="Schedulers")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("NAME", style="cyan", no_wrap=True)
-                table.add_column("AVAILABLE", style="cyan", no_wrap=True)
-                table.add_column("TARGET", style="cyan", no_wrap=True)
-                table.add_column("CRON", style="cyan", no_wrap=True)
-                for scheduler in schedulers:
-                    table.add_row(
-                        scheduler.get("id", "-"),
-                        scheduler.get("name", "-"),
-                        scheduler.get("available", "-"),
-                        scheduler.get("target", "-"),
-                        scheduler.get("cron_expression", "-"),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("Schedulers", schedulers, [
+                    ("ID", "id"), ("NAME", "name"), ("AVAILABLE", "available"),
+                    ("TARGET", "target"), ("CRON", "cron_expression"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list Schedulers. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list Schedulers. {message} Status code: {status}", "Scheduler", "list"))
             raise typer.Exit(code=status)
 
 
@@ -322,16 +278,10 @@ def start_scheduler(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"Scheduler '{scheduler_id}' started successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"Scheduler '{scheduler_id}' started successfully.", "Scheduler", "start", scheduler_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to start Scheduler. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to start Scheduler. {message} Status code: {status}", "Scheduler", "start"))
             raise typer.Exit(code=status)
 
 
@@ -354,14 +304,8 @@ def stop_scheduler(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"Scheduler '{scheduler_id}' stopped successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"Scheduler '{scheduler_id}' stopped successfully.", "Scheduler", "stop", scheduler_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to stop Scheduler. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to stop Scheduler. {message} Status code: {status}", "Scheduler", "stop"))
             raise typer.Exit(code=status)
