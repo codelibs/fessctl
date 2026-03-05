@@ -4,12 +4,10 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import encode_to_urlsafe_base64
+from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, output_error
 
 
 # Create a Typer sub-application for group commands
@@ -54,21 +52,15 @@ def create_group(
         else:
             if status == 0:
                 group_id = result.get("response", {}).get("id", None)
-                typer.secho(
-                    f"Group '{name}' created successfully with ID: {group_id}.",
-                    fg=typer.colors.GREEN,
-                )
+                typer.echo(format_result_markdown(True, f"Group '{name}' created successfully with ID: {group_id}.", "Group", "create", group_id or ""))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to create group. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to create group. {message} Status code: {status}", "Group", "create"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error creating group: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Group", "create")
         raise typer.Exit(code=1)
 
 
@@ -93,51 +85,48 @@ def update_group(
     """
     client = FessAPIClient(Settings())
 
-    result = client.get_group(group_id=group_id)
-    if result.get("response", {}).get("status", 1) != 0:
-        message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"Group with ID '{group_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(code=1)
+    try:
+        result = client.get_group(group_id=group_id)
+        if result.get("response", {}).get("status", 1) != 0:
+            message: str = result.get("response", {}).get("message", "")
+            typer.echo(format_result_markdown(False, f"Group with ID '{group_id}' not found. {message}", "Group", "update"))
+            raise typer.Exit(code=1)
 
-    config = result.get("response", {}).get("setting", {})
-    config["crud_mode"] = 2
-    config["updated_by"] = updated_by
-    config["updated_time"] = updated_time
+        config = result.get("response", {}).get("setting", {})
+        config["crud_mode"] = 2
+        config["updated_by"] = updated_by
+        config["updated_time"] = updated_time
 
-    if attributes is not None:
-        attr_dict = {}
-        for attr in attributes:
-            if "=" not in attr:
-                typer.secho(
-                    f"Invalid attribute format: {attr}", fg=typer.colors.RED)
-                raise typer.Exit(code=1)
-            key, value = attr.split("=", 1)
-            attr_dict[key.strip()] = value.strip()
-        config["attributes"] = attr_dict
+        if attributes is not None:
+            attr_dict = {}
+            for attr in attributes:
+                if "=" not in attr:
+                    typer.secho(
+                        f"Invalid attribute format: {attr}", fg=typer.colors.RED)
+                    raise typer.Exit(code=1)
+                key, value = attr.split("=", 1)
+                attr_dict[key.strip()] = value.strip()
+            config["attributes"] = attr_dict
 
-    result = client.update_group(config)
-    status = result.get("response", {}).get("status", 1)
+        result = client.update_group(config)
+        status = result.get("response", {}).get("status", 1)
 
-    if output == "json":
-        typer.echo(json.dumps(result, indent=2))
-    elif output == "yaml":
-        typer.echo(yaml.dump(result))
-    else:
-        if status == 0:
-            typer.secho(
-                f"Group '{group_id}' updated successfully.",
-                fg=typer.colors.GREEN,
-            )
+        if output == "json":
+            typer.echo(json.dumps(result, indent=2))
+        elif output == "yaml":
+            typer.echo(yaml.dump(result))
         else:
-            message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update group. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
-            raise typer.Exit(code=status)
+            if status == 0:
+                typer.echo(format_result_markdown(True, f"Group '{group_id}' updated successfully.", "Group", "update", group_id))
+            else:
+                message = result.get("response", {}).get("message", "")
+                typer.echo(format_result_markdown(False, f"Failed to update group. {message} Status code: {status}", "Group", "update"))
+                raise typer.Exit(code=status)
+    except typer.Exit:
+        raise
+    except Exception as e:
+        output_error(output, e, "Group", "update")
+        raise typer.Exit(code=1)
 
 
 @group_app.command("delete")
@@ -162,21 +151,15 @@ def delete_group(
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
-                typer.secho(
-                    f"Group with ID '{group_id}' deleted successfully.",
-                    fg=typer.colors.GREEN,
-                )
+                typer.echo(format_result_markdown(True, f"Group with ID '{group_id}' deleted successfully.", "Group", "delete", group_id))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to delete group. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to delete group. {message} Status code: {status}", "Group", "delete"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error deleting group: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Group", "delete")
         raise typer.Exit(code=1)
 
 
@@ -213,34 +196,32 @@ def get_group(
         else:
             if status == 0:
                 group = result.get("response", {}).get("setting", {})
-                console = Console()
-                table = Table(title=f"Group Details: {group.get('name', '-')}")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                table.add_row("ID", group.get("id", "-"))
-                table.add_row("Name", group.get("name", "-"))
                 attributes = group.get("attributes", {})
                 attr_str = (
                     "\n".join(f"{k}={v}" for k, v in attributes.items())
                     if attributes
                     else "-"
                 )
-                table.add_row("Attributes", attr_str)
-                table.add_row("Version", str(group.get("version_no", "-")))
-
-                console.print(table)
+                data = dict(group)
+                data["attributes_display"] = attr_str
+                typer.echo(format_detail_markdown(
+                    f"Group Details: {group.get('name', '-')}",
+                    data,
+                    [
+                        ("ID", "id"),
+                        ("Name", "name"),
+                        ("Attributes", "attributes_display"),
+                        ("Version", "version_no"),
+                    ],
+                ))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to retrieve group. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to retrieve group. {message} Status code: {status}", "Group", "get"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving group: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Group", "get")
         raise typer.Exit(code=1)
 
 
@@ -269,36 +250,28 @@ def list_groups(
             if status == 0:
                 groups = result.get("response", {}).get("settings", [])
                 if not groups:
-                    typer.secho("No groups found.", fg=typer.colors.YELLOW)
+                    typer.echo("No groups found.")
                 else:
-                    console = Console()
-                    table = Table(title="Groups")
-                    table.add_column("ID", style="cyan", no_wrap=True)
-                    table.add_column("NAME", style="cyan", no_wrap=True)
-                    table.add_column("ATTRIBUTES", style="cyan", no_wrap=False)
-                    table.add_column("VERSION", style="cyan", no_wrap=True)
-                    for group in groups:
-                        table.add_row(
-                            *[
-                                group.get("id", "-"),
-                                group.get("name", "-"),
-                                "\n".join(
-                                    f"{k}={v}"
-                                    for k, v in group.get("attributes", {}).items()
-                                ),
-                                str(group.get("version_no", "-")),
-                            ]
+                    display_items = []
+                    for item in groups:
+                        d = dict(item)
+                        d["attributes_display"] = "\n".join(
+                            f"{k}={v}"
+                            for k, v in item.get("attributes", {}).items()
                         )
-                    console.print(table)
+                        display_items.append(d)
+                    typer.echo(format_list_markdown("Groups", display_items, [
+                        ("ID", "id"),
+                        ("NAME", "name"),
+                        ("ATTRIBUTES", "attributes_display"),
+                        ("VERSION", "version_no"),
+                    ]))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to list groups. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to list groups. {message} Status code: {status}", "Group", "list"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error listing groups: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Group", "list")
         raise typer.Exit(code=1)

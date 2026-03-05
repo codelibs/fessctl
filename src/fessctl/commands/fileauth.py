@@ -4,12 +4,16 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    output_error,
+    to_utc_iso8601,
+)
 
 fileauth_app = typer.Typer()
 
@@ -72,12 +76,10 @@ def create_fileauth(
     else:
         if status == 0:
             fileauth_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"FileAuth '{fileauth_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"FileAuth '{fileauth_id}' created successfully.", "FileAuth", "create", fileauth_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create FileAuth. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create FileAuth. {message} Status code: {status}", "FileAuth", "create"))
             raise typer.Exit(code=status)
 
 
@@ -113,8 +115,7 @@ def update_fileauth(
     result = client.get_fileauth(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"FileAuth with ID '{config_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"FileAuth with ID '{config_id}' not found. {message}", "FileAuth", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -145,12 +146,10 @@ def update_fileauth(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"FileAuth '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"FileAuth '{config_id}' updated successfully.", "FileAuth", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update FileAuth. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update FileAuth. {message} Status code: {status}", "FileAuth", "update"))
             raise typer.Exit(code=status)
 
 
@@ -173,16 +172,10 @@ def delete_fileauth(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"FileAuth '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"FileAuth '{config_id}' deleted successfully.", "FileAuth", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete FileAuth. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete FileAuth. {message} Status code: {status}", "FileAuth", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -207,43 +200,35 @@ def get_fileauth(
         else:
             if status == 0:
                 fileauth = result.get("response", {}).get("setting", {})
-                console = Console()
-                table = Table(title=f"FileAuth Details: {fileauth.get('id', '-')}")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                # Output fields (FileAuth public name fields only)
-                table.add_row("id", str(fileauth.get("id", "-")))
-                table.add_row("updated_by", str(fileauth.get("updated_by", "-")))
-                table.add_row("updated_time", to_utc_iso8601(
-                    fileauth.get("updated_time")))
-                table.add_row("version_no", str(fileauth.get("version_no", "-")))
-                table.add_row("crud_mode", str(fileauth.get("crud_mode", "-")))
-                table.add_row("hostname", str(fileauth.get("hostname", "-")))
-                table.add_row("port", str(fileauth.get("port", "-")))
-                table.add_row("protocol_scheme", str(
-                    fileauth.get("protocol_scheme", "-")))
-                table.add_row("username", str(fileauth.get("username", "-")))
-                table.add_row("password", str(fileauth.get("password", "-")))
-                table.add_row("parameters", str(fileauth.get("parameters", "-")))
-                table.add_row("file_config_id", str(
-                    fileauth.get("file_config_id", "-")))
-                table.add_row("created_by", str(fileauth.get("created_by", "-")))
-                table.add_row("created_time", to_utc_iso8601(
-                    fileauth.get("created_time")))
-
-                console.print(table)
+                typer.echo(format_detail_markdown(
+                    f"FileAuth Details: {fileauth.get('id', '-')}",
+                    fileauth,
+                    [
+                        ("id", "id"),
+                        ("updated_by", "updated_by"),
+                        ("updated_time", "updated_time"),
+                        ("version_no", "version_no"),
+                        ("crud_mode", "crud_mode"),
+                        ("hostname", "hostname"),
+                        ("port", "port"),
+                        ("protocol_scheme", "protocol_scheme"),
+                        ("username", "username"),
+                        ("password", "password"),
+                        ("parameters", "parameters"),
+                        ("file_config_id", "file_config_id"),
+                        ("created_by", "created_by"),
+                        ("created_time", "created_time"),
+                    ],
+                    transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+                ))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to retrieve FileAuth. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to retrieve FileAuth. {message} Status code: {status}", "FileAuth", "get"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving fileauth: {e}", fg=typer.colors.RED)
+        output_error(output, e, "FileAuth", "get")
         raise typer.Exit(code=1)
 
 
@@ -269,29 +254,14 @@ def list_fileauths(
         if status == 0:
             fileauths = result.get("response", {}).get("settings", [])
             if not fileauths:
-                typer.secho("No FileAuths found.", fg=typer.colors.YELLOW)
+                typer.echo("No FileAuths found.")
             else:
-                console = Console()
-                table = Table(title="FileAuths")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("USERNAME", style="cyan")
-                table.add_column("HOSTNAME", style="cyan")
-                table.add_column("PORT", style="cyan")
-                table.add_column("FILE_CONFIG ID", style="cyan")
-
-                for fileauth in fileauths:
-                    table.add_row(
-                        fileauth.get("id", "-"),
-                        fileauth.get("username", "-"),
-                        fileauth.get("hostname", "-"),
-                        str(fileauth.get("port", "-")),
-                        fileauth.get("file_config_id", "-"),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("FileAuths", fileauths, [
+                    ("ID", "id"), ("USERNAME", "username"),
+                    ("HOSTNAME", "hostname"), ("PORT", "port"),
+                    ("FILE_CONFIG ID", "file_config_id"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list FileAuths. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list FileAuths. {message} Status code: {status}", "FileAuth", "list"))
             raise typer.Exit(code=status)

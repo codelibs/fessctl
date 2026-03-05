@@ -4,12 +4,15 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    to_utc_iso8601,
+)
 
 duplicatehost_app = typer.Typer()
 
@@ -58,15 +61,10 @@ def create_duplicatehost(
     else:
         if status == 0:
             dup_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"DuplicateHost '{dup_id}' created successfully.", fg=typer.colors.GREEN
-            )
+            typer.echo(format_result_markdown(True, f"DuplicateHost '{dup_id}' created successfully.", "DuplicateHost", "create", dup_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create DuplicateHost. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to create DuplicateHost. {message} Status code: {status}", "DuplicateHost", "create"))
             raise typer.Exit(code=status)
 
 
@@ -99,10 +97,7 @@ def update_duplicatehost(
     result = client.get_duplicatehost(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"DuplicateHost with ID '{config_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"DuplicateHost with ID '{config_id}' not found. {message}", "DuplicateHost", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -126,16 +121,10 @@ def update_duplicatehost(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"DuplicateHost '{config_id}' updated successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"DuplicateHost '{config_id}' updated successfully.", "DuplicateHost", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update DuplicateHost. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to update DuplicateHost. {message} Status code: {status}", "DuplicateHost", "update"))
             raise typer.Exit(code=status)
 
 
@@ -159,16 +148,10 @@ def delete_duplicatehost(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"DuplicateHost '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"DuplicateHost '{config_id}' deleted successfully.", "DuplicateHost", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete DuplicateHost. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete DuplicateHost. {message} Status code: {status}", "DuplicateHost", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -193,47 +176,26 @@ def get_duplicatehost(
     else:
         if status == 0:
             duplicatehost = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"DuplicateHost Details: {duplicatehost.get('id', '-')}"
-            )
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # 正しい public name ベースのフィールドのみを表示
-            table.add_row("id", str(duplicatehost.get("id", "-")))
-            table.add_row("regular_name", str(
-                duplicatehost.get("regular_name", "-")))
-            table.add_row(
-                "duplicate_host_name",
-                str(duplicatehost.get("duplicate_host_name", "-")),
-            )
-            table.add_row("sort_order", str(
-                duplicatehost.get("sort_order", "-")))
-            table.add_row("version_no", str(
-                duplicatehost.get("version_no", "-")))
-            table.add_row("crud_mode", str(
-                duplicatehost.get("crud_mode", "-")))
-            table.add_row("updated_by", str(
-                duplicatehost.get("updated_by", "-")))
-            table.add_row(
-                "updated_time", to_utc_iso8601(
-                    duplicatehost.get("updated_time"))
-            )
-            table.add_row("created_by", str(
-                duplicatehost.get("created_by", "-")))
-            table.add_row(
-                "created_time", to_utc_iso8601(
-                    duplicatehost.get("created_time"))
-            )
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"DuplicateHost Details: {duplicatehost.get('id', '-')}",
+                duplicatehost,
+                [
+                    ("id", "id"),
+                    ("regular_name", "regular_name"),
+                    ("duplicate_host_name", "duplicate_host_name"),
+                    ("sort_order", "sort_order"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve DuplicateHost. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve DuplicateHost. {message} Status code: {status}", "DuplicateHost", "get"))
             raise typer.Exit(code=status)
 
 
@@ -260,31 +222,20 @@ def list_duplicatehosts(
         if status == 0:
             duplicatehosts = result.get("response", {}).get("settings", [])
             if not duplicatehosts:
-                typer.secho("No DuplicateHosts found.", fg=typer.colors.YELLOW)
+                typer.echo("No DuplicateHosts found.")
             else:
-                console = Console()
-                table = Table(title="DuplicateHosts")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("REGULAR NAME", style="magenta")
-                table.add_column("DUPLICATE HOST NAME", style="green")
-                table.add_column("SORT ORDER", style="yellow")
-                table.add_column("UPDATED BY", style="blue")
-                table.add_column("UPDATED TIME", style="white")
-
+                display_items = []
                 for dh in duplicatehosts:
-                    table.add_row(
-                        dh.get("id", "-"),
-                        dh.get("regular_name", "-"),
-                        dh.get("duplicate_host_name", "-"),
-                        str(dh.get("sort_order", "-")),
-                        dh.get("updated_by", "-"),
-                        to_utc_iso8601(dh.get("updated_time")),
-                    )
-                console.print(table)
+                    d = dict(dh)
+                    d["updated_time_display"] = to_utc_iso8601(dh.get("updated_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("DuplicateHosts", display_items, [
+                    ("ID", "id"), ("REGULAR NAME", "regular_name"),
+                    ("DUPLICATE HOST NAME", "duplicate_host_name"),
+                    ("SORT ORDER", "sort_order"), ("UPDATED BY", "updated_by"),
+                    ("UPDATED TIME", "updated_time_display"),
+                ]))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list DuplicateHosts. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list DuplicateHosts. {message} Status code: {status}", "DuplicateHost", "list"))
             raise typer.Exit(code=status)

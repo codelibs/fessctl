@@ -4,12 +4,15 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    to_utc_iso8601,
+)
 
 elevateword_app = typer.Typer()
 
@@ -67,12 +70,10 @@ def create_elevateword(
     else:
         if status == 0:
             eid = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"ElevateWord '{eid}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"ElevateWord '{eid}' created successfully.", "ElevateWord", "create", eid))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create ElevateWord. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create ElevateWord. {message} Status code: {status}", "ElevateWord", "create"))
             raise typer.Exit(code=status)
 
 
@@ -107,8 +108,7 @@ def update_elevateword(
     result = client.get_elevateword(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"ElevateWord with ID '{config_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"ElevateWord with ID '{config_id}' not found. {message}", "ElevateWord", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -140,12 +140,10 @@ def update_elevateword(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"ElevateWord '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"ElevateWord '{config_id}' updated successfully.", "ElevateWord", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update ElevateWord. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update ElevateWord. {message} Status code: {status}", "ElevateWord", "update"))
             raise typer.Exit(code=status)
 
 
@@ -168,16 +166,10 @@ def delete_elevateword(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"ElevateWord '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"ElevateWord '{config_id}' deleted successfully.", "ElevateWord", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete ElevateWord. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete ElevateWord. {message} Status code: {status}", "ElevateWord", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -201,43 +193,29 @@ def get_elevateword(
     else:
         if status == 0:
             elevateword = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"ElevateWord Details: {elevateword.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # 正しい public name に基づいたフィールドのみ表示
-            table.add_row("id", str(elevateword.get("id", "-")))
-            table.add_row("suggest_word", str(
-                elevateword.get("suggest_word", "-")))
-            table.add_row("boost", str(elevateword.get("boost", "-")))
-            table.add_row("version_no", str(
-                elevateword.get("version_no", "-")))
-            table.add_row("label_type_ids", ", ".join(
-                elevateword.get("label_type_ids", [])))
-            table.add_row("reading", str(elevateword.get("reading", "-")))
-            table.add_row("target_label", str(
-                elevateword.get("target_label", "-")))
-            table.add_row("permissions", str(
-                elevateword.get("permissions", "-")))
-            table.add_row("crud_mode", str(elevateword.get("crud_mode", "-")))
-            table.add_row("created_by", str(
-                elevateword.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                elevateword.get("created_time")))
-            table.add_row("updated_by", str(
-                elevateword.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                elevateword.get("updated_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"ElevateWord Details: {elevateword.get('id', '-')}",
+                elevateword,
+                [
+                    ("id", "id"),
+                    ("suggest_word", "suggest_word"),
+                    ("boost", "boost"),
+                    ("version_no", "version_no"),
+                    ("label_type_ids", "label_type_ids"),
+                    ("reading", "reading"),
+                    ("target_label", "target_label"),
+                    ("permissions", "permissions"),
+                    ("crud_mode", "crud_mode"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                ],
+                transforms={"created_time": to_utc_iso8601, "updated_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve ElevateWord. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve ElevateWord. {message} Status code: {status}", "ElevateWord", "get"))
             raise typer.Exit(code=1)
 
 
@@ -263,31 +241,19 @@ def list_elevatewords(
         if status == 0:
             elevatewords = result.get("response", {}).get("settings", [])
             if not elevatewords:
-                typer.secho("No ElevateWords found.", fg=typer.colors.YELLOW)
+                typer.echo("No ElevateWords found.")
             else:
-                console = Console()
-                table = Table(title="ElevateWords")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("SUGGEST WORD", style="green")
-                table.add_column("BOOST", style="magenta")
-                table.add_column("VERSION NO", style="yellow")
-                table.add_column("UPDATED BY", style="blue")
-                table.add_column("UPDATED TIME", style="white")
-
+                display_items = []
                 for ew in elevatewords:
-                    table.add_row(
-                        ew.get("id", "-"),
-                        ew.get("suggest_word", "-"),
-                        str(ew.get("boost", "-")),
-                        str(ew.get("version_no", "-")),
-                        ew.get("updated_by", "-"),
-                        to_utc_iso8601(ew.get("updated_time")),
-                    )
-                console.print(table)
+                    d = dict(ew)
+                    d["updated_time_display"] = to_utc_iso8601(ew.get("updated_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("ElevateWords", display_items, [
+                    ("ID", "id"), ("SUGGEST WORD", "suggest_word"),
+                    ("BOOST", "boost"), ("VERSION NO", "version_no"),
+                    ("UPDATED BY", "updated_by"), ("UPDATED TIME", "updated_time_display"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list ElevateWords. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list ElevateWords. {message} Status code: {status}", "ElevateWord", "list"))
             raise typer.Exit(code=status)

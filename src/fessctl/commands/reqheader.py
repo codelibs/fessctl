@@ -4,12 +4,10 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 reqheader_app = typer.Typer()
 
@@ -55,14 +53,10 @@ def create_reqheader(
     else:
         if status == 0:
             reqheader_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"ReqHeader '{reqheader_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"ReqHeader '{reqheader_id}' created successfully.", "ReqHeader", "create", reqheader_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create ReqHeader. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to create ReqHeader. {message} Status code: {status}", "ReqHeader", "create"))
             raise typer.Exit(code=status)
 
 
@@ -91,8 +85,7 @@ def update_reqheader(
     result = client.get_reqheader(reqheader_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"ReqHeader '{reqheader_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"ReqHeader '{reqheader_id}' not found. {message}", "ReqHeader", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -116,14 +109,10 @@ def update_reqheader(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"ReqHeader '{reqheader_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"ReqHeader '{reqheader_id}' updated successfully.", "ReqHeader", "update", reqheader_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update ReqHeader. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to update ReqHeader. {message} Status code: {status}", "ReqHeader", "update"))
             raise typer.Exit(code=status)
 
 
@@ -146,16 +135,10 @@ def delete_reqheader(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"ReqHeader '{reqheader_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"ReqHeader '{reqheader_id}' deleted successfully.", "ReqHeader", "delete", reqheader_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete ReqHeader. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete ReqHeader. {message} Status code: {status}", "ReqHeader", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -179,40 +162,31 @@ def get_reqheader(
     else:
         if status == 0:
             reqheader = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"ReqHeader Details: {reqheader.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # Output fields (ReqHeader public name fields only)
-            table.add_row("id", str(reqheader.get("id", "-")))
-            table.add_row("updated_by", str(reqheader.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                reqheader.get("updated_time")))
-            table.add_row("version_no", str(reqheader.get("version_no", "-")))
-            table.add_row("crud_mode", str(reqheader.get("crud_mode", "-")))
-            table.add_row("hostname", str(reqheader.get("hostname", "-")))
-            table.add_row("port", str(reqheader.get("port", "-")))
-            table.add_row("auth_realm", str(reqheader.get("auth_realm", "-")))
-            table.add_row("protocol_scheme", str(
-                reqheader.get("protocol_scheme", "-")))
-            table.add_row("username", str(reqheader.get("username", "-")))
-            table.add_row("password", str(reqheader.get("password", "-")))
-            table.add_row("parameters", str(reqheader.get("parameters", "-")))
-            table.add_row("web_config_id", str(
-                reqheader.get("web_config_id", "-")))
-            table.add_row("created_by", str(reqheader.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                reqheader.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"ReqHeader Details: {reqheader.get('id', '-')}",
+                reqheader,
+                [
+                    ("id", "id"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("hostname", "hostname"),
+                    ("port", "port"),
+                    ("auth_realm", "auth_realm"),
+                    ("protocol_scheme", "protocol_scheme"),
+                    ("username", "username"),
+                    ("password", "password"),
+                    ("parameters", "parameters"),
+                    ("web_config_id", "web_config_id"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve ReqHeader. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve ReqHeader. {message} Status code: {status}", "ReqHeader", "get"))
             raise typer.Exit(code=status)
 
 
@@ -239,27 +213,15 @@ def list_reqheaders(
         if status == 0:
             reqheaders = result.get("response", {}).get("settings", [])
             if not reqheaders:
-                typer.secho("No ReqHeaders found.", fg=typer.colors.YELLOW)
+                typer.echo("No ReqHeaders found.")
             else:
-                console = Console()
-                table = Table(title="ReqHeaders")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("NAME", style="cyan")
-                table.add_column("VALUE", style="cyan")
-                table.add_column("WEB_CONFIG_ID", style="cyan")
-
-                for rh in reqheaders:
-                    table.add_row(
-                        rh.get("id", "-"),
-                        rh.get("name", "-"),
-                        rh.get("value", "-"),
-                        rh.get("web_config_id", "-"),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("ReqHeaders", reqheaders, [
+                    ("ID", "id"),
+                    ("NAME", "name"),
+                    ("VALUE", "value"),
+                    ("WEB_CONFIG_ID", "web_config_id"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list ReqHeaders. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list ReqHeaders. {message} Status code: {status}", "ReqHeader", "list"))
             raise typer.Exit(code=status)

@@ -4,12 +4,10 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 badword_app = typer.Typer()
 
@@ -50,12 +48,10 @@ def create_badword(
     else:
         if status == 0:
             badword_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"BadWord '{badword_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"BadWord '{badword_id}' created successfully.", "BadWord", "create", badword_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create BadWord. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create BadWord. {message} Status code: {status}", "BadWord", "create"))
             raise typer.Exit(code=status)
 
 
@@ -80,10 +76,7 @@ def update_badword(
     result = client.get_badword(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"BadWord with ID '{config_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"BadWord with ID '{config_id}' not found. {message}", "BadWord", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -103,16 +96,10 @@ def update_badword(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"BadWord '{config_id}' updated successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"BadWord '{config_id}' updated successfully.", "BadWord", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update BadWord. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to update BadWord. {message} Status code: {status}", "BadWord", "update"))
             raise typer.Exit(code=status)
 
 
@@ -135,16 +122,10 @@ def delete_badword(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"BadWord '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"BadWord '{config_id}' deleted successfully.", "BadWord", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete BadWord. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete BadWord. {message} Status code: {status}", "BadWord", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -168,31 +149,24 @@ def get_badword(
     else:
         if status == 0:
             badword = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(title=f"BadWord Details: {badword.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # Correct output fields based on API schema
-            table.add_row("id", str(badword.get("id", "-")))
-            table.add_row("updated_by", str(badword.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                badword.get("updated_time")))
-            table.add_row("version_no", str(badword.get("version_no", "-")))
-            table.add_row("crud_mode", str(badword.get("crud_mode", "-")))
-            table.add_row("suggest_word", str(
-                badword.get("suggest_word", "-")))
-            table.add_row("created_by", str(badword.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                badword.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"BadWord Details: {badword.get('id', '-')}",
+                badword,
+                [
+                    ("id", "id"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("suggest_word", "suggest_word"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve BadWord. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve BadWord. {message} Status code: {status}", "BadWord", "get"))
             raise typer.Exit(code=status)
 
 
@@ -218,31 +192,20 @@ def list_badwords(
         if status == 0:
             badwords = result.get("response", {}).get("settings", [])
             if not badwords:
-                typer.secho("No BadWords found.", fg=typer.colors.YELLOW)
+                typer.echo("No BadWords found.")
             else:
-                console = Console()
-                table = Table(title="BadWords")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("SUGGEST_WORD", style="cyan")
-                table.add_column("UPDATED_BY", style="cyan")
-                table.add_column("UPDATED_TIME", style="cyan")
-                table.add_column("VERSION_NO", style="cyan")
-
-                for badword in badwords:
-                    table.add_row(
-                        badword.get("id", "-"),
-                        badword.get("suggest_word", "-"),
-                        badword.get("updated_by", "-"),
-                        to_utc_iso8601(badword.get("updated_time")),
-                        str(badword.get("version_no", "-")),
-                    )
-                console.print(table)
+                display_items = []
+                for item in badwords:
+                    d = dict(item)
+                    d["updated_time_display"] = to_utc_iso8601(item.get("updated_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("BadWords", display_items, [
+                    ("ID", "id"), ("SUGGEST_WORD", "suggest_word"), ("UPDATED_BY", "updated_by"),
+                    ("UPDATED_TIME", "updated_time_display"), ("VERSION_NO", "version_no"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list BadWords. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list BadWords. {message} Status code: {status}", "BadWord", "list"))
             raise typer.Exit(code=status)
 
 # TODO upload

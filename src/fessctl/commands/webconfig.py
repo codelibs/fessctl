@@ -4,12 +4,10 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 webconfig_app = typer.Typer()
 
@@ -114,14 +112,10 @@ def create_webconfig(
     else:
         if status == 0:
             config_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"WebConfig '{config_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"WebConfig '{config_id}' created successfully.", "WebConfig", "create", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "WebConfig", "create"))
             raise typer.Exit(code=status)
 
 
@@ -197,10 +191,7 @@ def update_webconfig(
     result = client.get_webconfig(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"WebConfig with ID '{config_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"WebConfig with ID '{config_id}' not found. {message}", "WebConfig", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -256,14 +247,10 @@ def update_webconfig(
     else:
         if status == 0:
             config_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"WebConfig '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"WebConfig '{config_id}' updated successfully.", "WebConfig", "update", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "WebConfig", "update"))
             raise typer.Exit(code=status)
 
 
@@ -286,16 +273,10 @@ def delete_webconfig(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"WebConfig '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"WebConfig '{config_id}' deleted successfully.", "WebConfig", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete WebConfig. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete WebConfig. {message} Status code: {status}", "WebConfig", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -319,69 +300,42 @@ def get_webconfig(
     else:
         if status == 0:
             webconfig = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"WebConfig Details: {webconfig.get('name', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # Output all fields (public names)
-            table.add_row("id", str(webconfig.get("id", "-")))
-            table.add_row("updated_by", str(webconfig.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                webconfig.get("updated_time")))
-            table.add_row("version_no", str(webconfig.get("version_no", "-")))
-            table.add_row(
-                "label_type_ids", "\n".join(
-                    webconfig.get("label_type_ids", []))
-            )
-            table.add_row("crud_mode", str(webconfig.get("crud_mode", "-")))
-            table.add_row("name", str(webconfig.get("name", "-")))
-            table.add_row("description", str(
-                webconfig.get("description", "-")))
-            table.add_row("urls", str(webconfig.get("urls", "-")))
-            table.add_row("included_urls", str(
-                webconfig.get("included_urls", "-")))
-            table.add_row("excluded_urls", str(
-                webconfig.get("excluded_urls", "-")))
-            table.add_row(
-                "included_doc_urls", str(
-                    webconfig.get("included_doc_urls", "-"))
-            )
-            table.add_row(
-                "excluded_doc_urls", str(
-                    webconfig.get("excluded_doc_urls", "-"))
-            )
-            table.add_row(
-                "config_parameter", str(webconfig.get("config_parameter", "-"))
-            )
-            table.add_row("depth", str(webconfig.get("depth", "-")))
-            table.add_row(
-                "max_access_count", str(webconfig.get("max_access_count", "-"))
-            )
-            table.add_row("user_agent", str(webconfig.get("user_agent", "-")))
-            table.add_row("num_of_thread", str(
-                webconfig.get("num_of_thread", "-")))
-            table.add_row("interval_time", str(
-                webconfig.get("interval_time", "-")))
-            table.add_row("boost", str(webconfig.get("boost", "-")))
-            table.add_row("available", str(webconfig.get("available", "-")))
-            table.add_row("permissions", str(
-                webconfig.get("permissions", "-")))
-            table.add_row("virtual_hosts", str(
-                webconfig.get("virtual_hosts", "-")))
-            table.add_row("sort_order", str(webconfig.get("sort_order", "-")))
-            table.add_row("created_by", str(webconfig.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                webconfig.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"WebConfig Details: {webconfig.get('name', '-')}",
+                webconfig,
+                [
+                    ("id", "id"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("version_no", "version_no"),
+                    ("label_type_ids", "label_type_ids"),
+                    ("crud_mode", "crud_mode"),
+                    ("name", "name"),
+                    ("description", "description"),
+                    ("urls", "urls"),
+                    ("included_urls", "included_urls"),
+                    ("excluded_urls", "excluded_urls"),
+                    ("included_doc_urls", "included_doc_urls"),
+                    ("excluded_doc_urls", "excluded_doc_urls"),
+                    ("config_parameter", "config_parameter"),
+                    ("depth", "depth"),
+                    ("max_access_count", "max_access_count"),
+                    ("user_agent", "user_agent"),
+                    ("num_of_thread", "num_of_thread"),
+                    ("interval_time", "interval_time"),
+                    ("boost", "boost"),
+                    ("available", "available"),
+                    ("permissions", "permissions"),
+                    ("virtual_hosts", "virtual_hosts"),
+                    ("sort_order", "sort_order"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve WebConfig. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve WebConfig. {message} Status code: {status}", "WebConfig", "get"))
             raise typer.Exit(code=status)
 
 
@@ -406,26 +360,12 @@ def list_webconfigs(
         if status == 0:
             webconfigs = result.get("response", {}).get("settings", [])
             if not webconfigs:
-                typer.secho("No WebConfigs found.", fg=typer.colors.YELLOW)
+                typer.echo("No WebConfigs found.")
             else:
-                console = Console()
-                table = Table(title="WebConfigs")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("NAME", style="cyan", no_wrap=True)
-                table.add_column("AVAILABLE", style="cyan", no_wrap=True)
-                table.add_column("SORT ORDER", style="cyan", no_wrap=True)
-                for webconfig in webconfigs:
-                    table.add_row(
-                        webconfig.get("id", "-"),
-                        webconfig.get("name", "-"),
-                        webconfig.get("available", "-"),
-                        str(webconfig.get("sort_order", "-")),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("WebConfigs", webconfigs, [
+                    ("ID", "id"), ("NAME", "name"), ("AVAILABLE", "available"), ("SORT ORDER", "sort_order"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list WebConfigs. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list WebConfigs. {message} Status code: {status}", "WebConfig", "list"))
             raise typer.Exit(code=status)

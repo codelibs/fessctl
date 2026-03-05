@@ -4,12 +4,15 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    to_utc_iso8601,
+)
 
 labeltype_app = typer.Typer()
 
@@ -71,16 +74,10 @@ def create_labeltype(
     else:
         if status == 0:
             labeltype_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"LabelType '{labeltype_id}' created successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"LabelType '{labeltype_id}' created successfully.", "LabelType", "create", labeltype_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create LabelType. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to create LabelType. {message} Status code: {status}", "LabelType", "create"))
             raise typer.Exit(code=status)
 
 
@@ -117,8 +114,7 @@ def update_labeltype(
     result = client.get_labeltype(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"LabelType with ID '{config_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"LabelType with ID '{config_id}' not found. {message}", "LabelType", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -152,12 +148,10 @@ def update_labeltype(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"LabelType '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"LabelType '{config_id}' updated successfully.", "LabelType", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update LabelType. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update LabelType. {message} Status code: {status}", "LabelType", "update"))
             raise typer.Exit(code=status)
 
 
@@ -180,16 +174,10 @@ def delete_labeltype(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"LabelType '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"LabelType '{config_id}' deleted successfully.", "LabelType", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete LabelType. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete LabelType. {message} Status code: {status}", "LabelType", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -213,40 +201,30 @@ def get_labeltype(
     else:
         if status == 0:
             labeltype = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"LabelType Details: {labeltype.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            table.add_row("id", str(labeltype.get("id", "-")))
-            table.add_row("name", str(labeltype.get("name", "-")))
-            table.add_row("value", str(labeltype.get("value", "-")))
-            table.add_row("version_no", str(labeltype.get("version_no", "-")))
-            table.add_row("sort_order", str(labeltype.get("sort_order", "-")))
-            table.add_row("included_paths", labeltype.get(
-                "included_paths", "").replace("\n", ", "))
-            table.add_row("excluded_paths", labeltype.get(
-                "excluded_paths", "").replace("\n", ", "))
-            table.add_row("permissions", labeltype.get(
-                "permissions", "").replace("\n", ", "))
-            table.add_row("virtual_host", str(
-                labeltype.get("virtual_host", "-")))
-            table.add_row("crud_mode", str(labeltype.get("crud_mode", "-")))
-            table.add_row("created_by", str(labeltype.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                labeltype.get("created_time")))
-            table.add_row("updated_by", str(labeltype.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                labeltype.get("updated_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"LabelType Details: {labeltype.get('id', '-')}",
+                labeltype,
+                [
+                    ("id", "id"),
+                    ("name", "name"),
+                    ("value", "value"),
+                    ("version_no", "version_no"),
+                    ("sort_order", "sort_order"),
+                    ("included_paths", "included_paths"),
+                    ("excluded_paths", "excluded_paths"),
+                    ("permissions", "permissions"),
+                    ("virtual_host", "virtual_host"),
+                    ("crud_mode", "crud_mode"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                ],
+                transforms={"created_time": to_utc_iso8601, "updated_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve LabelType. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve LabelType. {message} Status code: {status}", "LabelType", "get"))
             raise typer.Exit(code=status)
 
 
@@ -272,25 +250,12 @@ def list_labeltypes(
         if status == 0:
             labeltypes = result.get("response", {}).get("settings", [])
             if not labeltypes:
-                typer.secho("No LabelTypes found.", fg=typer.colors.YELLOW)
+                typer.echo("No LabelTypes found.")
             else:
-                console = Console()
-                table = Table(title="LabelTypes")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("NAME", style="green")
-                table.add_column("VALUE", style="magenta")
-
-                for lt in labeltypes:
-                    table.add_row(
-                        lt.get("id", "-"),
-                        lt.get("name", "-"),
-                        lt.get("value", "-"),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("LabelTypes", labeltypes, [
+                    ("ID", "id"), ("NAME", "name"), ("VALUE", "value"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list LabelTypes. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list LabelTypes. {message} Status code: {status}", "LabelType", "list"))
             raise typer.Exit(code=status)

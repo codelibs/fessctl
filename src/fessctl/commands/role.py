@@ -4,12 +4,10 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import encode_to_urlsafe_base64
+from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, output_error
 
 # Create a Typer sub-application for role commands
 role_app = typer.Typer()
@@ -53,21 +51,15 @@ def create_role(
         else:
             if status == 0:
                 role_id = result.get("response", {}).get("id", None)
-                typer.secho(
-                    f"Role '{name}' created successfully with ID: {role_id}.",
-                    fg=typer.colors.GREEN,
-                )
+                typer.echo(format_result_markdown(True, f"Role '{name}' created successfully with ID: {role_id}.", "Role", "create", role_id or ""))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to create role. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to create role. {message} Status code: {status}", "Role", "create"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error creating role: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Role", "create")
         raise typer.Exit(code=1)
 
 
@@ -95,10 +87,7 @@ def update_role(
     result = client.get_role(role_id=role_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"Role with ID '{role_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"Role with ID '{role_id}' not found. {message}", "Role", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -126,16 +115,10 @@ def update_role(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"Role '{role_id}' updated successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"Role '{role_id}' updated successfully.", "Role", "update", role_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update role. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to update role. {message} Status code: {status}", "Role", "update"))
             raise typer.Exit(code=status)
 
 
@@ -161,21 +144,15 @@ def delete_role(
             typer.echo(yaml.dump(result))
         else:
             if status == 0:
-                typer.secho(
-                    f"Role with ID '{role_id}' deleted successfully.",
-                    fg=typer.colors.GREEN,
-                )
+                typer.echo(format_result_markdown(True, f"Role with ID '{role_id}' deleted successfully.", "Role", "delete", role_id))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to delete role. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to delete role. {message} Status code: {status}", "Role", "delete"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error deleting role: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Role", "delete")
         raise typer.Exit(code=1)
 
 
@@ -212,34 +189,32 @@ def get_role(
         else:
             if status == 0:
                 role = result.get("response", {}).get("setting", {})
-                console = Console()
-                table = Table(title=f"Role Details: {role.get('name', '-')}")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                table.add_row("ID", role.get("id", "-"))
-                table.add_row("Name", role.get("name", "-"))
                 attributes = role.get("attributes", {})
                 attr_str = (
                     "\n".join(f"{k}={v}" for k, v in attributes.items())
                     if attributes
                     else "-"
                 )
-                table.add_row("Attributes", attr_str)
-                table.add_row("Version", str(role.get("version_no", "-")))
-
-                console.print(table)
+                data = dict(role)
+                data["attributes_display"] = attr_str
+                typer.echo(format_detail_markdown(
+                    f"Role Details: {role.get('name', '-')}",
+                    data,
+                    [
+                        ("ID", "id"),
+                        ("Name", "name"),
+                        ("Attributes", "attributes_display"),
+                        ("Version", "version_no"),
+                    ],
+                ))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to retrieve role. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to retrieve role. {message} Status code: {status}", "Role", "get"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving role: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Role", "get")
         raise typer.Exit(code=1)
 
 
@@ -268,36 +243,28 @@ def list_roles(
             if status == 0:
                 roles = result.get("response", {}).get("settings", [])
                 if not roles:
-                    typer.secho("No roles found.", fg=typer.colors.YELLOW)
+                    typer.echo("No roles found.")
                 else:
-                    console = Console()
-                    table = Table(title="Roles")
-                    table.add_column("ID", style="cyan", no_wrap=True)
-                    table.add_column("NAME", style="cyan", no_wrap=True)
-                    table.add_column("ATTRIBUTES", style="cyan", no_wrap=False)
-                    table.add_column("VERSION", style="cyan", no_wrap=True)
-                    for role in roles:
-                        table.add_row(
-                            *[
-                                role.get("id", "-"),
-                                role.get("name", "-"),
-                                "\n".join(
-                                    f"{k}={v}"
-                                    for k, v in role.get("attributes", {}).items()
-                                ),
-                                str(role.get("version_no", "-")),
-                            ]
+                    display_items = []
+                    for item in roles:
+                        d = dict(item)
+                        d["attributes_display"] = "\n".join(
+                            f"{k}={v}"
+                            for k, v in item.get("attributes", {}).items()
                         )
-                    console.print(table)
+                        display_items.append(d)
+                    typer.echo(format_list_markdown("Roles", display_items, [
+                        ("ID", "id"),
+                        ("NAME", "name"),
+                        ("ATTRIBUTES", "attributes_display"),
+                        ("VERSION", "version_no"),
+                    ]))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to list roles. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to list roles. {message} Status code: {status}", "Role", "list"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error listing roles: {e}", fg=typer.colors.RED)
+        output_error(output, e, "Role", "list")
         raise typer.Exit(code=1)

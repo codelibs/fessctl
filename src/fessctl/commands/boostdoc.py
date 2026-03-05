@@ -4,12 +4,10 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 boostdoc_app = typer.Typer()
 
@@ -54,12 +52,10 @@ def create_boostdoc(
     else:
         if status == 0:
             boostdoc_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"BoostDoc '{boostdoc_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"BoostDoc '{boostdoc_id}' created successfully.", "BoostDoc", "create", boostdoc_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create BoostDoc. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create BoostDoc. {message} Status code: {status}", "BoostDoc", "create"))
             raise typer.Exit(code=status)
 
 
@@ -88,8 +84,7 @@ def update_boostdoc(
     result = client.get_boostdoc(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"BoostDoc with ID '{config_id}' not found. {message}", fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"BoostDoc with ID '{config_id}' not found. {message}", "BoostDoc", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -113,12 +108,10 @@ def update_boostdoc(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"BoostDoc '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"BoostDoc '{config_id}' updated successfully.", "BoostDoc", "update", config_id))
         else:
             message = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update BoostDoc. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update BoostDoc. {message} Status code: {status}", "BoostDoc", "update"))
             raise typer.Exit(code=status)
 
 
@@ -141,16 +134,10 @@ def delete_boostdoc(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"BoostDoc '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"BoostDoc '{config_id}' deleted successfully.", "BoostDoc", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete BoostDoc. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete BoostDoc. {message} Status code: {status}", "BoostDoc", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -174,31 +161,26 @@ def get_boostdoc(
     else:
         if status == 0:
             boostdoc = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(title=f"BoostDoc Details: {boostdoc.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            table.add_row("id", str(boostdoc.get("id", "-")))
-            table.add_row("url_expr", str(boostdoc.get("url_expr", "-")))
-            table.add_row("boost_expr", str(boostdoc.get("boost_expr", "-")))
-            table.add_row("sort_order", str(boostdoc.get("sort_order", "-")))
-            table.add_row("version_no", str(boostdoc.get("version_no", "-")))
-            table.add_row("crud_mode", str(boostdoc.get("crud_mode", "-")))
-            table.add_row("updated_by", str(boostdoc.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                boostdoc.get("updated_time")))
-            table.add_row("created_by", str(boostdoc.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                boostdoc.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"BoostDoc Details: {boostdoc.get('id', '-')}",
+                boostdoc,
+                [
+                    ("id", "id"),
+                    ("url_expr", "url_expr"),
+                    ("boost_expr", "boost_expr"),
+                    ("sort_order", "sort_order"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve BoostDoc. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve BoostDoc. {message} Status code: {status}", "BoostDoc", "get"))
             raise typer.Exit(code=status)
 
 
@@ -224,31 +206,19 @@ def list_boostdocs(
         if status == 0:
             boostdocs = result.get("response", {}).get("settings", [])
             if not boostdocs:
-                typer.secho("No BoostDocs found.", fg=typer.colors.YELLOW)
+                typer.echo("No BoostDocs found.")
             else:
-                console = Console()
-                table = Table(title="BoostDocs")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("URL_EXPR", style="magenta")
-                table.add_column("BOOST_EXPR", style="green")
-                table.add_column("SORT_ORDER", style="yellow")
-                table.add_column("UPDATED_BY", style="blue")
-                table.add_column("UPDATED_TIME", style="white")
-
-                for boostdoc in boostdocs:
-                    table.add_row(
-                        boostdoc.get("id", "-"),
-                        boostdoc.get("url_expr", "-"),
-                        boostdoc.get("boost_expr", "-"),
-                        str(boostdoc.get("sort_order", "-")),
-                        boostdoc.get("updated_by", "-"),
-                        to_utc_iso8601(boostdoc.get("updated_time")),
-                    )
-                console.print(table)
+                display_items = []
+                for item in boostdocs:
+                    d = dict(item)
+                    d["updated_time_display"] = to_utc_iso8601(item.get("updated_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("BoostDocs", display_items, [
+                    ("ID", "id"), ("URL_EXPR", "url_expr"), ("BOOST_EXPR", "boost_expr"),
+                    ("SORT_ORDER", "sort_order"), ("UPDATED_BY", "updated_by"),
+                    ("UPDATED_TIME", "updated_time_display"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list BoostDocs. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list BoostDocs. {message} Status code: {status}", "BoostDoc", "list"))
             raise typer.Exit(code=status)

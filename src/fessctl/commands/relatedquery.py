@@ -4,12 +4,10 @@ from typing import Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 relatedquery_app = typer.Typer()
 
@@ -57,12 +55,10 @@ def create_relatedquery(
     else:
         if status == 0:
             relatedquery_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"RelatedQuery '{relatedquery_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"RelatedQuery '{relatedquery_id}' created successfully.", "RelatedQuery", "create", relatedquery_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to create RelatedQuery. {message} Status code: {status}", fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to create RelatedQuery. {message} Status code: {status}", "RelatedQuery", "create"))
             raise typer.Exit(code=status)
 
 
@@ -90,9 +86,7 @@ def update_relatedquery(
 
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"RelatedQuery with ID '{config_id}' not found. {message}",
-            fg=typer.colors.RED)
+        typer.echo(format_result_markdown(False, f"RelatedQuery with ID '{config_id}' not found. {message}", "RelatedQuery", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -117,14 +111,10 @@ def update_relatedquery(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"RelatedQuery '{config_id}' updated successfully.",
-                fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"RelatedQuery '{config_id}' updated successfully.", "RelatedQuery", "update", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to update RelatedQuery. {message} Status code: {status}",
-                fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to update RelatedQuery. {message} Status code: {status}", "RelatedQuery", "update"))
             raise typer.Exit(code=status)
 
 
@@ -147,16 +137,10 @@ def delete_relatedquery(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"RelatedQuery '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"RelatedQuery '{config_id}' deleted successfully.", "RelatedQuery", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete RelatedQuery. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete RelatedQuery. {message} Status code: {status}", "RelatedQuery", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -180,36 +164,26 @@ def get_relatedquery(
     else:
         if status == 0:
             relatedquery = result.get("response", {}).get("setting", {})
-            console = Console()
-            table = Table(
-                title=f"RelatedQuery Details: {relatedquery.get('id', '-')}")
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            table.add_row("id", str(relatedquery.get("id", "-")))
-            table.add_row("term", str(relatedquery.get("term", "-")))
-            table.add_row("queries", str(relatedquery.get("queries", "-")))
-            table.add_row("virtual_host", str(
-                relatedquery.get("virtual_host", "-")))
-            table.add_row("version_no", str(
-                relatedquery.get("version_no", "-")))
-            table.add_row("crud_mode", str(relatedquery.get("crud_mode", "-")))
-            table.add_row("updated_by", str(
-                relatedquery.get("updated_by", "-")))
-            table.add_row("updated_time", to_utc_iso8601(
-                relatedquery.get("updated_time")))
-            table.add_row("created_by", str(
-                relatedquery.get("created_by", "-")))
-            table.add_row("created_time", to_utc_iso8601(
-                relatedquery.get("created_time")))
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"RelatedQuery Details: {relatedquery.get('id', '-')}",
+                relatedquery,
+                [
+                    ("id", "id"),
+                    ("term", "term"),
+                    ("queries", "queries"),
+                    ("virtual_host", "virtual_host"),
+                    ("version_no", "version_no"),
+                    ("crud_mode", "crud_mode"),
+                    ("updated_by", "updated_by"),
+                    ("updated_time", "updated_time"),
+                    ("created_by", "created_by"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve RelatedQuery. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve RelatedQuery. {message} Status code: {status}", "RelatedQuery", "get"))
             raise typer.Exit(code=status)
 
 
@@ -235,29 +209,16 @@ def list_relatedqueries(
         if status == 0:
             relatedqueries = result.get("response", {}).get("settings", [])
             if len(relatedqueries) == 0:
-                typer.secho("No RelatedQueries found.",
-                            fg=typer.colors.YELLOW)
+                typer.echo("No RelatedQueries found.")
             else:
-                console = Console()
-                table = Table(title="RelatedQueries")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("TERM", style="magenta")
-                table.add_column("QUERIES", style="green")
-                table.add_column("VIRTUAL HOST", style="blue")
-                table.add_column("VERSION", style="yellow")
-
-                for rq in relatedqueries:
-                    table.add_row(
-                        rq.get("id", "-"),
-                        rq.get("term", "-"),
-                        rq.get("queries", "-"),
-                        rq.get("virtual_host", "-"),
-                        str(rq.get("version_no", "-")),
-                    )
-                console.print(table)
+                typer.echo(format_list_markdown("RelatedQueries", relatedqueries, [
+                    ("ID", "id"),
+                    ("TERM", "term"),
+                    ("QUERIES", "queries"),
+                    ("VIRTUAL HOST", "virtual_host"),
+                    ("VERSION", "version_no"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list RelatedQueries. {message} Status code: {status}",
-                fg=typer.colors.RED)
+            typer.echo(format_result_markdown(False, f"Failed to list RelatedQueries. {message} Status code: {status}", "RelatedQuery", "list"))
             raise typer.Exit(code=status)

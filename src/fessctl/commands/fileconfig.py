@@ -4,12 +4,16 @@ from typing import List, Optional
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import (
+    format_detail_markdown,
+    format_list_markdown,
+    format_result_markdown,
+    output_error,
+    to_utc_iso8601,
+)
 
 fileconfig_app = typer.Typer()
 
@@ -106,14 +110,10 @@ def create_fileconfig(
     else:
         if status == 0:
             config_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"FileConfig '{config_id}' created successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"FileConfig '{config_id}' created successfully.", "FileConfig", "create", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "FileConfig", "create"))
             raise typer.Exit(code=status)
 
 
@@ -184,10 +184,7 @@ def update_fileconfig(
     result = client.get_fileconfig(config_id)
     if result.get("response", {}).get("status", 1) != 0:
         message: str = result.get("response", {}).get("message", "")
-        typer.secho(
-            f"FileConfig with ID '{config_id}' not found. {message}",
-            fg=typer.colors.RED,
-        )
+        typer.echo(format_result_markdown(False, f"FileConfig with ID '{config_id}' not found. {message}", "FileConfig", "update"))
         raise typer.Exit(code=1)
 
     config = result.get("response", {}).get("setting", {})
@@ -241,14 +238,10 @@ def update_fileconfig(
     else:
         if status == 0:
             config_id = result.get("response", {}).get("id", "")
-            typer.secho(
-                f"FileConfig '{config_id}' updated successfully.", fg=typer.colors.GREEN)
+            typer.echo(format_result_markdown(True, f"FileConfig '{config_id}' updated successfully.", "FileConfig", "update", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Operation failed. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "FileConfig", "update"))
             raise typer.Exit(code=status)
 
 
@@ -271,16 +264,10 @@ def delete_fileconfig(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"FileConfig '{config_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"FileConfig '{config_id}' deleted successfully.", "FileConfig", "delete", config_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete FileConfig. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete FileConfig. {message} Status code: {status}", "FileConfig", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -306,75 +293,46 @@ def get_fileconfig(
         else:
             if status == 0:
                 fileconfig = result.get("response", {}).get("setting", {})
-                console = Console()
-                table = Table(
-                    title=f"FileConfig Details: {fileconfig.get('name', '-')}")
-                table.add_column("Field", style="cyan", no_wrap=True)
-                table.add_column("Value", style="magenta")
-
-                # Output all public fields
-                table.add_row("id", str(fileconfig.get("id", "-")))
-                table.add_row("updated_by", str(fileconfig.get("updated_by", "-")))
-                table.add_row("updated_time", to_utc_iso8601(
-                    fileconfig.get("updated_time")))
-                table.add_row("version_no", str(fileconfig.get("version_no", "-")))
-                table.add_row(
-                    "label_type_ids", ", ".join(
-                        fileconfig.get("label_type_ids", []))
-                )
-                table.add_row("crud_mode", str(fileconfig.get("crud_mode", "-")))
-                table.add_row("name", str(fileconfig.get("name", "-")))
-                table.add_row("description", str(
-                    fileconfig.get("description", "-")))
-                table.add_row("paths", str(fileconfig.get("paths", "-")))
-                table.add_row("included_paths", str(
-                    fileconfig.get("included_paths", "-")))
-                table.add_row("excluded_paths", str(
-                    fileconfig.get("excluded_paths", "-")))
-                table.add_row(
-                    "included_doc_paths", str(
-                        fileconfig.get("included_doc_paths", "-"))
-                )
-                table.add_row(
-                    "excluded_doc_paths", str(
-                        fileconfig.get("excluded_doc_paths", "-"))
-                )
-                table.add_row(
-                    "config_parameter", str(
-                        fileconfig.get("config_parameter", "-"))
-                )
-                table.add_row("depth", str(fileconfig.get("depth", "-")))
-                table.add_row(
-                    "max_access_count", str(
-                        fileconfig.get("max_access_count", "-"))
-                )
-                table.add_row("num_of_thread", str(
-                    fileconfig.get("num_of_thread", "-")))
-                table.add_row("interval_time", str(
-                    fileconfig.get("interval_time", "-")))
-                table.add_row("boost", str(fileconfig.get("boost", "-")))
-                table.add_row("available", str(fileconfig.get("available", "-")))
-                table.add_row("permissions", str(
-                    fileconfig.get("permissions", "-")))
-                table.add_row("virtual_hosts", str(
-                    fileconfig.get("virtual_hosts", "-")))
-                table.add_row("sort_order", str(fileconfig.get("sort_order", "-")))
-                table.add_row("created_by", str(fileconfig.get("created_by", "-")))
-                table.add_row("created_time", to_utc_iso8601(
-                    fileconfig.get("created_time")))
-
-                console.print(table)
+                typer.echo(format_detail_markdown(
+                    f"FileConfig Details: {fileconfig.get('name', '-')}",
+                    fileconfig,
+                    [
+                        ("id", "id"),
+                        ("updated_by", "updated_by"),
+                        ("updated_time", "updated_time"),
+                        ("version_no", "version_no"),
+                        ("label_type_ids", "label_type_ids"),
+                        ("crud_mode", "crud_mode"),
+                        ("name", "name"),
+                        ("description", "description"),
+                        ("paths", "paths"),
+                        ("included_paths", "included_paths"),
+                        ("excluded_paths", "excluded_paths"),
+                        ("included_doc_paths", "included_doc_paths"),
+                        ("excluded_doc_paths", "excluded_doc_paths"),
+                        ("config_parameter", "config_parameter"),
+                        ("depth", "depth"),
+                        ("max_access_count", "max_access_count"),
+                        ("num_of_thread", "num_of_thread"),
+                        ("interval_time", "interval_time"),
+                        ("boost", "boost"),
+                        ("available", "available"),
+                        ("permissions", "permissions"),
+                        ("virtual_hosts", "virtual_hosts"),
+                        ("sort_order", "sort_order"),
+                        ("created_by", "created_by"),
+                        ("created_time", "created_time"),
+                    ],
+                    transforms={"updated_time": to_utc_iso8601, "created_time": to_utc_iso8601},
+                ))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.secho(
-                    f"Failed to retrieve FileConfig. {message} Status code: {status}",
-                    fg=typer.colors.RED,
-                )
+                typer.echo(format_result_markdown(False, f"Failed to retrieve FileConfig. {message} Status code: {status}", "FileConfig", "get"))
                 raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
-        typer.secho(f"Error retrieving fileconfig: {e}", fg=typer.colors.RED)
+        output_error(output, e, "FileConfig", "get")
         raise typer.Exit(code=1)
 
 
@@ -400,20 +358,12 @@ def list_fileconfigs(
         if status == 0:
             configs = result.get("response", {}).get("settings", [])
             if not configs:
-                typer.secho("No FileConfigs found.", fg=typer.colors.YELLOW)
+                typer.echo("No FileConfigs found.")
             else:
-                console = Console()
-                table = Table(title="FileConfigs")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("Name", style="cyan", no_wrap=True)
-                for config in configs:
-                    table.add_row(config.get("id", "-"),
-                                  config.get("name", "-"))
-                console.print(table)
+                typer.echo(format_list_markdown("FileConfigs", configs, [
+                    ("ID", "id"), ("Name", "name"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list FileConfigs. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list FileConfigs. {message} Status code: {status}", "FileConfig", "list"))
             raise typer.Exit(code=status)

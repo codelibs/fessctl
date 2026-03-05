@@ -2,12 +2,10 @@ import json
 
 import typer
 import yaml
-from rich.console import Console
-from rich.table import Table
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 crawlinginfo_app = typer.Typer()
 
@@ -32,16 +30,10 @@ def delete_crawlinginfo(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.secho(
-                f"CrawlingInfo '{crawlinginfo_id}' deleted successfully.",
-                fg=typer.colors.GREEN,
-            )
+            typer.echo(format_result_markdown(True, f"CrawlingInfo '{crawlinginfo_id}' deleted successfully.", "CrawlingInfo", "delete", crawlinginfo_id))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to delete CrawlingInfo. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to delete CrawlingInfo. {message} Status code: {status}", "CrawlingInfo", "delete"))
             raise typer.Exit(code=status)
 
 
@@ -66,30 +58,19 @@ def get_crawlinginfo(
     else:
         if status == 0:
             crawlinginfo = result.get("response", {}).get("log", {})
-            console = Console()
-            table = Table(
-                title=f"CrawlingInfo Details: {crawlinginfo.get('job_name', '-')}"
-            )
-            table.add_column("Field", style="cyan", no_wrap=True)
-            table.add_column("Value", style="magenta")
-
-            # output all fields according to new schema
-            table.add_row("id", str(crawlinginfo.get("id", "-")))
-            table.add_row("session_id", str(
-                crawlinginfo.get("session_id", "-")))
-            table.add_row(
-                "created_time", to_utc_iso8601(
-                    crawlinginfo.get("created_time"))
-            )
-            # TODO add missing fields
-
-            console.print(table)
+            typer.echo(format_detail_markdown(
+                f"CrawlingInfo Details: {crawlinginfo.get('job_name', '-')}",
+                crawlinginfo,
+                [
+                    ("id", "id"),
+                    ("session_id", "session_id"),
+                    ("created_time", "created_time"),
+                ],
+                transforms={"created_time": to_utc_iso8601},
+            ))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to retrieve CrawlingInfo. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to retrieve CrawlingInfo. {message} Status code: {status}", "CrawlingInfo", "get"))
             raise typer.Exit(code=status)
 
 
@@ -115,24 +96,19 @@ def list_crawlinginfos(
         if status == 0:
             crawlinginfos = result.get("response", {}).get("logs", [])
             if not crawlinginfos:
-                typer.secho("No CrawlingInfos found.", fg=typer.colors.YELLOW)
+                typer.echo("No CrawlingInfos found.")
             else:
-                console = Console()
-                table = Table(title="CrawlingInfos")
-                table.add_column("ID", style="cyan", no_wrap=True)
-                table.add_column("SESSION ID", style="cyan", no_wrap=True)
-                table.add_column("CREATED TIME", style="cyan", no_wrap=True)
-                for crawlinginfo in crawlinginfos:
-                    table.add_row(
-                        crawlinginfo.get("id", "-"),
-                        crawlinginfo.get("session_id", "-"),
-                        to_utc_iso8601(crawlinginfo.get("created_time")),
-                    )
-                console.print(table)
+                display_items = []
+                for item in crawlinginfos:
+                    d = dict(item)
+                    d["created_time_display"] = to_utc_iso8601(item.get("created_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("CrawlingInfos", display_items, [
+                    ("ID", "id"),
+                    ("SESSION ID", "session_id"),
+                    ("CREATED TIME", "created_time_display"),
+                ]))
         else:
             message: str = result.get("response", {}).get("message", "")
-            typer.secho(
-                f"Failed to list CrawlingInfos. {message} Status code: {status}",
-                fg=typer.colors.RED,
-            )
+            typer.echo(format_result_markdown(False, f"Failed to list CrawlingInfos. {message} Status code: {status}", "CrawlingInfo", "list"))
             raise typer.Exit(code=status)
