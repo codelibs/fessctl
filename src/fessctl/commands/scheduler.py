@@ -278,7 +278,11 @@ def start_scheduler(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            typer.echo(format_result_markdown(True, f"Scheduler '{scheduler_id}' started successfully.", "Scheduler", "start", scheduler_id))
+            job_log_id = result.get("response", {}).get("jobLogId")
+            message = f"Scheduler '{scheduler_id}' started successfully."
+            if job_log_id:
+                message += f" Job Log ID: {job_log_id}"
+            typer.echo(format_result_markdown(True, message, "Scheduler", "start", scheduler_id))
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to start Scheduler. {message} Status code: {status}", "Scheduler", "start"))
