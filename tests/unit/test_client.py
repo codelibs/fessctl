@@ -452,7 +452,7 @@ class TestSchedulerAPIs:
     def test_start_scheduler(self, mock_put, client):
         """Test starting a scheduler."""
         mock_response = Mock()
-        mock_response.json.return_value = {"response": {"status": 0}}
+        mock_response.json.return_value = {"response": {"status": 0, "jobLogId": "abc123def456"}}
         mock_put.return_value = mock_response
 
         client.start_scheduler("scheduler-123")
