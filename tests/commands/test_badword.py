@@ -33,7 +33,7 @@ def test_badword_crud_flow(runner, fess_service):
     # 2) Retrieve the created badword
     result = runner.invoke(
         badword_app,
-        ["get", badword_id, "--output", "json"]
+        ["get", "--output", "json", "--", badword_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -46,7 +46,7 @@ def test_badword_crud_flow(runner, fess_service):
     new_suggest_word = f"updated-{suggest_word}"
     result = runner.invoke(
         badword_app,
-        ["update", badword_id, "--suggest-word", new_suggest_word, "--output", "json"]
+        ["update", "--suggest-word", new_suggest_word, "--output", "json", "--", badword_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -55,7 +55,7 @@ def test_badword_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated suggest_word
     result = runner.invoke(
         badword_app,
-        ["get", badword_id, "--output", "json"]
+        ["get", "--output", "json", "--", badword_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -77,7 +77,7 @@ def test_badword_crud_flow(runner, fess_service):
     # 6) Delete the badword
     result = runner.invoke(
         badword_app,
-        ["delete", badword_id, "--output", "json"]
+        ["delete", "--output", "json", "--", badword_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -86,7 +86,7 @@ def test_badword_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         badword_app,
-        ["get", badword_id]
+        ["get", "--", badword_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve badword" in result.stdout.lower()

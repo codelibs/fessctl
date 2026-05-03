@@ -35,7 +35,7 @@ def test_elevateword_crud_flow(runner, fess_service):
     # 2) Retrieve the created elevateword
     result = runner.invoke(
         elevateword_app,
-        ["get", elevateword_id, "--output", "json"]
+        ["get", "--output", "json", "--", elevateword_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def test_elevateword_crud_flow(runner, fess_service):
     new_boost = "20.0"
     result = runner.invoke(
         elevateword_app,
-        ["update", elevateword_id, "--boost", new_boost, "--output", "json"]
+        ["update", "--boost", new_boost, "--output", "json", "--", elevateword_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -57,7 +57,7 @@ def test_elevateword_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated boost
     result = runner.invoke(
         elevateword_app,
-        ["get", elevateword_id, "--output", "json"]
+        ["get", "--output", "json", "--", elevateword_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -79,7 +79,7 @@ def test_elevateword_crud_flow(runner, fess_service):
     # 6) Delete the elevateword
     result = runner.invoke(
         elevateword_app,
-        ["delete", elevateword_id, "--output", "json"]
+        ["delete", "--output", "json", "--", elevateword_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -88,7 +88,7 @@ def test_elevateword_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         elevateword_app,
-        ["get", elevateword_id]
+        ["get", "--", elevateword_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve elevateword" in result.stdout.lower()

@@ -35,7 +35,7 @@ def test_labeltype_crud_flow(runner, fess_service):
     # 2) Retrieve the created labeltype
     result = runner.invoke(
         labeltype_app,
-        ["get", labeltype_id, "--output", "json"]
+        ["get", "--output", "json", "--", labeltype_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def test_labeltype_crud_flow(runner, fess_service):
     new_name = f"new-{name}"
     result = runner.invoke(
         labeltype_app,
-        ["update", labeltype_id, "--name", new_name, "--output", "json"]
+        ["update", "--name", new_name, "--output", "json", "--", labeltype_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -57,7 +57,7 @@ def test_labeltype_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated name
     result = runner.invoke(
         labeltype_app,
-        ["get", labeltype_id, "--output", "json"]
+        ["get", "--output", "json", "--", labeltype_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -79,7 +79,7 @@ def test_labeltype_crud_flow(runner, fess_service):
     # 6) Delete the labeltype
     result = runner.invoke(
         labeltype_app,
-        ["delete", labeltype_id, "--output", "json"]
+        ["delete", "--output", "json", "--", labeltype_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -88,7 +88,7 @@ def test_labeltype_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         labeltype_app,
-        ["get", labeltype_id]
+        ["get", "--", labeltype_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve labeltype" in result.stdout.lower()

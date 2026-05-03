@@ -21,7 +21,7 @@ class TestSettings:
 
         assert settings.fess_endpoint == "http://localhost:8080"
         assert settings.access_token is None
-        assert settings.fess_version == "15.4.0"
+        assert settings.fess_version == "15.6.1"
 
     def test_endpoint_from_environment(self, monkeypatch):
         """Test that FESS_ENDPOINT environment variable is used."""

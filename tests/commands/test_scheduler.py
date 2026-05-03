@@ -36,7 +36,7 @@ def test_scheduler_crud_flow(runner, fess_service):
     # 2) Retrieve the created scheduler
     result = runner.invoke(
         scheduler_app,
-        ["get", scheduler_id, "--output", "json"]
+        ["get", "--output", "json", "--", scheduler_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -49,7 +49,7 @@ def test_scheduler_crud_flow(runner, fess_service):
     new_cron = "0 13 * * *"
     result = runner.invoke(
         scheduler_app,
-        ["update", scheduler_id, "--cron-expression", new_cron, "--output", "json"]
+        ["update", "--cron-expression", new_cron, "--output", "json", "--", scheduler_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -58,7 +58,7 @@ def test_scheduler_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated cron_expression
     result = runner.invoke(
         scheduler_app,
-        ["get", scheduler_id, "--output", "json"]
+        ["get", "--output", "json", "--", scheduler_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -80,7 +80,7 @@ def test_scheduler_crud_flow(runner, fess_service):
     # 6) Delete the scheduler
     result = runner.invoke(
         scheduler_app,
-        ["delete", scheduler_id, "--output", "json"]
+        ["delete", "--output", "json", "--", scheduler_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -89,7 +89,7 @@ def test_scheduler_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         scheduler_app,
-        ["get", scheduler_id]
+        ["get", "--", scheduler_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve scheduler" in result.stdout.lower()
@@ -120,7 +120,7 @@ def test_scheduler_start_stop_json_output(runner, fess_service):
         # 2) Start the scheduler - verify returns valid JSON with response structure
         result = runner.invoke(
             scheduler_app,
-            ["start", scheduler_id, "--output", "json"]
+            ["start", "--output", "json", "--", scheduler_id]
         )
         # Command should return JSON regardless of success/failure
         start_resp = json.loads(result.stdout)
@@ -130,7 +130,7 @@ def test_scheduler_start_stop_json_output(runner, fess_service):
         # 3) Stop the scheduler - verify returns valid JSON with response structure
         result = runner.invoke(
             scheduler_app,
-            ["stop", scheduler_id, "--output", "json"]
+            ["stop", "--output", "json", "--", scheduler_id]
         )
         stop_resp = json.loads(result.stdout)
         assert "response" in stop_resp
@@ -140,7 +140,7 @@ def test_scheduler_start_stop_json_output(runner, fess_service):
         # 4) Clean up - delete the scheduler
         runner.invoke(
             scheduler_app,
-            ["delete", scheduler_id, "--output", "json"]
+            ["delete", "--output", "json", "--", scheduler_id]
         )
 
 
@@ -162,7 +162,7 @@ def test_scheduler_start_text_output(runner, fess_service):
         # Start with text output - should produce some output
         result = runner.invoke(
             scheduler_app,
-            ["start", scheduler_id, "--output", "text"]
+            ["start", "--output", "text", "--", scheduler_id]
         )
         # Verify there is output (either success or failure message)
         assert len(result.stdout) > 0
@@ -171,13 +171,13 @@ def test_scheduler_start_text_output(runner, fess_service):
         # Stop with text output - should produce some output
         result = runner.invoke(
             scheduler_app,
-            ["stop", scheduler_id, "--output", "text"]
+            ["stop", "--output", "text", "--", scheduler_id]
         )
         assert len(result.stdout) > 0
         assert "scheduler" in result.stdout.lower()
 
     finally:
-        runner.invoke(scheduler_app, ["delete", scheduler_id])
+        runner.invoke(scheduler_app, ["delete", "--", scheduler_id])
 
 
 def test_scheduler_start_yaml_output(runner, fess_service):
@@ -197,13 +197,13 @@ def test_scheduler_start_yaml_output(runner, fess_service):
         # Start with YAML output - verify YAML structure
         result = runner.invoke(
             scheduler_app,
-            ["start", scheduler_id, "--output", "yaml"]
+            ["start", "--output", "yaml", "--", scheduler_id]
         )
         # YAML output should contain response key
         assert "response:" in result.stdout
 
     finally:
-        runner.invoke(scheduler_app, ["delete", scheduler_id])
+        runner.invoke(scheduler_app, ["delete", "--", scheduler_id])
 
 
 def test_scheduler_start_nonexistent(runner, fess_service):
