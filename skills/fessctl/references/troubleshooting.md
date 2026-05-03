@@ -11,7 +11,7 @@ HTTP 401: Unauthorized
 Causes:
 
 - `FESS_ACCESS_TOKEN` is unset, mistyped, or has been deleted in the admin UI.
-- The token was issued for a non-admin user; most fessctl operations require admin (`Radmin-api`) permission.
+- The token is bound to a role that does not have admin permissions; most fessctl operations require an admin-grade token (e.g. one bound to `{role}admin`).
 - You exported the token in one shell but are running fessctl from another shell where the env var was not inherited.
 
 Recovery:
@@ -20,8 +20,8 @@ Recovery:
 echo "${FESS_ACCESS_TOKEN:-UNSET}"          # 1. confirm the env var is exported
 fessctl ping                                 # 2. ping does NOT need a token; if this works the endpoint is reachable
 fessctl user list --size 1                   # 3. this DOES need a token
-# If still 401: re-issue
-fessctl accesstoken create --name claude-cli --permissions "Radmin-api"
+# If still 401: re-issue with an admin-bound permission
+fessctl accesstoken create --name claude-cli --permission "{role}admin"
 export FESS_ACCESS_TOKEN=<new value>
 ```
 
@@ -33,14 +33,15 @@ HTTP 404: Not Found
 
 Causes:
 
-- The `--id` you passed does not exist in this Fess server (typo, copy-pasted from a different env, or the resource was deleted).
+- The positional ID you passed does not exist in this Fess server (typo, copy-pasted from a different env, or the resource was deleted).
 - `FESS_ENDPOINT` points at the wrong server.
 - A previous `delete` ran successfully and the ID is now gone.
 
 Recovery:
 
 ```bash
-fessctl <resource> list --output json | jq '.[] | {id,name}'
+fessctl <resource> list --output json | jq '.response.settings[] | {id,name}'
+# joblog / crawlinginfo use .response.logs[] instead
 ```
 
 Find the live ID, retry. Resource IDs do not survive an export/import — see `references/conventions.md`.
@@ -77,8 +78,11 @@ Cause: `FESS_VERSION` does not match the running server's major.minor. fessctl s
 Recovery:
 
 ```bash
-curl -fsS "${FESS_ENDPOINT}/api/v1/health" | jq .   # find the running Fess version
-export FESS_VERSION=<that version>
+# Confirm the endpoint is reachable; cluster_name and status come back here,
+# but the Fess server version is not in this payload — get it from the
+# admin UI footer or from the codelibs/fess release tag your operator deployed.
+curl -fsS "${FESS_ENDPOINT}/api/v1/health" | jq .
+export FESS_VERSION=<the deployed Fess major.minor>
 ```
 
 If the Fess server is newer than any version fessctl knows about, you may also need to update fessctl itself.
@@ -108,7 +112,8 @@ Causes:
 Recovery:
 
 ```bash
-fessctl <resource> list --page 1 --size 100 --output json | jq 'length'
+fessctl <resource> list --page 1 --size 100 --output json \
+  | jq '.response.settings | length'
 ```
 
 If `length` is 0, the resource really is empty in this environment. Confirm you are pointed at the right `FESS_ENDPOINT`.

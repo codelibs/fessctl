@@ -7,16 +7,18 @@ Patterns that hold across most fessctl subcommands. Each per-feature reference n
 Every resource type exposes a uniform set of verbs:
 
 ```
-fessctl <resource> list      # paginated list
-fessctl <resource> get       # one resource by --id
-fessctl <resource> create    # new resource, fields via flags
-fessctl <resource> update    # mutate one resource by --id
-fessctl <resource> delete    # remove one resource by --id
+fessctl <resource> list                # paginated list
+fessctl <resource> get    <ID>          # one resource by positional ID
+fessctl <resource> create [flags]       # new resource, fields via flags
+fessctl <resource> update <ID> [flags]  # mutate one resource by positional ID
+fessctl <resource> delete <ID>          # remove one resource by positional ID
 ```
 
 Exceptions:
 
-- **`crawlinginfo`** is effectively read-only history: it exposes only `list`, `get`, `delete`. There is no `create` or `update`. Verify with `grep '@crawlinginfo_app.command' src/fessctl/commands/crawlinginfo.py` if in doubt.
+- **`crawlinginfo`** and **`joblog`** are effectively read-only history: they expose only `list`, `get`, `delete`. There is no `create` or `update`. Verify with `grep '@<name>_app.command' src/fessctl/commands/<name>.py` if in doubt.
+- **`user`**, **`role`**, **`group`** add a `getbyname` verb — `fessctl user getbyname <NAME>` resolves the row by its human-readable name rather than its opaque ID.
+- **`scheduler`** adds `start <ID>` and `stop <ID>` for triggering or halting a job manually.
 - The top-level `fessctl ping` is not part of any resource group; it is the smoke test for endpoint reachability.
 
 When in doubt, run `fessctl <resource> --help` to see the verbs offered for a particular resource, then `fessctl <resource> <verb> --help` for the flag list.
@@ -25,8 +27,14 @@ When in doubt, run `fessctl <resource> --help` to see the verbs offered for a pa
 
 Most resources use opaque Fess-internal IDs (e.g. ULID-like strings). Treat them as opaque — they are not URLs, not human-readable, and may differ between environments after an export/import.
 
-- `get`, `update`, `delete` always require `--id`.
-- IDs are discovered via `list`. The `id` field is included in `list --output json` output.
+- `get`, `update`, `delete` always take the resource ID as a **positional argument**, not a flag. For example:
+  ```bash
+  fessctl webconfig get   <CONFIG_ID>
+  fessctl webconfig update <CONFIG_ID> --num-of-thread 3
+  fessctl webconfig delete <CONFIG_ID>
+  ```
+  No fessctl subcommand accepts `--id`; if you see one, that is a typo.
+- IDs are discovered via `list`. With `--output json` the path is `.response.settings[].id` for most resources (`.response.logs[].id` for `joblog`/`crawlinginfo`).
 - Do not hard-code IDs across environments. After importing settings into a new Fess server, IDs will be regenerated.
 
 ## Pagination
@@ -50,11 +58,12 @@ Fields are exposed as Typer options. Required fields are marked with `...` (Type
 
 ```bash
 # Look up first, decide to create or update
-existing_id=$(fessctl webconfig list --output json | jq -r '.[] | select(.name=="foo") | .id')
+existing_id=$(fessctl webconfig list --output json \
+  | jq -r '.response.settings[] | select(.name=="foo") | .id')
 if [[ -z "$existing_id" ]]; then
   fessctl webconfig create --name foo ...
 else
-  fessctl webconfig update --id "$existing_id" ...
+  fessctl webconfig update "$existing_id" ...
 fi
 ```
 
@@ -66,8 +75,8 @@ fessctl does not provide native bulk verbs. Compose with shell:
 
 ```bash
 fessctl badword list --output json \
-  | jq -r '.[].id' \
-  | xargs -I{} fessctl badword delete --id {}
+  | jq -r '.response.settings[].id' \
+  | xargs -I{} fessctl badword delete {}
 ```
 
 When deleting in bulk, capture a backup first (`fessctl <resource> list --output yaml > before.yaml`) so the operation is reversible.

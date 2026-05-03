@@ -37,12 +37,12 @@ pipx install fessctl
 fessctl --help
 ```
 
-`pipx` is preferred because it isolates fessctl in its own virtualenv. As of v0.1.0 the project is also installable from source:
+`pipx` is preferred because it isolates fessctl in its own virtualenv. (Confirm the package is published to PyPI for the version you need; if not, fall back to a source install.) The project is also installable from source:
 
 ```bash
 git clone https://github.com/codelibs/fessctl.git
 cd fessctl
-uv pip install -e src
+uv pip install -e .
 ```
 
 After either install, `command -v fessctl` should print a path on `$PATH` and the detection chain will pick this branch.

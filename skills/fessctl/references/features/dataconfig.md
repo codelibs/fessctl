@@ -53,7 +53,7 @@ Required on create: `name`, `handler_name`. Recommended in practice: `handler_pa
 
 - **labeltype** — assign labels through the script or via permissions to let users filter ingested documents in the UI.
 - **scheduler** — actual crawling is triggered by a scheduler job (typically the `Default Crawler` job, or a job whose script calls the data-store handler). Without an enabled scheduler job, a DataConfig is inert.
-- **fess-ds-\*** plugin — non-built-in `handler_name` values require the corresponding plugin to be installed on the Fess server (see `fessctl plugin install`). The handler name in the config must match the plugin's registered name exactly.
+- **fess-ds-\*** plugin — non-built-in `handler_name` values require the corresponding plugin to be installed on the Fess server. fessctl 0.1.0 does not wrap the plugin admin API; install plugins from the Fess admin UI (System → Plugin) or follow the plugin's own install docs. The handler name in the config must match the plugin's registered name exactly.
 - **JDBC driver / native libs** — `DatabaseDataStore` needs the matching JDBC `.jar` in `app/WEB-INF/lib` and a server restart to be picked up.
 - **virtualhost** — controls which virtual host the produced documents are visible under.
 

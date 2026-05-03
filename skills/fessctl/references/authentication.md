@@ -18,7 +18,7 @@ Defaults live in `src/fessctl/config/settings.py`. The defaults are conservative
 
 1. Browse to `${FESS_ENDPOINT}/admin/` and sign in with an admin account.
 2. Open **System → Access Token**.
-3. Click **Create New**, give the token a name (e.g. `claude-cli`), and select the permissions it needs. For most fessctl operations the `Radmin-api` permission is required.
+3. Click **Create New**, give the token a name (e.g. `claude-cli`), and pick a parameter name plus the permissions it should grant. Permissions are Fess permission strings of the form `{role}<role-name>`, `{group}<group-name>`, or `{user}<user-name>` — for full administrative access bind the token to a role that already has admin rights, for example `{role}admin`. The exact syntax is documented in `fess-docs/en/15.6/admin/accesstoken-guide.rst`.
 4. Save and copy the generated token value. It is shown only once.
 
 ### Via fessctl (after you already have one admin token)
@@ -26,7 +26,7 @@ Defaults live in `src/fessctl/config/settings.py`. The defaults are conservative
 ```bash
 fessctl accesstoken create \
   --name claude-cli \
-  --permissions "Radmin-api"
+  --permission "{role}admin"          # repeat --permission to grant more
 ```
 
 See `references/features/accesstoken.md` for the full subcommand surface (list, get, update, delete).
@@ -56,11 +56,12 @@ Never commit a token to git, and never include it in chat output, log files, or 
 Fess access tokens are bearer tokens. The token's permissions are fixed at creation time; rotating permissions means issuing a new token and deleting the old one. Tokens do not auto-rotate. If a token leaks, delete it immediately via:
 
 ```bash
-fessctl accesstoken list --output json | jq '.[] | select(.name=="claude-cli")'
-fessctl accesstoken delete --id <id>
+fessctl accesstoken list --output json \
+  | jq '.response.settings[] | select(.name=="claude-cli")'
+fessctl accesstoken delete <id>
 ```
 
-Most fessctl subcommands require admin-equivalent permission. A token issued for a non-admin user will succeed at `ping` and may succeed at some read-only `list` operations but will fail with `403 Forbidden` on `create`/`update`/`delete`.
+Most fessctl subcommands require admin-equivalent permission. A token bound to a non-admin role will succeed at `ping` and may succeed at some read-only `list` operations but will fail with `403 Forbidden` on `create`/`update`/`delete`.
 
 ## Smoke test
 
@@ -78,4 +79,4 @@ Expected:
 
 ## Common 401 / 403 causes
 
-If `user list` fails after `ping` succeeds, the token is the problem. See `references/troubleshooting.md` for the full diagnostic flow; the short list is: token unset, token typo, token expired or revoked, or token issued without `Radmin-api` permission.
+If `user list` fails after `ping` succeeds, the token is the problem. See `references/troubleshooting.md` for the full diagnostic flow; the short list is: token unset, token typo, token expired or revoked, or token issued for a role that lacks admin permissions.
