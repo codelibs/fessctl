@@ -118,11 +118,11 @@ fessctl <resource> list --page 1 --size 100 --output json \
 
 If `length` is 0, the resource really is empty in this environment. Confirm you are pointed at the right `FESS_ENDPOINT`.
 
-## `uv run fessctl` slow on the first invocation
+## Slow first invocation
 
-Cause: cold virtualenv build inside `repos/fessctl/.venv`.
+Cause: when fessctl is installed from source, the first call may build the virtualenv on demand.
 
-Recovery: run `uv sync` once up front in `repos/fessctl`. Subsequent `uv run fessctl ...` calls reuse the cached environment and start in well under a second.
+Recovery: install with `pipx install fessctl`, `uv tool install fessctl`, or pre-warm a source install with `uv sync` / `uv pip install -e .` once up front. Subsequent calls start in well under a second.
 
 ## Docker pull or auth errors against `ghcr.io`
 

@@ -11,9 +11,8 @@ version: 0.1.0
 
 ## Detection (run in this order)
 
-1. `command -v fessctl` → use it directly
-2. `$FESS_WORKSPACE/repos/fessctl` exists AND `command -v uv` → `cd $FESS_WORKSPACE/repos/fessctl && uv run fessctl`
-3. Fall back to `docker run --rm -e FESS_ENDPOINT -e FESS_ACCESS_TOKEN -e FESS_VERSION ghcr.io/codelibs/fessctl:<tag>`
+1. `command -v fessctl` → use it directly (covers `pipx install fessctl`, `uv tool install fessctl`, manual `uv pip install -e .`, or any future package-manager install).
+2. Fall back to `docker run --rm -e FESS_ENDPOINT -e FESS_ACCESS_TOKEN -e FESS_VERSION ghcr.io/codelibs/fessctl:<tag>`.
 
 See `references/installation.md` for the exact wrappers.
 

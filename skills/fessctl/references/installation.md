@@ -1,6 +1,6 @@
 # Installing & Invoking fessctl
 
-`fessctl` is delivered as a Python package and a published Docker image. The skill picks one of three runners depending on what is available locally.
+`fessctl` is delivered as a Python package and a published Docker image. The skill picks one of two runners depending on what is available locally.
 
 ## Detection chain
 
@@ -10,10 +10,6 @@ Resolve the runner once at the start of a session. Use the first branch that suc
 resolve_fessctl() {
   if command -v fessctl >/dev/null 2>&1; then
     FESSCTL="fessctl"
-    return
-  fi
-  if [[ -d "${FESS_WORKSPACE:-$PWD}/repos/fessctl" ]] && command -v uv >/dev/null 2>&1; then
-    FESSCTL="uv --directory ${FESS_WORKSPACE:-$PWD}/repos/fessctl run fessctl"
     return
   fi
   FESSCTL="docker run --rm \
@@ -26,42 +22,30 @@ resolve_fessctl
 $FESSCTL ping
 ```
 
-The order matters: a system-PATH `fessctl` (e.g. installed via `pipx` or any future package manager) is the fastest invocation, followed by an in-tree `uv run` against `repos/fessctl`, with the published Docker image as the universal fallback.
+The order matters: a system-PATH `fessctl` is the fastest invocation; Docker is the universal fallback that works on any machine with a Docker daemon.
 
 ## Option A — system PATH install
 
-Recommended for end users who do not have a `fess-workspace` checkout.
+Recommended for end users. Any install method that puts `fessctl` on `$PATH` is picked up by the detection chain automatically.
 
 ```bash
-pipx install fessctl
-fessctl --help
-```
-
-`pipx` is preferred because it isolates fessctl in its own virtualenv. (Confirm the package is published to PyPI for the version you need; if not, fall back to a source install.) The project is also installable from source:
-
-```bash
+pipx install fessctl                 # if published to PyPI
+# or
+uv tool install fessctl              # if published to PyPI
+# or, from a local source checkout:
 git clone https://github.com/codelibs/fessctl.git
 cd fessctl
 uv pip install -e .
+fessctl --help
 ```
 
-After either install, `command -v fessctl` should print a path on `$PATH` and the detection chain will pick this branch.
+`pipx` and `uv tool` are preferred because they isolate fessctl in its own virtualenv. Confirm the package is published to PyPI for the version you need; if not, the source install is the fallback.
 
-## Option B — fess-workspace dev mode
+After install, `command -v fessctl` should print a path on `$PATH` and the detection chain will pick this branch.
 
-Use this when you are actively editing fessctl source inside a `fess-workspace` clone. Local edits are picked up on the next invocation.
+## Option B — Docker
 
-```bash
-cd $FESS_WORKSPACE/repos/fessctl
-uv sync
-uv run fessctl --help
-```
-
-`uv sync` only needs to run when `pyproject.toml` or `uv.lock` changes; subsequent calls reuse the cached environment. This branch is what the detection chain selects when `repos/fessctl` exists and `uv` is on `$PATH`.
-
-## Option C — Docker
-
-Use this when neither a PATH install nor a fess-workspace clone is available.
+Use this when a PATH install is not possible or desired.
 
 ```bash
 docker run --rm \
