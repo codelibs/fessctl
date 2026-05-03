@@ -17,7 +17,7 @@ def mock_settings():
     settings = Mock(spec=Settings)
     settings.fess_endpoint = "http://localhost:8080"
     settings.access_token = "test-token"
-    settings.fess_version = "15.4.0"
+    settings.fess_version = "15.6.1"
     return settings
 
 
@@ -53,7 +53,7 @@ class TestFessAPIClientInit:
         assert client.base_url == "http://localhost:8080"
         assert client.timeout == 5.0
         assert client._major_version == 15
-        assert client._minor_version == 4
+        assert client._minor_version == 6
 
     def test_init_with_custom_timeout(self, mock_settings):
         """Test client initialization with custom timeout."""
