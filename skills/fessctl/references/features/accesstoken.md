@@ -44,7 +44,7 @@ Always reconfirm with `fessctl accesstoken <sub> --help`.
 }
 ```
 
-Required on create: `name` and at least one entry in `permissions` (passed as repeated `--permission` flags, joined with newlines by fessctl). `expires` is optional but recommended for non-service tokens; the CLI accepts `yyyy-MM-ddTHH:mm:ss`. `parameter_name` is optional and only meaningful for trusted internal embedding scenarios. `crud_mode` is set automatically (`1` for create, `2` for update).
+Required by the CLI: `--name`. The Fess server typically also expects at least one `--permission` (passed as repeated flags, joined with newlines by fessctl) — without it the resulting token grants nothing useful, even though Typer accepts the call. `expires` is optional but recommended for non-service tokens; the CLI accepts `yyyy-MM-ddTHH:mm:ss`. `parameter_name` is optional and only meaningful for trusted internal embedding scenarios. `crud_mode` is set automatically (`1` for create, `2` for update).
 
 ## Relationships
 
