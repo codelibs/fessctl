@@ -35,7 +35,7 @@ def test_boostdoc_crud_flow(runner, fess_service):
     # 2) Retrieve the created boostdoc
     result = runner.invoke(
         boostdoc_app,
-        ["get", boostdoc_id, "--output", "json"]
+        ["get", "--output", "json", "--", boostdoc_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def test_boostdoc_crud_flow(runner, fess_service):
     new_boost_expr = "20.0"
     result = runner.invoke(
         boostdoc_app,
-        ["update", boostdoc_id, "--boost-expr", new_boost_expr, "--output", "json"]
+        ["update", "--boost-expr", new_boost_expr, "--output", "json", "--", boostdoc_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -57,7 +57,7 @@ def test_boostdoc_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated boost_expr
     result = runner.invoke(
         boostdoc_app,
-        ["get", boostdoc_id, "--output", "json"]
+        ["get", "--output", "json", "--", boostdoc_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -79,7 +79,7 @@ def test_boostdoc_crud_flow(runner, fess_service):
     # 6) Delete the boostdoc
     result = runner.invoke(
         boostdoc_app,
-        ["delete", boostdoc_id, "--output", "json"]
+        ["delete", "--output", "json", "--", boostdoc_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -88,7 +88,7 @@ def test_boostdoc_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         boostdoc_app,
-        ["get", boostdoc_id]
+        ["get", "--", boostdoc_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve boostdoc" in result.stdout.lower()

@@ -33,7 +33,7 @@ def test_user_crud_flow(runner, fess_service):
     # 2) Retrieve the created user
     result = runner.invoke(
         user_app,
-        ["get", user_id, "--output", "json"]
+        ["get", "--output", "json", "--", user_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -69,7 +69,7 @@ def test_user_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated fields
     result = runner.invoke(
         user_app,
-        ["get", user_id, "--output", "json"]
+        ["get", "--output", "json", "--", user_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -106,7 +106,7 @@ def test_user_crud_flow(runner, fess_service):
     # 6) Delete the user
     result = runner.invoke(
         user_app,
-        ["delete", user_id, "--output", "json"]
+        ["delete", "--output", "json", "--", user_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -115,7 +115,7 @@ def test_user_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         user_app,
-        ["get", user_id]
+        ["get", "--", user_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve user" in result.stdout.lower()
@@ -146,4 +146,4 @@ def test_getbyname_user(runner, fess_service):
     assert setting["name"] == unique_name
 
     # Cleanup
-    runner.invoke(user_app, ["delete", user_id, "--output", "json"])
+    runner.invoke(user_app, ["delete", "--output", "json", "--", user_id])

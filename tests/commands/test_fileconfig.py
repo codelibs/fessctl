@@ -34,7 +34,7 @@ def test_fileconfig_crud_flow(runner, fess_service):
     # 2) Retrieve the created fileconfig
     result = runner.invoke(
         fileconfig_app,
-        ["get", fileconfig_id, "--output", "json"]
+        ["get", "--output", "json", "--", fileconfig_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -47,7 +47,7 @@ def test_fileconfig_crud_flow(runner, fess_service):
     new_description = "test description"
     result = runner.invoke(
         fileconfig_app,
-        ["update", fileconfig_id, "--description", new_description, "--output", "json"]
+        ["update", "--description", new_description, "--output", "json", "--", fileconfig_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -56,7 +56,7 @@ def test_fileconfig_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated description
     result = runner.invoke(
         fileconfig_app,
-        ["get", fileconfig_id, "--output", "json"]
+        ["get", "--output", "json", "--", fileconfig_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -78,7 +78,7 @@ def test_fileconfig_crud_flow(runner, fess_service):
     # 6) Delete the fileconfig
     result = runner.invoke(
         fileconfig_app,
-        ["delete", fileconfig_id, "--output", "json"]
+        ["delete", "--output", "json", "--", fileconfig_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -87,7 +87,7 @@ def test_fileconfig_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         fileconfig_app,
-        ["get", fileconfig_id]
+        ["get", "--", fileconfig_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve fileconfig" in result.stdout.lower()

@@ -27,7 +27,7 @@ def test_group_crud_flow(runner, fess_service):
     # 2) Retrieve the created group
     result = runner.invoke(
         group_app,
-        ["get", group_id, "--output", "json"]
+        ["get", "--output", "json", "--", group_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -41,7 +41,7 @@ def test_group_crud_flow(runner, fess_service):
     # 3) Update the group's attributes
     result = runner.invoke(
         group_app,
-        ["update", group_id, "--attribute", "key1=val1", "--output", "json"]
+        ["update", "--attribute", "key1=val1", "--output", "json", "--", group_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -50,7 +50,7 @@ def test_group_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated attributes
     result = runner.invoke(
         group_app,
-        ["get", group_id, "--output", "json"]
+        ["get", "--output", "json", "--", group_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -78,7 +78,7 @@ def test_group_crud_flow(runner, fess_service):
     # 6) Delete the group
     result = runner.invoke(
         group_app,
-        ["delete", group_id, "--output", "json"]
+        ["delete", "--output", "json", "--", group_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -87,7 +87,7 @@ def test_group_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         group_app,
-        ["get", group_id]
+        ["get", "--", group_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve group" in result.stdout.lower()
@@ -116,4 +116,4 @@ def test_getbyname_group(runner, fess_service):
     assert setting["id"] == group_id
     assert setting["name"] == unique_name
 
-    runner.invoke(group_app, ["delete", group_id, "--output", "json"])
+    runner.invoke(group_app, ["delete", "--output", "json", "--", group_id])

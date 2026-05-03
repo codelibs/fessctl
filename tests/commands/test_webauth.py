@@ -29,7 +29,7 @@ def temp_webconfig(runner):
     assert result.exit_code == 0, f"Failed to create temp webconfig: {result.stdout}"
     webconfig_id = json.loads(result.stdout)["response"]["id"]
     yield webconfig_id
-    runner.invoke(webconfig_app, ["delete", webconfig_id])
+    runner.invoke(webconfig_app, ["delete", "--", webconfig_id])
 
 
 def test_webauth_crud_flow(runner, fess_service, temp_webconfig):
@@ -51,7 +51,7 @@ def test_webauth_crud_flow(runner, fess_service, temp_webconfig):
     # 2) Retrieve the created webauth
     result = runner.invoke(
         webauth_app,
-        ["get", webauth_id, "--output", "json"]
+        ["get", "--output", "json", "--", webauth_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -64,7 +64,7 @@ def test_webauth_crud_flow(runner, fess_service, temp_webconfig):
     new_password = "new_password"
     result = runner.invoke(
         webauth_app,
-        ["update", webauth_id, "--password", new_password, "--output", "json"]
+        ["update", "--password", new_password, "--output", "json", "--", webauth_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -73,7 +73,7 @@ def test_webauth_crud_flow(runner, fess_service, temp_webconfig):
     # 4) Retrieve again and verify updated password
     result = runner.invoke(
         webauth_app,
-        ["get", webauth_id, "--output", "json"]
+        ["get", "--output", "json", "--", webauth_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -95,7 +95,7 @@ def test_webauth_crud_flow(runner, fess_service, temp_webconfig):
     # 6) Delete the webauth
     result = runner.invoke(
         webauth_app,
-        ["delete", webauth_id, "--output", "json"]
+        ["delete", "--output", "json", "--", webauth_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -104,7 +104,7 @@ def test_webauth_crud_flow(runner, fess_service, temp_webconfig):
     # 7) Verify that get now fails
     result = runner.invoke(
         webauth_app,
-        ["get", webauth_id]
+        ["get", "--", webauth_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve webauth" in result.stdout.lower()

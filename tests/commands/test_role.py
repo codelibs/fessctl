@@ -27,7 +27,7 @@ def test_role_crud_flow(runner, fess_service):
     # 2) Retrieve the created role
     result = runner.invoke(
         role_app,
-        ["get", role_id, "--output", "json"]
+        ["get", "--output", "json", "--", role_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -41,7 +41,7 @@ def test_role_crud_flow(runner, fess_service):
     # 3) Update the role's attributes
     result = runner.invoke(
         role_app,
-        ["update", role_id, "--attribute", "key1=val1", "--output", "json"]
+        ["update", "--attribute", "key1=val1", "--output", "json", "--", role_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -50,7 +50,7 @@ def test_role_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated attributes
     result = runner.invoke(
         role_app,
-        ["get", role_id, "--output", "json"]
+        ["get", "--output", "json", "--", role_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -78,7 +78,7 @@ def test_role_crud_flow(runner, fess_service):
     # 6) Delete the role
     result = runner.invoke(
         role_app,
-        ["delete", role_id, "--output", "json"]
+        ["delete", "--output", "json", "--", role_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -87,7 +87,7 @@ def test_role_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         role_app,
-        ["get", role_id]
+        ["get", "--", role_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve role" in result.stdout.lower()
@@ -117,4 +117,4 @@ def test_getbyname_role(runner, fess_service):
     assert setting["name"] == unique_name
 
     # Cleanup
-    runner.invoke(role_app, ["delete", role_id, "--output", "json"])
+    runner.invoke(role_app, ["delete", "--output", "json", "--", role_id])

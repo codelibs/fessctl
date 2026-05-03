@@ -35,7 +35,7 @@ def test_pathmap_crud_flow(runner, fess_service):
     # 2) Retrieve the created pathmap
     result = runner.invoke(
         pathmap_app,
-        ["get", pathmap_id, "--output", "json"]
+        ["get", "--output", "json", "--", pathmap_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def test_pathmap_crud_flow(runner, fess_service):
     new_replacement = "https://www.n2sm.net/"
     result = runner.invoke(
         pathmap_app,
-        ["update", pathmap_id, "--replacement", new_replacement, "--output", "json"]
+        ["update", "--replacement", new_replacement, "--output", "json", "--", pathmap_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -57,7 +57,7 @@ def test_pathmap_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated replacement
     result = runner.invoke(
         pathmap_app,
-        ["get", pathmap_id, "--output", "json"]
+        ["get", "--output", "json", "--", pathmap_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -79,7 +79,7 @@ def test_pathmap_crud_flow(runner, fess_service):
     # 6) Delete the pathmap
     result = runner.invoke(
         pathmap_app,
-        ["delete", pathmap_id, "--output", "json"]
+        ["delete", "--output", "json", "--", pathmap_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -88,7 +88,7 @@ def test_pathmap_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         pathmap_app,
-        ["get", pathmap_id]
+        ["get", "--", pathmap_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve pathmap" in result.stdout.lower()

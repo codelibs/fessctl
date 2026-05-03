@@ -35,7 +35,7 @@ def test_relatedquery_crud_flow(runner, fess_service):
     # 2) Retrieve the created relatedquery
     result = runner.invoke(
         relatedquery_app,
-        ["get", relatedquery_id, "--output", "json"]
+        ["get", "--output", "json", "--", relatedquery_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def test_relatedquery_crud_flow(runner, fess_service):
     new_queries = "n2sm"
     result = runner.invoke(
         relatedquery_app,
-        ["update", relatedquery_id, "--queries", new_queries, "--output", "json"]
+        ["update", "--queries", new_queries, "--output", "json", "--", relatedquery_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -57,7 +57,7 @@ def test_relatedquery_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated queries
     result = runner.invoke(
         relatedquery_app,
-        ["get", relatedquery_id, "--output", "json"]
+        ["get", "--output", "json", "--", relatedquery_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -79,7 +79,7 @@ def test_relatedquery_crud_flow(runner, fess_service):
     # 6) Delete the relatedquery
     result = runner.invoke(
         relatedquery_app,
-        ["delete", relatedquery_id, "--output", "json"]
+        ["delete", "--output", "json", "--", relatedquery_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -88,7 +88,7 @@ def test_relatedquery_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         relatedquery_app,
-        ["get", relatedquery_id]
+        ["get", "--", relatedquery_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve relatedquery" in result.stdout.lower()

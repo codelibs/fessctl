@@ -29,7 +29,7 @@ def temp_fileconfig(runner):
     assert result.exit_code == 0, f"Failed to create temp fileconfig: {result.stdout}"
     fileconfig_id = json.loads(result.stdout)["response"]["id"]
     yield fileconfig_id
-    runner.invoke(fileconfig_app, ["delete", fileconfig_id])
+    runner.invoke(fileconfig_app, ["delete", "--", fileconfig_id])
 
 
 def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
@@ -51,7 +51,7 @@ def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
     # 2) Retrieve the created fileauth
     result = runner.invoke(
         fileauth_app,
-        ["get", fileauth_id, "--output", "json"]
+        ["get", "--output", "json", "--", fileauth_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -64,7 +64,7 @@ def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
     new_password = "new_password"
     result = runner.invoke(
         fileauth_app,
-        ["update", fileauth_id, "--password", new_password, "--output", "json"]
+        ["update", "--password", new_password, "--output", "json", "--", fileauth_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -73,7 +73,7 @@ def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
     # 4) Retrieve again and verify updated password
     result = runner.invoke(
         fileauth_app,
-        ["get", fileauth_id, "--output", "json"]
+        ["get", "--output", "json", "--", fileauth_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -95,7 +95,7 @@ def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
     # 6) Delete the fileauth
     result = runner.invoke(
         fileauth_app,
-        ["delete", fileauth_id, "--output", "json"]
+        ["delete", "--output", "json", "--", fileauth_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -104,7 +104,7 @@ def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
     # 7) Verify that get now fails
     result = runner.invoke(
         fileauth_app,
-        ["get", fileauth_id]
+        ["get", "--", fileauth_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve fileauth" in result.stdout.lower()

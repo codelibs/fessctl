@@ -35,7 +35,7 @@ def test_duplicatehost_crud_flow(runner, fess_service):
     # 2) Retrieve the created duplicatehost
     result = runner.invoke(
         duplicatehost_app,
-        ["get", duplicatehost_id, "--output", "json"]
+        ["get", "--output", "json", "--", duplicatehost_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -48,7 +48,7 @@ def test_duplicatehost_crud_flow(runner, fess_service):
     new_sort_order = "10"
     result = runner.invoke(
         duplicatehost_app,
-        ["update", duplicatehost_id, "--sort-order", new_sort_order, "--output", "json"]
+        ["update", "--sort-order", new_sort_order, "--output", "json", "--", duplicatehost_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -57,7 +57,7 @@ def test_duplicatehost_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated sort_order
     result = runner.invoke(
         duplicatehost_app,
-        ["get", duplicatehost_id, "--output", "json"]
+        ["get", "--output", "json", "--", duplicatehost_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -79,7 +79,7 @@ def test_duplicatehost_crud_flow(runner, fess_service):
     # 6) Delete the duplicatehost
     result = runner.invoke(
         duplicatehost_app,
-        ["delete", duplicatehost_id, "--output", "json"]
+        ["delete", "--output", "json", "--", duplicatehost_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -88,7 +88,7 @@ def test_duplicatehost_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         duplicatehost_app,
-        ["get", duplicatehost_id]
+        ["get", "--", duplicatehost_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve duplicatehost" in result.stdout.lower()

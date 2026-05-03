@@ -29,7 +29,7 @@ def temp_webconfig(runner):
     assert result.exit_code == 0, f"Failed to create temp webconfig: {result.stdout}"
     webconfig_id = json.loads(result.stdout)["response"]["id"]
     yield webconfig_id
-    runner.invoke(webconfig_app, ["delete", webconfig_id])
+    runner.invoke(webconfig_app, ["delete", "--", webconfig_id])
 
 
 def test_reqheader_crud_flow(runner, fess_service, temp_webconfig):
@@ -52,7 +52,7 @@ def test_reqheader_crud_flow(runner, fess_service, temp_webconfig):
     # 2) Retrieve the created reqheader
     result = runner.invoke(
         reqheader_app,
-        ["get", reqheader_id, "--output", "json"]
+        ["get", "--output", "json", "--", reqheader_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -65,7 +65,7 @@ def test_reqheader_crud_flow(runner, fess_service, temp_webconfig):
     new_value = "new-test-value"
     result = runner.invoke(
         reqheader_app,
-        ["update", reqheader_id, "--value", new_value, "--output", "json"]
+        ["update", "--value", new_value, "--output", "json", "--", reqheader_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -74,7 +74,7 @@ def test_reqheader_crud_flow(runner, fess_service, temp_webconfig):
     # 4) Retrieve again and verify updated value
     result = runner.invoke(
         reqheader_app,
-        ["get", reqheader_id, "--output", "json"]
+        ["get", "--output", "json", "--", reqheader_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -96,7 +96,7 @@ def test_reqheader_crud_flow(runner, fess_service, temp_webconfig):
     # 6) Delete the reqheader
     result = runner.invoke(
         reqheader_app,
-        ["delete", reqheader_id, "--output", "json"]
+        ["delete", "--output", "json", "--", reqheader_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -105,7 +105,7 @@ def test_reqheader_crud_flow(runner, fess_service, temp_webconfig):
     # 7) Verify that get now fails
     result = runner.invoke(
         reqheader_app,
-        ["get", reqheader_id]
+        ["get", "--", reqheader_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve reqheader" in result.stdout.lower()

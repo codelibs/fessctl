@@ -37,7 +37,7 @@ def test_keymatch_crud_flow(runner, fess_service):
     # 2) Retrieve the created keymatch
     result = runner.invoke(
         keymatch_app,
-        ["get", keymatch_id, "--output", "json"]
+        ["get", "--output", "json", "--", keymatch_id]
     )
     assert result.exit_code == 0, f"Get failed: {result.stdout}"
     get_resp = json.loads(result.stdout)
@@ -50,7 +50,7 @@ def test_keymatch_crud_flow(runner, fess_service):
     new_boost = "200.0"
     result = runner.invoke(
         keymatch_app,
-        ["update", keymatch_id, "--boost", new_boost, "--output", "json"]
+        ["update", "--boost", new_boost, "--output", "json", "--", keymatch_id]
     )
     assert result.exit_code == 0, f"Update failed: {result.stdout}"
     update_resp = json.loads(result.stdout)
@@ -59,7 +59,7 @@ def test_keymatch_crud_flow(runner, fess_service):
     # 4) Retrieve again and verify updated boost
     result = runner.invoke(
         keymatch_app,
-        ["get", keymatch_id, "--output", "json"]
+        ["get", "--output", "json", "--", keymatch_id]
     )
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
@@ -81,7 +81,7 @@ def test_keymatch_crud_flow(runner, fess_service):
     # 6) Delete the keymatch
     result = runner.invoke(
         keymatch_app,
-        ["delete", keymatch_id, "--output", "json"]
+        ["delete", "--output", "json", "--", keymatch_id]
     )
     assert result.exit_code == 0, f"Delete failed: {result.stdout}"
     del_resp = json.loads(result.stdout)
@@ -90,7 +90,7 @@ def test_keymatch_crud_flow(runner, fess_service):
     # 7) Verify that get now fails
     result = runner.invoke(
         keymatch_app,
-        ["get", keymatch_id]
+        ["get", "--", keymatch_id]
     )
     assert result.exit_code != 0
     assert "failed to retrieve keymatch" in result.stdout.lower()
