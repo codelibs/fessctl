@@ -24,6 +24,7 @@ class TestPingCommand:
     def test_ping_healthy_server_text_output(self, mock_client_class, runner):
         """Test ping with healthy server returns green status in text output."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "green", "timed_out": False}
         }
@@ -39,6 +40,7 @@ class TestPingCommand:
     def test_ping_healthy_server_json_output(self, mock_client_class, runner):
         """Test ping with healthy server returns JSON output."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "green", "timed_out": False}
         }
@@ -54,6 +56,7 @@ class TestPingCommand:
     def test_ping_healthy_server_yaml_output(self, mock_client_class, runner):
         """Test ping with healthy server returns YAML output."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "green", "timed_out": False}
         }
@@ -68,6 +71,7 @@ class TestPingCommand:
     def test_ping_yellow_status(self, mock_client_class, runner):
         """Test ping with yellow status shows warning."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "yellow", "timed_out": False}
         }
@@ -82,6 +86,7 @@ class TestPingCommand:
     def test_ping_red_status(self, mock_client_class, runner):
         """Test ping with red status returns error."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "red", "timed_out": False},
             "response": {"message": "Cluster is unhealthy"}
@@ -97,6 +102,7 @@ class TestPingCommand:
     def test_ping_timed_out(self, mock_client_class, runner):
         """Test ping with timed_out=True returns error."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "green", "timed_out": True},
             "response": {"message": "Request timed out"}
@@ -112,6 +118,7 @@ class TestPingCommand:
     def test_ping_unknown_status(self, mock_client_class, runner):
         """Test ping with unknown status returns error."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "unknown", "timed_out": True},
             "response": {"message": ""}
@@ -126,6 +133,7 @@ class TestPingCommand:
     def test_ping_connection_error(self, mock_client_class, runner):
         """Test ping with connection error."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.side_effect = FessAPIClientError(
             status_code=-1, content="Connection refused"
         )
@@ -140,6 +148,7 @@ class TestPingCommand:
     def test_ping_generic_exception(self, mock_client_class, runner):
         """Test ping with generic exception."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.side_effect = Exception("Unexpected error")
         mock_client_class.return_value = mock_client
 
@@ -147,6 +156,80 @@ class TestPingCommand:
 
         assert result.exit_code == 1
         assert "Unexpected error" in result.stdout
+
+
+class TestPingCommandV2:
+    """Tests for the ping command against Fess 15.7+ (/api/v2/health envelope)."""
+
+    @patch("fessctl.cli.FessAPIClient")
+    def test_ping_healthy_server_text_output(self, mock_client_class, runner):
+        """Test v2 ping with a healthy (green) cluster."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {"status": 0, "engine": {"status": "green", "ping_status": 0}}
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping"])
+
+        assert result.exit_code == 0
+        assert "healthy" in result.stdout.lower()
+        assert "green" in result.stdout.lower()
+
+    @patch("fessctl.cli.FessAPIClient")
+    def test_ping_yellow_status(self, mock_client_class, runner):
+        """Test v2 ping with a yellow cluster shows a warning but succeeds."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {"status": 0, "engine": {"status": "yellow", "ping_status": 0}}
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping"])
+
+        assert result.exit_code == 0
+        assert "yellow" in result.stdout.lower()
+
+    @patch("fessctl.cli.FessAPIClient")
+    def test_ping_red_status(self, mock_client_class, runner):
+        """Test v2 ping with a red cluster (error envelope) returns an error."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {
+                "status": 9,
+                "error": {
+                    "code": "service_unavailable",
+                    "message": "search engine cluster is red",
+                    "details": {"engine": {"status": "red", "ping_status": 2}},
+                },
+            }
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping"])
+
+        assert result.exit_code == 1
+        assert "red" in result.stdout.lower()
+        assert "search engine cluster is red" in result.stdout
+
+    @patch("fessctl.cli.FessAPIClient")
+    def test_ping_json_output(self, mock_client_class, runner):
+        """Test v2 ping JSON output echoes the raw v2 envelope."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {"status": 0, "engine": {"status": "green", "ping_status": 0}}
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping", "--output", "json"])
+
+        assert result.exit_code == 0
+        response = json.loads(result.stdout)
+        assert response["response"]["engine"]["status"] == "green"
 
 
 class TestAppStructure:
@@ -185,6 +268,7 @@ class TestPingOutputFormats:
     def test_ping_json_output_is_valid_json(self, mock_client_class, runner):
         """Test that JSON output is valid JSON."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "green", "timed_out": False, "number_of_nodes": 3}
         }
@@ -200,6 +284,7 @@ class TestPingOutputFormats:
     def test_ping_short_output_flag(self, mock_client_class, runner):
         """Test that -o short flag works for output."""
         mock_client = Mock()
+        mock_client.is_api_v2 = False
         mock_client.ping.return_value = {
             "data": {"status": "green", "timed_out": False}
         }

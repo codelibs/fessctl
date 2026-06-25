@@ -9,4 +9,4 @@ class Settings:
     access_token: str | None = field(
         default_factory=lambda: os.getenv("FESS_ACCESS_TOKEN", None))
     fess_version: str = field(
-        default_factory=lambda: os.getenv("FESS_VERSION", "15.6.1"))
+        default_factory=lambda: os.getenv("FESS_VERSION", "15.7.0"))

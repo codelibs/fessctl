@@ -18,6 +18,8 @@ jobs:
             opensearch_version: "2.19.1"
           - fess_version: "15.6.1"
             opensearch_version: "3.6.0"
+          - fess_version: "15.7.0"
+            opensearch_version: "3.7.0"
 
     steps:
     - uses: actions/checkout@v4

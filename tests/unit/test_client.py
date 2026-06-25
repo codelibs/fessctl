@@ -32,6 +32,16 @@ def mock_settings_v14():
 
 
 @pytest.fixture
+def mock_settings_v157():
+    """Create a mock Settings object for Fess 15.7+ (unified /api/v2)."""
+    settings = Mock(spec=Settings)
+    settings.fess_endpoint = "http://localhost:8080"
+    settings.access_token = "test-token"
+    settings.fess_version = "15.7.0"
+    return settings
+
+
+@pytest.fixture
 def client(mock_settings):
     """Create a FessAPIClient instance with mocked settings."""
     return FessAPIClient(mock_settings)
@@ -41,6 +51,12 @@ def client(mock_settings):
 def client_v14(mock_settings_v14):
     """Create a FessAPIClient instance for Fess 14.x."""
     return FessAPIClient(mock_settings_v14)
+
+
+@pytest.fixture
+def client_v157(mock_settings_v157):
+    """Create a FessAPIClient instance for Fess 15.7+."""
+    return FessAPIClient(mock_settings_v157)
 
 
 class TestFessAPIClientInit:
@@ -302,6 +318,28 @@ class TestSendRequestErrorHandling:
 
         assert result == expected_data
 
+    @patch("httpx.get")
+    def test_non_200_json_body_is_returned_without_raising(self, mock_get, client):
+        """A non-2xx response with a JSON body (e.g. v2 red-cluster 503) is parsed, not raised."""
+        envelope = {
+            "response": {
+                "status": 9,
+                "error": {
+                    "code": "service_unavailable",
+                    "message": "search engine cluster is red",
+                    "details": {"engine": {"status": "red", "ping_status": 2}},
+                },
+            }
+        }
+        mock_response = Mock()
+        mock_response.status_code = 503
+        mock_response.json.return_value = envelope
+        mock_get.return_value = mock_response
+
+        result = client.send_request(Action.GET, "http://test/api")
+
+        assert result == envelope
+
 
 class TestSendRequestHeaders:
     """Tests for header handling in send_request."""
@@ -376,6 +414,70 @@ class TestPingMethod:
 
         call_kwargs = mock_get.call_args[1]
         assert "Authorization" not in call_kwargs["headers"]
+
+    @patch("httpx.get")
+    def test_ping_v157_calls_v2_health_endpoint(self, mock_get, client_v157):
+        """Test that ping targets /api/v2/health on Fess 15.7+."""
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "response": {"status": 0, "engine": {"status": "green", "ping_status": 0}}
+        }
+        mock_get.return_value = mock_response
+
+        client_v157.ping()
+
+        mock_get.assert_called_once()
+        call_url = mock_get.call_args[0][0]
+        assert "/api/v2/health" in call_url
+        assert "/api/v1/health" not in call_url
+
+    @patch("httpx.get")
+    def test_ping_v157_uses_search_headers(self, mock_get, client_v157):
+        """Test that v2 ping uses search headers (no auth)."""
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "response": {"status": 0, "engine": {"status": "green", "ping_status": 0}}
+        }
+        mock_get.return_value = mock_response
+
+        client_v157.ping()
+
+        call_kwargs = mock_get.call_args[1]
+        assert "Authorization" not in call_kwargs["headers"]
+
+
+class TestIsApiV2:
+    """Tests for the is_api_v2 version gate (Fess 15.7+ uses /api/v2)."""
+
+    @pytest.mark.parametrize(
+        "version,expected",
+        [
+            ("14.19.2", False),
+            ("15.0.0", False),
+            ("15.6.1", False),
+            ("15.7.0", True),
+            ("15.7.3", True),
+            ("15.8.0", True),
+            ("16.0.0", True),
+            ("16.0.0-SNAPSHOT", True),
+        ],
+    )
+    def test_is_api_v2(self, version, expected):
+        """Only Fess 15.7 and newer expose the unified /api/v2 surface."""
+        settings = Mock(spec=Settings)
+        settings.fess_endpoint = "http://localhost:8080"
+        settings.access_token = "test-token"
+        settings.fess_version = version
+
+        assert FessAPIClient(settings).is_api_v2 is expected
+
+    def test_default_settings_use_api_v2(self, monkeypatch):
+        """The default FESS_VERSION targets the unified /api/v2 surface (Fess 15.7+)."""
+        monkeypatch.delenv("FESS_VERSION", raising=False)
+        monkeypatch.delenv("FESS_ENDPOINT", raising=False)
+        monkeypatch.delenv("FESS_ACCESS_TOKEN", raising=False)
+
+        assert FessAPIClient(Settings()).is_api_v2 is True
 
 
 class TestRoleAPIs:
