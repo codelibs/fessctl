@@ -13,7 +13,7 @@ def fess_service():
     print(f"Project root: {project_root}")
     
     # Determine which compose file to use based on FESS_VERSION
-    fess_version = os.getenv("FESS_VERSION", "15.6.1")
+    fess_version = os.getenv("FESS_VERSION", "15.7.0")
     if fess_version.startswith("15."):
         compose_file = "compose-fess15.yaml"
     else:
@@ -29,7 +29,15 @@ def fess_service():
 
     timeout_seconds = 60
     start = time.time()
-    health_url = f"{endpoint}/api/v1/health"
+    # Fess 15.7+ serves the health check at /api/v2/health (the legacy /api/v1/health
+    # was removed); earlier versions use /api/v1/health.
+    try:
+        major, minor, *_ = (int(p) for p in fess_version.split(".")[:2])
+        is_api_v2 = (major, minor) >= (15, 7)
+    except (ValueError, TypeError):
+        is_api_v2 = False
+    health_path = "/api/v2/health" if is_api_v2 else "/api/v1/health"
+    health_url = f"{endpoint}{health_path}"
     while True:
         try:
             res = requests.get(health_url, timeout=1)

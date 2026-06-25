@@ -50,6 +50,16 @@ class FessAPIClient:
         except Exception as e:
             raise ValueError(f"Invalid version format: '{version}'") from e
 
+    @property
+    def is_api_v2(self) -> bool:
+        """
+        Whether the target Fess server exposes the unified ``/api/v2`` surface.
+
+        Fess 15.7 removed the legacy ``/api/v1`` (and ``/api/chat``) endpoints and
+        replaced them with ``/api/v2``. The admin API (``/api/admin/*``) is unchanged.
+        """
+        return (self._major_version, self._minor_version) >= (15, 7)
+
     def send_request(
         self,
         action: Action,
@@ -117,10 +127,16 @@ class FessAPIClient:
         """
         Sends a GET request to the health endpoint of the API to check the service status.
 
+        Fess 15.7+ serves the health check at ``/api/v2/health`` (the legacy
+        ``/api/v1/health`` was removed); earlier versions use ``/api/v1/health``.
+
         Returns:
             dict: The response from the health endpoint, typically containing service health information.
         """
-        url = f"{self.base_url}/api/v1/health"
+        if self.is_api_v2:
+            url = f"{self.base_url}/api/v2/health"
+        else:
+            url = f"{self.base_url}/api/v1/health"
         return self.send_request(Action.GET, url, is_admin=False)
 
     # Role APIs

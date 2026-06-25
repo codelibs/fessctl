@@ -89,8 +89,23 @@ def ping(
     client = FessAPIClient(Settings())
     try:
         result = client.ping()
-        status = result.get("data", {}).get("status", "unknown")
-        timed_out = result.get("data", {}).get("timed_out", True)
+        if client.is_api_v2:
+            # Fess 15.7+ /api/v2/health envelope:
+            #   healthy: {"response": {"status": 0, "engine": {"status": "green", "ping_status": 0}}}
+            #   red:     {"response": {"status": 9, "error": {"message": "...",
+            #                          "details": {"engine": {"status": "red", "ping_status": N}}}}}
+            response = result.get("response", {})
+            engine = response.get("engine")
+            if engine is None:
+                engine = response.get("error", {}).get("details", {}).get("engine", {})
+            status = engine.get("status", "unknown")
+            # The v2 health endpoint does not report timed_out; cluster status is authoritative.
+            timed_out = False
+            message: str = response.get("error", {}).get("message", "")
+        else:
+            status = result.get("data", {}).get("status", "unknown")
+            timed_out = result.get("data", {}).get("timed_out", True)
+            message = result.get("response", {}).get("message", "")
 
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
@@ -102,7 +117,6 @@ def ping(
             elif status == "yellow":
                 typer.echo(format_result_markdown(True, f"Fess server status: {status} (timed_out: {timed_out})", "Server", "ping"))
             else:
-                message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Fess server status: {status} (timed_out: {timed_out}) {message}", "Server", "ping"))
                 raise typer.Exit(code=1)
     except typer.Exit:
