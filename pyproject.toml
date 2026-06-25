@@ -1,7 +1,10 @@
 [project]
 name = "fessctl"
-version = "0.2.0.dev"
+version = "0.2.0"
 description = "CLI tool to manage Fess using the admin API"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "CodeLibs, Inc.", email = "info@codelibs.co" }]
 requires-python = ">=3.13"
 dependencies = [
@@ -28,7 +31,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=77.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
