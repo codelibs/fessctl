@@ -15,7 +15,7 @@ Fess is an open-source enterprise search server based on OpenSearch.
 
 ## Installation and Usage
 
-There are three ways to use fessctl:
+There are four ways to use fessctl:
 
 ### Method 1: Using Pre-built Docker Image
 
@@ -94,9 +94,34 @@ fessctl user list
 fessctl webconfig create --name TestConfig --url https://test.config.com/
 ```
 
+### Method 4: Install from PyPI
+
+`fessctl` is published to [PyPI](https://pypi.org/project/fessctl/). Install it with `pip`,
+or use [`pipx`](https://pipx.pypa.io/) / [`uv tool`](https://docs.astral.sh/uv/guides/tools/)
+for an isolated, globally available CLI:
+
+```bash
+pip install fessctl
+# or, for an isolated install:
+pipx install fessctl
+# or:
+uv tool install fessctl
+```
+
+#### Usage
+```bash
+export FESS_ACCESS_TOKEN=your_access_token_here
+export FESS_ENDPOINT=https://your-fess-server
+export FESS_VERSION=15.6.1
+
+fessctl --help
+fessctl ping
+fessctl user list
+```
+
 ## Environment Variables
 
-All three methods require the following environment variables:
+All four methods require the following environment variables:
 
 - `FESS_ENDPOINT`: The URL of your Fess server's API endpoint (default: `http://localhost:8080`)
 - `FESS_ACCESS_TOKEN`: Bearer token for API authentication (required)
