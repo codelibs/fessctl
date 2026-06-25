@@ -1,12 +1,24 @@
 [project]
 name = "fessctl"
-version = "0.2.0"
+version = "0.3.0.dev0"
 description = "CLI tool to manage Fess using the admin API"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "CodeLibs, Inc.", email = "info@codelibs.co" }]
 requires-python = ">=3.13"
+keywords = ["fess", "search", "opensearch", "cli", "admin", "codelibs"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Utilities",
+]
 dependencies = [
     "httpx==0.28.1",
     "pyyaml==6.0.2",
@@ -15,6 +27,13 @@ dependencies = [
 
 [project.scripts]
 fessctl = "fessctl.cli:main"
+
+[project.urls]
+Homepage = "https://fess.codelibs.org/"
+Repository = "https://github.com/codelibs/fessctl"
+Issues = "https://github.com/codelibs/fessctl/issues"
+Documentation = "https://github.com/codelibs/fessctl#readme"
+Changelog = "https://github.com/codelibs/fessctl/releases"
 
 [project.optional-dependencies]
 dev = [

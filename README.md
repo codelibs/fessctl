@@ -1,8 +1,12 @@
-# FessCTL [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+# FessCTL
+
+[![PyPI version](https://img.shields.io/pypi/v/fessctl.svg)](https://pypi.org/project/fessctl/)
+[![Python versions](https://img.shields.io/pypi/pyversions/fessctl.svg)](https://pypi.org/project/fessctl/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/codelibs/fessctl/blob/main/LICENSE)
 
 **fessctl** is a command-line interface (CLI) tool to manage [Fess](https://fess.codelibs.org/) via its Admin API.
 
-Fess is an open-source enterprise search server based on OpenSearch.  
+Fess is an open-source enterprise search server based on OpenSearch.
 `fessctl` allows developers and operators to automate and script administrative tasks such as:
 
 - Creating or updating crawler configurations
@@ -17,16 +21,41 @@ Fess is an open-source enterprise search server based on OpenSearch.
 
 There are four ways to use fessctl:
 
-### Method 1: Using Pre-built Docker Image
+### Method 1: Install from PyPI (recommended)
 
-The easiest way to get started is using the pre-built Docker image:
+`fessctl` is published to [PyPI](https://pypi.org/project/fessctl/). Install it with `pip`,
+or use [`pipx`](https://pipx.pypa.io/) / [`uv tool`](https://docs.astral.sh/uv/guides/tools/)
+for an isolated, globally available CLI:
+
+```bash
+pip install fessctl
+# or, for an isolated install:
+pipx install fessctl
+# or:
+uv tool install fessctl
+```
+
+#### Usage
+```bash
+export FESS_ACCESS_TOKEN=your_access_token_here
+export FESS_ENDPOINT=https://your-fess-server
+export FESS_VERSION=15.7.0
+
+fessctl --help
+fessctl ping
+fessctl user list
+```
+
+### Method 2: Using Pre-built Docker Image
+
+If you prefer a container-based workflow, use the pre-built Docker image:
 
 ```bash
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
   -e FESS_VERSION=15.7.0 \
-  ghcr.io/codelibs/fessctl:0.1.0 --help
+  ghcr.io/codelibs/fessctl:0.2.0 --help
 ```
 
 Run actual commands:
@@ -36,21 +65,21 @@ docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
   -e FESS_VERSION=15.7.0 \
-  ghcr.io/codelibs/fessctl:0.1.0 ping
+  ghcr.io/codelibs/fessctl:0.2.0 ping
 
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
   -e FESS_VERSION=15.7.0 \
-  ghcr.io/codelibs/fessctl:0.1.0 user list
+  ghcr.io/codelibs/fessctl:0.2.0 user list
 ```
 
-### Method 2: Building Your Own Docker Image
+### Method 3: Building Your Own Docker Image
 
 Clone the repository and build the Docker image locally:
 
 ```bash
-git clone https://github.com/your-org/fessctl.git
+git clone https://github.com/codelibs/fessctl.git
 cd fessctl
 docker build -t fessctl:latest .
 ```
@@ -65,7 +94,7 @@ docker run --rm \
   fessctl:latest --help
 ```
 
-### Method 3: Install from Source with pip
+### Method 4: Install from Source
 
 For development or when you need to modify the source code:
 
@@ -75,7 +104,7 @@ For development or when you need to modify the source code:
 
 #### Setup
 ```bash
-git clone https://github.com/your-org/fessctl.git
+git clone https://github.com/codelibs/fessctl.git
 cd fessctl
 uv venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows
@@ -94,31 +123,6 @@ fessctl user list
 fessctl webconfig create --name TestConfig --url https://test.config.com/
 ```
 
-### Method 4: Install from PyPI
-
-`fessctl` is published to [PyPI](https://pypi.org/project/fessctl/). Install it with `pip`,
-or use [`pipx`](https://pipx.pypa.io/) / [`uv tool`](https://docs.astral.sh/uv/guides/tools/)
-for an isolated, globally available CLI:
-
-```bash
-pip install fessctl
-# or, for an isolated install:
-pipx install fessctl
-# or:
-uv tool install fessctl
-```
-
-#### Usage
-```bash
-export FESS_ACCESS_TOKEN=your_access_token_here
-export FESS_ENDPOINT=https://your-fess-server
-export FESS_VERSION=15.6.1
-
-fessctl --help
-fessctl ping
-fessctl user list
-```
-
 ## Environment Variables
 
 All four methods require the following environment variables:
@@ -130,7 +134,7 @@ All four methods require the following environment variables:
 ## License
 
 This project is licensed under the Apache License 2.0.
-See the LICENSE file for details.
+See the [LICENSE](https://github.com/codelibs/fessctl/blob/main/LICENSE) file for details.
 
 ## Contributing
 
