@@ -8,7 +8,7 @@ Every fessctl call other than `ping` is authenticated with a Fess access token s
 |----------|----------|---------|-------|
 | `FESS_ENDPOINT`     | optional | `http://localhost:8080`    | Base URL of the target Fess server. Include scheme; do not include a trailing `/`. |
 | `FESS_ACCESS_TOKEN` | **yes** for any non-`ping` call | none | Bearer token issued from the Fess admin UI or via `fessctl accesstoken create`. |
-| `FESS_VERSION`      | optional | `15.4.0` (as of fessctl 0.1.0) | Must match the major.minor of the target Fess server so request shapes line up. Set it explicitly — do not rely on the default. |
+| `FESS_VERSION`      | optional | `15.8.0` | Must match the major.minor of the target Fess server so request shapes line up. Set it explicitly — do not rely on the default. |
 
 Defaults live in `src/fessctl/config/settings.py`. The defaults are conservative and may lag the latest Fess release; for any non-trivial work, set `FESS_ENDPOINT` and `FESS_VERSION` explicitly.
 
@@ -39,7 +39,7 @@ Pick the option that matches how you run fessctl.
   ```bash
   export FESS_ENDPOINT=http://localhost:8080
   export FESS_ACCESS_TOKEN=eyJhbGciOi...
-  export FESS_VERSION=15.6.0
+  export FESS_VERSION=15.8.0
   ```
   Add `.envrc` to `.gitignore`. Run `direnv allow` to activate.
 

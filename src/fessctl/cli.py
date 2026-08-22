@@ -91,9 +91,9 @@ def ping(
         result = client.ping()
         if client.is_api_v2:
             # Fess 15.7+ /api/v2/health envelope:
-            #   healthy: {"response": {"status": 0, "engine": {"status": "green", "ping_status": 0}}}
+            #   healthy: {"response": {"status": 0, "engine": {"status": "GREEN", "ping_status": 0}}}
             #   red:     {"response": {"status": 9, "error": {"message": "...",
-            #                          "details": {"engine": {"status": "red", "ping_status": N}}}}}
+            #                          "details": {"engine": {"status": "RED", "ping_status": N}}}}}
             response = result.get("response", {})
             engine = response.get("engine")
             if engine is None:
@@ -107,14 +107,19 @@ def ping(
             timed_out = result.get("data", {}).get("timed_out", True)
             message = result.get("response", {}).get("message", "")
 
+        # The /api/v2 envelope carries the OpenSearch enum name ("GREEN"/"YELLOW"/"RED"), while
+        # the legacy /api/v1 body spelled the same value in lower case. Compare case-insensitively
+        # so a healthy 15.7+ server is not reported as an error.
+        normalized_status = str(status).lower()
+
         if output == "json":
             typer.echo(json.dumps(result, indent=2))
         elif output == "yaml":
             typer.echo(yaml.dump(result))
         else:
-            if status == "green" and not timed_out:
-                typer.echo(format_result_markdown(True, "Fess server is healthy (status: green).", "Server", "ping"))
-            elif status == "yellow":
+            if normalized_status == "green" and not timed_out:
+                typer.echo(format_result_markdown(True, f"Fess server is healthy (status: {status}).", "Server", "ping"))
+            elif normalized_status == "yellow":
                 typer.echo(format_result_markdown(True, f"Fess server status: {status} (timed_out: {timed_out})", "Server", "ping"))
             else:
                 typer.echo(format_result_markdown(False, f"Fess server status: {status} (timed_out: {timed_out}) {message}", "Server", "ping"))

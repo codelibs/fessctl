@@ -216,6 +216,59 @@ class TestPingCommandV2:
         assert "search engine cluster is red" in result.stdout
 
     @patch("fessctl.cli.FessAPIClient")
+    def test_ping_uppercase_green_status(self, mock_client_class, runner):
+        """A real server spells the cluster status with the OpenSearch enum name (GREEN)."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {"status": 0, "engine": {"status": "GREEN", "ping_status": 0}}
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping"])
+
+        assert result.exit_code == 0
+        assert "healthy" in result.stdout.lower()
+        assert "GREEN" in result.stdout
+
+    @patch("fessctl.cli.FessAPIClient")
+    def test_ping_uppercase_yellow_status(self, mock_client_class, runner):
+        """An upper-case YELLOW is a warning, not an error."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {"status": 0, "engine": {"status": "YELLOW", "ping_status": 0}}
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping"])
+
+        assert result.exit_code == 0
+        assert "YELLOW" in result.stdout
+
+    @patch("fessctl.cli.FessAPIClient")
+    def test_ping_uppercase_red_status(self, mock_client_class, runner):
+        """An upper-case RED still fails the command."""
+        mock_client = Mock()
+        mock_client.is_api_v2 = True
+        mock_client.ping.return_value = {
+            "response": {
+                "status": 9,
+                "error": {
+                    "code": "service_unavailable",
+                    "message": "search engine cluster is red",
+                    "details": {"engine": {"status": "RED", "ping_status": 2}},
+                },
+            }
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(app, ["ping"])
+
+        assert result.exit_code == 1
+        assert "RED" in result.stdout
+
+    @patch("fessctl.cli.FessAPIClient")
     def test_ping_json_output(self, mock_client_class, runner):
         """Test v2 ping JSON output echoes the raw v2 envelope."""
         mock_client = Mock()
