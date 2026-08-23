@@ -139,7 +139,7 @@ Recovery:
 
 ```bash
 docker login ghcr.io                         # if behind auth
-docker pull ghcr.io/codelibs/fessctl:0.1.0   # pin a specific tag, not `latest`
+docker pull ghcr.io/codelibs/fessctl:0.3.0   # pin a specific tag, not `latest`
 ```
 
 If `latest` is unavailable in your environment, prefer a pinned version tag matching `FESS_VERSION`.
