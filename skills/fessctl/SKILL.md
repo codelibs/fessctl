@@ -20,7 +20,7 @@ See `references/installation.md` for the exact wrappers.
 
 - `FESS_ENDPOINT` (default `http://localhost:8080`)
 - `FESS_ACCESS_TOKEN` (required for any non-`ping` call)
-- `FESS_VERSION` (e.g. `15.6.0`; must match the target Fess server)
+- `FESS_VERSION` (e.g. `15.8.0`; must match the target Fess server)
 
 See `references/authentication.md` for token issuance.
 

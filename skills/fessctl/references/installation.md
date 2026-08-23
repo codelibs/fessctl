@@ -64,7 +64,7 @@ Two networking notes for reaching a Fess server running on the **host**:
 
 ## Choosing the Docker tag
 
-The Docker image is published at `ghcr.io/codelibs/fessctl`. Pin a tag rather than `latest` for reproducible runs. The convention is to keep the image tag close to the Fess version it has been validated against — if you are talking to a Fess 15.6 server, prefer the tag whose `FESS_VERSION` default matches. Inspect available tags at <https://github.com/codelibs/fessctl/pkgs/container/fessctl> if unsure.
+The Docker image is published at `ghcr.io/codelibs/fessctl`. Pin a tag rather than `latest` for reproducible runs. The convention is to keep the image tag close to the Fess version it has been validated against — if you are talking to a Fess 15.8 server, prefer the tag whose `FESS_VERSION` default matches. Inspect available tags at <https://github.com/codelibs/fessctl/pkgs/container/fessctl> if unsure.
 
 ## Verifying the install
 
