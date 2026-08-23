@@ -53,7 +53,7 @@ docker run --rm \
   -e FESS_ACCESS_TOKEN="$FESS_ACCESS_TOKEN" \
   -e FESS_VERSION="$FESS_VERSION" \
   --add-host=host.docker.internal:host-gateway \
-  ghcr.io/codelibs/fessctl:0.1.0 \
+  ghcr.io/codelibs/fessctl:0.3.0 \
   ping
 ```
 

@@ -55,7 +55,7 @@ docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
   -e FESS_VERSION=15.8.0 \
-  ghcr.io/codelibs/fessctl:0.2.0 --help
+  ghcr.io/codelibs/fessctl:0.3.0 --help
 ```
 
 Run actual commands:
@@ -65,13 +65,13 @@ docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
   -e FESS_VERSION=15.8.0 \
-  ghcr.io/codelibs/fessctl:0.2.0 ping
+  ghcr.io/codelibs/fessctl:0.3.0 ping
 
 docker run --rm \
   -e FESS_ENDPOINT=https://your-fess-server \
   -e FESS_ACCESS_TOKEN=your_access_token_here \
   -e FESS_VERSION=15.8.0 \
-  ghcr.io/codelibs/fessctl:0.2.0 user list
+  ghcr.io/codelibs/fessctl:0.3.0 user list
 ```
 
 ### Method 3: Building Your Own Docker Image
