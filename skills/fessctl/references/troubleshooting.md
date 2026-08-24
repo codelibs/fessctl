@@ -128,18 +128,19 @@ Recovery: install with `pipx install fessctl`, `uv tool install fessctl`, or pre
 
 ```
 denied: requested access to the resource is denied
+manifest unknown
 ```
 
 Causes:
 
-- Rate limiting from anonymous pulls.
-- Pulling from a private mirror without prior `docker login`.
+- `denied` — rate limiting from anonymous pulls, or pulling from a private mirror without a prior `docker login`.
+- `manifest unknown` — the tag does not exist. Most often this is the implicit `latest`, which this image does not publish.
 
 Recovery:
 
 ```bash
 docker login ghcr.io                         # if behind auth
-docker pull ghcr.io/codelibs/fessctl:0.3.0   # pin a specific tag, not `latest`
+docker pull ghcr.io/codelibs/fessctl:0.3.0   # always name a release tag
 ```
 
-If `latest` is unavailable in your environment, prefer a pinned version tag matching `FESS_VERSION`.
+The tag is a **fessctl** release version, not a Fess version, and there is no `latest` — a bare `docker pull ghcr.io/codelibs/fessctl` therefore fails with `manifest unknown`. Which Fess server the container talks to is decided by `FESS_VERSION` at runtime, independently of the tag.

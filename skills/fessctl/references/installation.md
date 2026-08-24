@@ -15,7 +15,7 @@ resolve_fessctl() {
   FESSCTL="docker run --rm \
     -e FESS_ENDPOINT -e FESS_ACCESS_TOKEN -e FESS_VERSION \
     --add-host=host.docker.internal:host-gateway \
-    ghcr.io/codelibs/fessctl:${FESS_VERSION:-latest}"
+    ghcr.io/codelibs/fessctl:0.3.0"
 }
 
 resolve_fessctl
@@ -64,7 +64,7 @@ Two networking notes for reaching a Fess server running on the **host**:
 
 ## Choosing the Docker tag
 
-The Docker image is published at `ghcr.io/codelibs/fessctl`. Pin a tag rather than `latest` for reproducible runs. The convention is to keep the image tag close to the Fess version it has been validated against — if you are talking to a Fess 15.8 server, prefer the tag whose `FESS_VERSION` default matches. Inspect available tags at <https://github.com/codelibs/fessctl/pkgs/container/fessctl> if unsure.
+The Docker image is published at `ghcr.io/codelibs/fessctl`. **Image tags are fessctl release versions** — `0.1.0`, `0.2.0`, `0.3.0`, and so on — plus a `snapshot` tag, which is not a release and should not be pinned to. There is no `latest` tag, so an untagged `ghcr.io/codelibs/fessctl` fails to pull with `manifest unknown`; always name a release tag. The tag says nothing about which Fess server you are talking to — that is selected at runtime by `FESS_VERSION`, so the same image works against every supported Fess version. Inspect available tags at <https://github.com/codelibs/fessctl/pkgs/container/fessctl> if unsure.
 
 ## Verifying the install
 
