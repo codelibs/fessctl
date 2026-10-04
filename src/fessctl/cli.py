@@ -35,6 +35,7 @@ from fessctl.commands.scheduler import scheduler_app
 # from fessctl.commands.stats import stats_app
 # from fessctl.commands.storage import storage_app
 # from fessctl.commands.suggest import suggest_app
+from fessctl.commands.tagtype import tagtype_app
 # from fessctl.commands.systeminfo import systeminfo_app
 from fessctl.commands.user import user_app
 from fessctl.commands.webauth import webauth_app
@@ -71,6 +72,7 @@ app.add_typer(scheduler_app, name="scheduler")
 # app.add_typer(stats_app, name="stats")
 # app.add_typer(storage_app, name="storage")
 # app.add_typer(suggest_app, name="suggest")
+app.add_typer(tagtype_app, name="tagtype")
 # app.add_typer(systeminfo_app, name="systeminfo")
 app.add_typer(user_app, name="user")
 app.add_typer(webauth_app, name="webauth")
