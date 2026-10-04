@@ -58,6 +58,7 @@ Each file documents one Fess admin feature: what it is, when to use it, fessctl 
 | Groups                   | references/features/group.md |
 | Access tokens            | references/features/accesstoken.md |
 | Label types              | references/features/labeltype.md |
+| User tags                | references/features/tagtype.md |
 | Key match                | references/features/keymatch.md |
 | Boost document           | references/features/boostdoc.md |
 | Elevate word             | references/features/elevateword.md |

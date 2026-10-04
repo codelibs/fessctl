@@ -962,6 +962,44 @@ class FessAPIClient:
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
 
+    # TagType APIs
+
+    def create_tagtype(self, config: dict) -> dict:
+        """
+        Creates a new TagType.
+        """
+        url = f"{self.base_url}/api/admin/tagtype/setting"
+        return self.send_request(Action.CREATE, url, json_data=config)
+
+    def update_tagtype(self, config: dict) -> dict:
+        """
+        Updates an existing TagType.
+        """
+        url = f"{self.base_url}/api/admin/tagtype/setting"
+        return self.send_request(Action.EDIT, url, json_data=config)
+
+    def delete_tagtype(self, config_id: str) -> dict:
+        """
+        Deletes a TagType by ID.
+        """
+        url = f"{self.base_url}/api/admin/tagtype/setting/{config_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def get_tagtype(self, config_id: str) -> dict:
+        """
+        Retrieves a TagType by ID.
+        """
+        url = f"{self.base_url}/api/admin/tagtype/setting/{config_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_tagtypes(self, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a list of TagTypes.
+        """
+        url = f"{self.base_url}/api/admin/tagtype/settings"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
     # PathMap APIs
 
     def create_pathmap(self, config: dict) -> dict:
