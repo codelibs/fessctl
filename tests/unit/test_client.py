@@ -2,6 +2,7 @@
 Unit tests for fessctl.api.client module.
 """
 import json
+from types import SimpleNamespace
 from unittest.mock import Mock, patch, MagicMock
 
 import httpx
@@ -201,16 +202,17 @@ class TestSendRequestHttpMethods:
 
         mock_delete.assert_called_once()
 
-    @patch("httpx.get")
-    def test_list_uses_get(self, mock_get, client):
+    @patch("httpx.request")
+    def test_list_uses_get(self, mock_request, client):
         """Test that LIST action uses GET method."""
         mock_response = Mock()
         mock_response.json.return_value = {"response": {"status": 0}}
-        mock_get.return_value = mock_response
+        mock_request.return_value = mock_response
 
         client.send_request(Action.LIST, "http://test/api")
 
-        mock_get.assert_called_once()
+        mock_request.assert_called_once()
+        assert mock_request.call_args[0][0] == "GET"
 
     @patch("httpx.get")
     def test_get_uses_get(self, mock_get, client):
@@ -266,6 +268,59 @@ class TestSendRequestHttpMethods:
         client_v14.send_request(Action.STOP, "http://test/api")
 
         mock_post.assert_called_once()
+
+
+LIST_METHODS = sorted(
+    name for name in dir(FessAPIClient) if name.startswith("list_"))
+
+
+@pytest.fixture
+def http():
+    """Patch httpx.get and httpx.request, both returning a successful response."""
+    response = Mock()
+    response.json.return_value = {"response": {"status": 0}}
+    with patch("httpx.get", return_value=response) as mock_get, \
+            patch("httpx.request", return_value=response) as mock_request:
+        yield SimpleNamespace(get=mock_get, request=mock_request)
+
+
+class TestListPaging:
+    """Fess admin list endpoints bind size, page and filters from the JSON request body."""
+
+    def test_list_sends_params_in_json_body_and_query_string(self, client, http):
+        params = {"page": 2, "size": 1}
+
+        client.send_request(Action.LIST, "http://test/api", params=params)
+
+        http.get.assert_not_called()
+        http.request.assert_called_once()
+        assert http.request.call_args[0] == ("GET", "http://test/api")
+        call_kwargs = http.request.call_args[1]
+        assert call_kwargs["json"] == {"page": 2, "size": 1}
+        assert call_kwargs["params"] == {"page": 2, "size": 1}
+
+    def test_list_without_params_sends_no_body(self, client, http):
+        client.send_request(Action.LIST, "http://test/api")
+
+        call_kwargs = http.request.call_args[1]
+        assert call_kwargs["json"] is None
+        assert call_kwargs["params"] is None
+
+    def test_get_carries_no_body(self, client, http):
+        client.send_request(Action.GET, "http://test/api/role/abc")
+
+        http.request.assert_not_called()
+        http.get.assert_called_once()
+        assert "json" not in http.get.call_args[1]
+
+    @pytest.mark.parametrize("method", LIST_METHODS)
+    def test_every_list_method_puts_paging_in_body(self, client, http, method):
+        getattr(client, method)(page=2, size=1)
+
+        http.get.assert_not_called()
+        call_kwargs = http.request.call_args[1]
+        assert call_kwargs["json"] == {"page": 2, "size": 1}
+        assert call_kwargs["params"] == {"page": 2, "size": 1}
 
 
 class TestSendRequestErrorHandling:
@@ -533,16 +588,16 @@ class TestRoleAPIs:
         call_url = mock_get.call_args[0][0]
         assert "role-123" in call_url
 
-    @patch("httpx.get")
-    def test_list_roles_with_pagination(self, mock_get, client):
+    @patch("httpx.request")
+    def test_list_roles_with_pagination(self, mock_request, client):
         """Test listing roles with pagination."""
         mock_response = Mock()
         mock_response.json.return_value = {"response": {"status": 0, "settings": []}}
-        mock_get.return_value = mock_response
+        mock_request.return_value = mock_response
 
         client.list_roles(page=2, size=50)
 
-        call_kwargs = mock_get.call_args[1]
+        call_kwargs = mock_request.call_args[1]
         assert call_kwargs["params"]["page"] == 2
         assert call_kwargs["params"]["size"] == 50
 

@@ -95,6 +95,32 @@ def test_scheduler_crud_flow(runner, fess_service):
     assert "failed to retrieve scheduler" in result.stdout.lower()
 
 
+def test_scheduler_list_size_and_page(runner, fess_service):
+    """
+    Tests that --size limits the rows returned and --page moves through them.
+    A fresh Fess ships with several built-in jobs, so there is more than one row.
+    """
+    result = runner.invoke(
+        scheduler_app,
+        ["list", "--size", "1", "--page", "1", "--output", "json"]
+    )
+    assert result.exit_code == 0, f"List page 1 failed: {result.stdout}"
+    page1 = json.loads(result.stdout)["response"]
+    assert page1.get("status") == 0
+    assert page1.get("total", 0) > 1, "Expected more than one scheduler on a fresh Fess"
+    assert len(page1["settings"]) == 1
+
+    result = runner.invoke(
+        scheduler_app,
+        ["list", "--size", "1", "--page", "2", "--output", "json"]
+    )
+    assert result.exit_code == 0, f"List page 2 failed: {result.stdout}"
+    page2 = json.loads(result.stdout)["response"]
+    assert page2.get("status") == 0
+    assert len(page2["settings"]) == 1
+    assert page2["settings"][0]["id"] != page1["settings"][0]["id"]
+
+
 def test_scheduler_start_stop_json_output(runner, fess_service):
     """
     Tests the start and stop commands return valid JSON responses.

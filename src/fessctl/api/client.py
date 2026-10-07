@@ -92,7 +92,13 @@ class FessAPIClient:
                 response = httpx.delete(
                     url, headers=headers, params=params, timeout=self.timeout
                 )
-            elif action == Action.LIST or action == Action.GET:
+            elif action == Action.LIST:
+                # Fess admin list endpoints bind size, page and filters from the
+                # JSON request body and ignore the query string, so send both.
+                response = httpx.request(
+                    "GET", url, headers=headers, params=params, json=params, timeout=self.timeout
+                )
+            elif action == Action.GET:
                 response = httpx.get(
                     url, headers=headers, params=params, timeout=self.timeout
                 )
