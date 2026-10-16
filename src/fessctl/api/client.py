@@ -1,10 +1,13 @@
 import json
+import os
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import httpx
 
 from fessctl.config.settings import Settings
+from fessctl.utils import encode_to_urlsafe_base64
 
 
 class Action(Enum):
@@ -15,6 +18,22 @@ class Action(Enum):
     GET = "get"
     START = "start"
     STOP = "stop"
+    UPLOAD = "upload"
+
+
+# Name of the multipart form field that carries the file, per dictionary type.
+DICT_UPLOAD_FIELDS = {
+    "synonym": "synonymFile",
+    "mapping": "charMappingFile",
+    "kuromoji": "kuromojiFile",
+    "stopwords": "stopwordsFile",
+    "protwords": "protwordsFile",
+    "stemmeroverride": "stemmerOverrideFile",
+}
+
+
+# Seconds to allow for uploading or downloading a dictionary file.
+FILE_TRANSFER_TIMEOUT = 60.0
 
 
 class FessAPIClientError(Exception):
@@ -67,6 +86,7 @@ class FessAPIClient:
         json_data: dict | None = None,
         params: dict | None = None,
         is_admin: bool = True,
+        files: dict | None = None,
     ) -> dict:
         headers = self.admin_api_headers if is_admin else self.search_api_headers
         try:
@@ -94,7 +114,7 @@ class FessAPIClient:
                         url, headers=headers, params=params, timeout=self.timeout
                     )
                 else:
-                    # Delete-by-query binds its query from a JSON body.
+                    # httpx.delete cannot carry a body; some endpoints (plugin, delete-by-query) bind it.
                     response = httpx.request(
                         "DELETE", url, headers=headers, params=params, json=json_data, timeout=self.timeout
                     )
@@ -107,6 +127,14 @@ class FessAPIClient:
             elif action == Action.GET:
                 response = httpx.get(
                     url, headers=headers, params=params, timeout=self.timeout
+                )
+            elif action == Action.UPLOAD:
+                # httpx sets the multipart Content-Type (with its boundary) itself.
+                upload_headers = {
+                    k: v for k, v in headers.items() if k != "Content-Type"}
+                response = httpx.post(
+                    url, headers=upload_headers, files=files, params=params,
+                    timeout=max(self.timeout, FILE_TRANSFER_TIMEOUT)
                 )
             elif action == Action.START or action == Action.STOP:
                 if self._major_version <= 14:
@@ -125,6 +153,9 @@ class FessAPIClient:
                 content=f"Network error: {str(e)}"
             ) from e
 
+        return self._parse_json(response)
+
+    def _parse_json(self, response) -> dict:
         # Parse JSON response - Fess API returns JSON even for errors
         try:
             return response.json()
@@ -134,6 +165,45 @@ class FessAPIClient:
                 status_code=response.status_code,
                 content=f"Invalid JSON response (HTTP {response.status_code}): {response.text}"
             ) from e
+
+    def _download(self, url: str, dest: Path) -> dict:
+        """
+        Streams a file download to ``dest``.
+
+        Fess answers a failed download with a JSON error body, which is returned like any other
+        response; a successful download returns ``{"response": {"status": 0, "path": ..., "size": ...}}``.
+        The file is written next to ``dest`` first, so a failed transfer leaves no partial file.
+        """
+        part = dest.with_name(dest.name + ".part")
+        headers = {"Authorization": self.admin_api_headers["Authorization"]}
+        try:
+            with httpx.stream(
+                "GET", url, headers=headers, timeout=httpx.Timeout(self.timeout, read=60.0)
+            ) as response:
+                # A backup may itself be application/x-ndjson, so match the JSON error type exactly.
+                if response.status_code != 200 or response.headers.get("content-type", "").startswith("application/json"):
+                    response.read()
+                    try:
+                        return response.json()
+                    except json.decoder.JSONDecodeError as e:
+                        raise FessAPIClientError(
+                            status_code=response.status_code,
+                            content=f"Invalid JSON response (HTTP {response.status_code}): {response.text}"
+                        ) from e
+                size = 0
+                with part.open("wb") as f:
+                    for chunk in response.iter_bytes():
+                        f.write(chunk)
+                        size += len(chunk)
+            part.replace(dest)
+        except httpx.HTTPError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=f"Network error: {str(e)}"
+            ) from e
+        finally:
+            part.unlink(missing_ok=True)
+        return {"response": {"status": 0, "path": str(dest), "size": size}}
 
     def ping(self) -> dict:
         """
@@ -150,6 +220,91 @@ class FessAPIClient:
         else:
             url = f"{self.base_url}/api/v1/health"
         return self.send_request(Action.GET, url, is_admin=False)
+
+    # Dictionary APIs
+
+    def get_dicts(self) -> dict:
+        """
+        Retrieves the dictionary files (type, id, path and timestamp).
+        """
+        url = f"{self.base_url}/api/admin/dict"
+        return self.send_request(Action.GET, url)
+
+    def list_dict_items(self, dict_type: str, dict_id: str, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a page of the entries of a dictionary file.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/settings/{dict_id}"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
+    def get_dict_item(self, dict_type: str, dict_id: str, item_id: int) -> dict:
+        """
+        Retrieves an entry of a dictionary file by ID.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}/{item_id}"
+        return self.send_request(Action.GET, url)
+
+    def create_dict_item(self, dict_type: str, dict_id: str, config: dict) -> dict:
+        """
+        Creates an entry in a dictionary file.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}"
+        return self.send_request(Action.CREATE, url, json_data=config)
+
+    def update_dict_item(self, dict_type: str, dict_id: str, config: dict) -> dict:
+        """
+        Replaces an entry of a dictionary file (config carries the entry's ID).
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}"
+        return self.send_request(Action.EDIT, url, json_data=config)
+
+    def delete_dict_item(self, dict_type: str, dict_id: str, item_id: int) -> dict:
+        """
+        Deletes an entry of a dictionary file by ID.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}/{item_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def upload_dict(self, dict_type: str, dict_id: str, file_path: str) -> dict:
+        """
+        Replaces a dictionary file with the content of a local file.
+
+        Fess 15.6 to 15.8 only route the upload as PUT and cannot read a multipart
+        PUT, so no upload is possible there (fixed in 15.9, which accepts POST).
+        """
+        if (15, 6) <= (self._major_version, self._minor_version) < (15, 9):
+            return {"response": {
+                "status": 1,
+                "message": "Dictionary upload is not supported by Fess 15.6 to 15.8 "
+                           "(the server cannot read a multipart PUT); it needs Fess 15.9 or 14.x.",
+            }}
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/upload/{dict_id}"
+        with open(file_path, "rb") as f:
+            files = {DICT_UPLOAD_FIELDS[dict_type]: (
+                os.path.basename(file_path), f.read(), "application/octet-stream")}
+        return self.send_request(Action.UPLOAD, url, files=files)
+
+    def download_dict(self, dict_type: str, dict_id: str) -> bytes:
+        """
+        Downloads a dictionary file. Raises FessAPIClientError when Fess does not
+        return the file (it answers with a JSON error instead).
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/download/{dict_id}"
+        try:
+            response = httpx.get(
+                url, headers=self.admin_api_headers,
+                timeout=max(self.timeout, FILE_TRANSFER_TIMEOUT))
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1, content=f"Network error: {str(e)}") from e
+        if response.status_code != 200 or response.headers.get("content-type", "").startswith("application/json"):
+            try:
+                message = response.json().get("response", {}).get("message", "")
+            except ValueError:
+                message = response.text
+            raise FessAPIClientError(status_code=response.status_code, content=message)
+        return response.content
 
     # Role APIs
 
@@ -791,6 +946,193 @@ class FessAPIClient:
         """
         url = f"{self.base_url}/api/admin/documents/bulk"
         return self.send_request(Action.EDIT, url, json_data={"documents": documents})
+    # General APIs
+
+    def get_general(self) -> dict:
+        """
+        Retrieves the General system settings.
+        """
+        url = f"{self.base_url}/api/admin/general"
+        return self.send_request(Action.GET, url)
+
+    def update_general(self, setting: dict) -> dict:
+        """
+        Updates the General system settings. The server merges the request with the stored
+        settings: a key that is left out (or null) keeps its stored value.
+        """
+        url = f"{self.base_url}/api/admin/general"
+        return self.send_request(Action.EDIT, url, json_data=setting)
+
+    # Plugin APIs
+
+    def get_installed_plugins(self) -> dict:
+        """
+        Retrieves the installed plugins.
+        """
+        url = f"{self.base_url}/api/admin/plugin/installed"
+        return self.send_request(Action.GET, url)
+
+    def get_available_plugins(self) -> dict:
+        """
+        Retrieves the plugins that can be installed.
+        """
+        url = f"{self.base_url}/api/admin/plugin/available"
+        return self.send_request(Action.GET, url)
+
+    def install_plugin(self, name: str, version: str) -> dict:
+        """
+        Installs a plugin by name and version.
+        """
+        url = f"{self.base_url}/api/admin/plugin"
+        return self.send_request(Action.CREATE, url, json_data={"name": name, "version": version})
+
+    def uninstall_plugin(self, name: str, version: str) -> dict:
+        """
+        Uninstalls a plugin by name and version (the request carries a JSON body).
+        """
+        url = f"{self.base_url}/api/admin/plugin"
+        return self.send_request(Action.DELETE, url, json_data={"name": name, "version": version})
+
+    # Storage APIs
+    # The storage endpoints identify an object by the URL-safe Base64 of its path ("dir/file").
+
+    def get_storage_items(self, path: str = "") -> dict:
+        """
+        Lists the objects and directories under a path (the bucket root when empty).
+        """
+        url = f"{self.base_url}/api/admin/storage/list"
+        if path:
+            url = f"{url}/{encode_to_urlsafe_base64(path)}"
+        return self.send_request(Action.GET, url)
+
+    def download_storage_file(self, path: str) -> httpx.Response:
+        """
+        Downloads an object. Returns the raw response: the body is the object on success and a
+        JSON error otherwise, so the caller decides by Content-Type.
+        """
+        url = f"{self.base_url}/api/admin/storage/download/{encode_to_urlsafe_base64(path)}/"
+        try:
+            return httpx.get(url, headers=self.admin_api_headers, timeout=self.timeout)
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=f"Network error: {str(e)}"
+            ) from e
+
+    def delete_storage_file(self, path: str) -> dict:
+        """
+        Deletes an object.
+        """
+        url = f"{self.base_url}/api/admin/storage/delete/{encode_to_urlsafe_base64(path)}/"
+        return self.send_request(Action.DELETE, url)
+
+    def upload_storage_file(self, file_path: Path, directory: str = "") -> dict:
+        """
+        Uploads a local file as multipart/form-data into a directory of the storage.
+
+        Fess 15.6 to 15.8 declare the endpoint as PUT only and do not parse a multipart PUT
+        (the server answers "file is required."), so no request is sent there.
+        """
+        if (15, 6) <= (self._major_version, self._minor_version) <= (15, 8):
+            return {"response": {
+                "status": 1,
+                "message": "Fess 15.6 to 15.8 cannot receive uploads through the admin API (fixed in 15.9).",
+            }}
+        url = f"{self.base_url}/api/admin/storage/upload/"
+        # no Content-Type: httpx sets the multipart boundary
+        headers = {"Authorization": self.admin_api_headers["Authorization"]}
+        try:
+            with file_path.open("rb") as f:
+                response = httpx.post(
+                    url, headers=headers, data={"path": directory},
+                    files={"file": (file_path.name, f)}, timeout=self.timeout
+                )
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=f"Network error: {str(e)}"
+            ) from e
+        return self._parse_json(response)
+
+    # SystemInfo / Stats APIs
+
+    def get_systeminfo(self) -> dict:
+        """
+        Retrieves the system information (bug report, environment, Fess and system properties).
+        """
+        url = f"{self.base_url}/api/admin/systeminfo"
+        return self.send_request(Action.GET, url)
+
+    def get_stats(self) -> dict:
+        """
+        Retrieves the server statistics (JVM, OS, process, engine and filesystem).
+        """
+        url = f"{self.base_url}/api/admin/stats"
+        return self.send_request(Action.GET, url)
+
+    # Log APIs
+
+    def get_log_files(self) -> dict:
+        """
+        Retrieves the log files in the log directory of the Fess server.
+        """
+        url = f"{self.base_url}/api/admin/log/files"
+        return self.send_request(Action.GET, url)
+
+    def download_log_file(self, log_id: str, dest: Path) -> dict:
+        """
+        Downloads a log file to ``dest``. ``log_id`` is the ``id`` returned by get_log_files.
+        """
+        url = f"{self.base_url}/api/admin/log/file/{log_id}"
+        return self._download(url, dest)
+
+    # Backup APIs
+
+    def get_backup_files(self) -> dict:
+        """
+        Retrieves the files that can be downloaded as a backup.
+        """
+        url = f"{self.base_url}/api/admin/backup/files"
+        return self.send_request(Action.GET, url)
+
+    def download_backup_file(self, backup_id: str, dest: Path) -> dict:
+        """
+        Downloads a backup file to ``dest``. ``backup_id`` is the ``id`` returned by get_backup_files.
+        """
+        # An id such as "fess_config.bulk" ends in an extension, and Fess answers such a path
+        # with a bare "404 Not Found." instead of running the action; the trailing slash avoids it.
+        url = f"{self.base_url}/api/admin/backup/file/{backup_id}/"
+        return self._download(url, dest)
+
+    # Suggest APIs
+
+    def get_suggest_info(self) -> dict:
+        """
+        Retrieves the number of words in the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest"
+        return self.send_request(Action.GET, url)
+
+    def delete_all_suggest_words(self) -> dict:
+        """
+        Deletes every word from the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest/all"
+        return self.send_request(Action.DELETE, url)
+
+    def delete_document_suggest_words(self) -> dict:
+        """
+        Deletes the words that come from documents from the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest/document"
+        return self.send_request(Action.DELETE, url)
+
+    def delete_query_suggest_words(self) -> dict:
+        """
+        Deletes the words that come from search queries from the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest/query"
+        return self.send_request(Action.DELETE, url)
 
     # WebAuth APIs
 
