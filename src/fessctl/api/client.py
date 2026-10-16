@@ -971,7 +971,7 @@ class FessAPIClient:
         try:
             with file_path.open("rb") as f:
                 response = httpx.post(
-                    url, headers=headers, data={"path": directory},
+                    url, headers=headers, data={"path": directory.strip("/")},
                     files={"file": (file_path.name, f)}, timeout=self.timeout
                 )
         except httpx.RequestError as e:
