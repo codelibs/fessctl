@@ -2,6 +2,7 @@
 Unit tests for fessctl.cli module (ping command).
 """
 import json
+import re
 from unittest.mock import Mock, patch
 
 import pytest
@@ -348,3 +349,21 @@ class TestPingOutputFormats:
         assert result.exit_code == 0
         # Should be JSON
         json.loads(result.stdout)
+
+
+class TestRequiredParameters:
+    """click 8.3.0 with typer 0.16.0 let a missing required argument or option through as None."""
+
+    @pytest.mark.parametrize("args,missing", [
+        (["webconfig", "create"], "--name"),
+        (["theme", "install", "filesearch"], "VERSION"),
+    ])
+    @patch("fessctl.api.client.httpx")
+    def test_missing_required_parameter_is_a_usage_error(self, mock_httpx, runner, args, missing):
+        result = runner.invoke(app, args)
+
+        assert result.exit_code == 2
+        # CI forces colour, which splits the option name with escape sequences
+        assert missing in re.sub(r"\x1b\[[0-9;]*m", "", result.output)
+        mock_httpx.post.assert_not_called()
+        mock_httpx.put.assert_not_called()
