@@ -140,7 +140,7 @@ Recovery:
 
 ```bash
 docker login ghcr.io                         # if behind auth
-docker pull ghcr.io/codelibs/fessctl:0.3.0   # always name a release tag
+docker pull ghcr.io/codelibs/fessctl:0.4.0   # always name a release tag
 ```
 
 The tag is a **fessctl** release version, not a Fess version, and there is no `latest` — a bare `docker pull ghcr.io/codelibs/fessctl` therefore fails with `manifest unknown`. Which Fess server the container talks to is decided by `FESS_VERSION` at runtime, independently of the tag.
