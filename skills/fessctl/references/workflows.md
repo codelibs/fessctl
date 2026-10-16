@@ -193,9 +193,3 @@ fessctl badword create --suggest-word internal-test
 ```
 
 **Caution:** several of these tunings take effect only after the suggest dictionary is rebuilt or the search index is reloaded. If changes do not appear in search results, trigger the matching maintenance scheduler job (inspect `fessctl scheduler list --output json | jq '.response.settings[] | select(.name | test("Suggest|Index"; "i"))'`).
-
----
-
-## Out of scope (today)
-
-These recipes intentionally restrict themselves to features fessctl currently wraps. Operations that depend on `searchlist` or `documents` are not represented here because fessctl 0.1.0 does not expose those subcommands. When fessctl adds them, update this file with the additional recipes.

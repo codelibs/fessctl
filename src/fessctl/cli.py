@@ -13,7 +13,7 @@ from fessctl.commands.boostdoc import boostdoc_app
 from fessctl.commands.crawlinginfo import crawlinginfo_app
 from fessctl.commands.dataconfig import dataconfig_app
 from fessctl.commands.dict import dict_app
-# from fessctl.commands.documents import documents_app
+from fessctl.commands.documents import documents_app
 from fessctl.commands.duplicatehost import duplicatehost_app
 from fessctl.commands.elevateword import elevateword_app
 from fessctl.commands.failureurl import failureurl_app
@@ -31,7 +31,7 @@ from fessctl.commands.role import role_app
 from fessctl.commands.relatedcontent import relatedcontent_app
 from fessctl.commands.relatedquery import relatedquery_app
 from fessctl.commands.reqheader import reqheader_app
-# from fessctl.commands.searchlist import searchlist_app
+from fessctl.commands.searchlist import searchlist_app
 from fessctl.commands.scheduler import scheduler_app
 from fessctl.commands.stats import stats_app
 from fessctl.commands.storage import storage_app
@@ -52,7 +52,7 @@ app.add_typer(boostdoc_app, name="boostdoc")
 app.add_typer(crawlinginfo_app, name="crawlinginfo")
 app.add_typer(dataconfig_app, name="dataconfig")
 app.add_typer(dict_app, name="dict")
-# app.add_typer(documents_app, name="documents")
+app.add_typer(documents_app, name="documents")
 app.add_typer(duplicatehost_app, name="duplicatehost")
 app.add_typer(elevateword_app, name="elevateword")
 app.add_typer(failureurl_app, name="failureurl")
@@ -70,7 +70,7 @@ app.add_typer(role_app, name="role")
 app.add_typer(relatedcontent_app, name="relatedcontent")
 app.add_typer(relatedquery_app, name="relatedquery")
 app.add_typer(reqheader_app, name="reqheader")
-# app.add_typer(searchlist_app, name="searchlist")
+app.add_typer(searchlist_app, name="searchlist")
 app.add_typer(scheduler_app, name="scheduler")
 app.add_typer(stats_app, name="stats")
 app.add_typer(storage_app, name="storage")

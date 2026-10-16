@@ -114,7 +114,7 @@ class FessAPIClient:
                         url, headers=headers, params=params, timeout=self.timeout
                     )
                 else:
-                    # httpx.delete cannot carry a body; some endpoints (plugin) bind it.
+                    # httpx.delete cannot carry a body; some endpoints (plugin, delete-by-query) bind it.
                     response = httpx.request(
                         "DELETE", url, headers=headers, params=params, json=json_data, timeout=self.timeout
                     )
@@ -873,6 +873,79 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/theme"
         return self.send_request(Action.CREATE, url, json_data={"name": name, "version": version})
 
+    # Searchlist (document) APIs
+
+    def search_documents(
+        self,
+        query: Optional[str] = None,
+        start: Optional[int] = None,
+        size: Optional[int] = None,
+        sort: Optional[str] = None,
+        lang: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Searches the indexed documents. start is the 0-based offset of the first hit;
+        the server caps size at paging.search.page.max.size (100 by default).
+        """
+        url = f"{self.base_url}/api/admin/searchlist/docs"
+        params = {
+            key: value
+            for key, value in (
+                ("q", query),
+                ("start", start),
+                ("size", size),
+                ("sort", sort),
+                ("lang", lang),
+            )
+            if value is not None
+        }
+        return self.send_request(Action.LIST, url, params=params)
+
+    def get_document(self, doc_id: str) -> dict:
+        """
+        Retrieves an indexed document by its doc_id.
+        """
+        url = f"{self.base_url}/api/admin/searchlist/doc/{doc_id}"
+        return self.send_request(Action.GET, url)
+
+    def create_document(self, doc: dict) -> dict:
+        """
+        Indexes a new document. The server requires url, title, role and boost.
+        """
+        url = f"{self.base_url}/api/admin/searchlist/doc"
+        return self.send_request(Action.CREATE, url, json_data={"doc": doc})
+
+    def update_document(self, doc: dict) -> dict:
+        """
+        Updates an indexed document identified by doc["doc_id"]. The fields in doc are
+        merged over the stored document, but the server validates doc on its own, so
+        url, title, role and boost must be present.
+        """
+        url = f"{self.base_url}/api/admin/searchlist/doc"
+        return self.send_request(Action.EDIT, url, json_data={"doc": doc})
+
+    def delete_document(self, doc_id: str) -> dict:
+        """
+        Deletes an indexed document by its doc_id.
+        """
+        url = f"{self.base_url}/api/admin/searchlist/doc/{doc_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def delete_documents_by_query(self, query: str) -> dict:
+        """
+        Deletes every indexed document matching the query.
+        """
+        url = f"{self.base_url}/api/admin/searchlist/query"
+        return self.send_request(Action.DELETE, url, json_data={"q": query})
+
+    # Documents APIs
+
+    def bulk_index_documents(self, documents: List[dict]) -> dict:
+        """
+        Indexes several documents in one request (POST on Fess 14, PUT on 15).
+        """
+        url = f"{self.base_url}/api/admin/documents/bulk"
+        return self.send_request(Action.EDIT, url, json_data={"documents": documents})
     # General APIs
 
     def get_general(self) -> dict:
