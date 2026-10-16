@@ -50,7 +50,9 @@ def list_storage(
     """
     List the objects and directories under a path of the configured object storage.
     """
-    client = FessAPIClient(Settings())
+    # Fess talks to the storage backend while serving this request; an unreachable
+    # backend can take far longer than the default timeout to answer.
+    client = FessAPIClient(Settings(), timeout=TRANSFER_TIMEOUT)
     result = client.get_storage_items(path)
     status = result.get("response", {}).get("status", 1)
 
@@ -102,6 +104,10 @@ def download_storage(
     """
     if file is not None and file.exists() and not force:
         typer.echo(format_result_markdown(False, f"{file} already exists. Use --force to overwrite it.", "Storage", "download"))
+        raise typer.Exit(code=1)
+
+    if file is not None and not file.parent.is_dir():
+        typer.echo(format_result_markdown(False, f"The directory {file.parent} does not exist.", "Storage", "download"))
         raise typer.Exit(code=1)
 
     client = FessAPIClient(Settings(), timeout=TRANSFER_TIMEOUT)

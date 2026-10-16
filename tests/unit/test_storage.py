@@ -67,6 +67,16 @@ class TestStorageList:
         assert "No storage client is registered" in result.stdout
 
 
+class TestStorageListTimeout:
+    @patch("fessctl.commands.storage.FessAPIClient")
+    def test_list_waits_for_a_slow_backend(self, mock_client_class, runner):
+        mock_client_class.return_value.get_storage_items.return_value = {"response": {"status": 0, "items": []}}
+
+        runner.invoke(storage_app, ["list"])
+
+        assert mock_client_class.call_args.kwargs["timeout"] >= 60
+
+
 class TestStorageDownload:
     @patch("fessctl.commands.storage.FessAPIClient")
     def test_download_to_file(self, mock_client_class, runner, tmp_path):
@@ -80,6 +90,16 @@ class TestStorageDownload:
         assert result.exit_code == 0
         assert target.read_bytes() == b"\x00\x01binary"
         mock_client.download_storage_file.assert_called_once_with("docs/a.bin")
+
+    @patch("fessctl.commands.storage.FessAPIClient")
+    def test_download_refuses_a_missing_parent_directory(self, mock_client_class, runner, tmp_path):
+        target = tmp_path / "missing" / "a.txt"
+
+        result = runner.invoke(storage_app, ["download", "docs/a.txt", "--file", str(target)])
+
+        assert result.exit_code == 1
+        assert "does not exist" in result.stdout
+        mock_client_class.return_value.download_storage_file.assert_not_called()
 
     @patch("fessctl.commands.storage.FessAPIClient")
     def test_download_to_stdout(self, mock_client_class, runner):

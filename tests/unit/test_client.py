@@ -812,6 +812,20 @@ class TestStorageAPIs:
         # the multipart Content-Type (with its boundary) must be left to httpx
         assert kwargs["headers"] == {"Authorization": "Bearer test-token"}
 
+    @pytest.mark.parametrize("directory,expected", [("/a/b/c/", "a/b/c"), ("/x", "x"), ("", "")])
+    @patch("httpx.post")
+    def test_upload_strips_slashes_around_the_directory(self, mock_post, directory, expected, mock_settings, tmp_path):
+        """Fess 15.9 joins the directory and the name with a slash without normalising, so
+        a leading or trailing slash would store an object that cannot be read back."""
+        mock_settings.fess_version = "15.9.0"
+        mock_post.return_value = _ok_response()
+        source = tmp_path / "report.pdf"
+        source.write_bytes(b"pdf")
+
+        FessAPIClient(mock_settings).upload_storage_file(source, directory)
+
+        assert mock_post.call_args[1]["data"] == {"path": expected}
+
     @pytest.mark.parametrize("version", ["15.6.1", "15.7.0", "15.8.0"])
     @patch("httpx.request")
     @patch("httpx.post")
