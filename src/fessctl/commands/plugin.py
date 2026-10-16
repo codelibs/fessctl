@@ -9,6 +9,10 @@ from fessctl.utils import format_list_markdown, format_result_markdown
 
 plugin_app = typer.Typer()
 
+# Fess queries the remote plugin repositories while serving `available`, which
+# can take longer than the default client timeout.
+REMOTE_TIMEOUT = 60.0
+
 
 def _list_plugins(result: dict, title: str, action: str, output: str):
     status = result.get("response", {}).get("status", 1)
@@ -58,7 +62,7 @@ def available_plugins(
     """
     List the plugins that can be installed from the configured plugin repositories.
     """
-    client = FessAPIClient(Settings())
+    client = FessAPIClient(Settings(), timeout=REMOTE_TIMEOUT)
     _list_plugins(client.get_available_plugins(), "Available Plugins", "available", output)
 
 

@@ -131,3 +131,21 @@ def test_failure_exits_with_status_in_every_format(mock_client_class, output):
 
     assert runner.invoke(plugin_app, ["install", "x", "1", "--output", output]).exit_code == 1
     assert runner.invoke(plugin_app, ["available", "--output", output]).exit_code == 1
+
+
+def test_available_uses_a_long_timeout():
+    """`available` makes Fess query the remote plugin repositories."""
+    from unittest.mock import Mock, patch
+
+    from typer.testing import CliRunner
+
+    from fessctl.commands.plugin import plugin_app
+
+    with patch("fessctl.commands.plugin.FessAPIClient") as mock_client_class:
+        mock_client = Mock()
+        mock_client.get_available_plugins.return_value = {"response": {"status": 0, "plugins": []}}
+        mock_client_class.return_value = mock_client
+
+        CliRunner().invoke(plugin_app, ["available"])
+
+        assert mock_client_class.call_args.kwargs["timeout"] >= 60
