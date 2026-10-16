@@ -9,6 +9,10 @@ from fessctl.utils import format_list_markdown, format_result_markdown
 
 theme_app = typer.Typer()
 
+# Fess fetches the theme list and the theme archive from a remote repository
+# while serving these requests, which can take longer than the default timeout.
+REMOTE_TIMEOUT = 60.0
+
 
 @theme_app.command("available")
 def available_themes(
@@ -19,7 +23,7 @@ def available_themes(
     """
     List the themes that can be installed (requires Fess 15.9+).
     """
-    client = FessAPIClient(Settings())
+    client = FessAPIClient(Settings(), timeout=REMOTE_TIMEOUT)
     result = client.get_available_themes()
     status = result.get("response", {}).get("status", 1)
 
@@ -54,7 +58,7 @@ def install_theme(
     """
     Install a theme by name and version (requires Fess 15.9+).
     """
-    client = FessAPIClient(Settings())
+    client = FessAPIClient(Settings(), timeout=REMOTE_TIMEOUT)
     result = client.install_theme(name, version)
     status = result.get("response", {}).get("status", 1)
 
