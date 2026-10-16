@@ -636,3 +636,209 @@ class TestSchedulerAPIs:
         call_url = mock_put.call_args[0][0]
         assert "scheduler-123" in call_url
         assert "/stop" in call_url
+
+
+def _ok_response(**extra):
+    response = Mock()
+    response.json.return_value = {"response": {"status": 0}}
+    response.status_code = 200
+    response.headers = {}
+    for key, value in extra.items():
+        setattr(response, key, value)
+    return response
+
+
+class TestDeleteWithBody:
+    """The plugin endpoint binds the name and version of a DELETE from a JSON body."""
+
+    @patch("httpx.request")
+    @patch("httpx.delete")
+    def test_delete_with_json_data_sends_the_body(self, mock_delete, mock_request, client):
+        mock_request.return_value = _ok_response()
+
+        client.send_request(Action.DELETE, "http://test/api", json_data={"name": "x"})
+
+        mock_delete.assert_not_called()
+        assert mock_request.call_args[0] == ("DELETE", "http://test/api")
+        assert mock_request.call_args[1]["json"] == {"name": "x"}
+
+    @patch("httpx.request")
+    @patch("httpx.delete")
+    def test_delete_without_json_data_is_unchanged(self, mock_delete, mock_request, client):
+        mock_delete.return_value = _ok_response()
+
+        client.send_request(Action.DELETE, "http://test/api")
+
+        mock_request.assert_not_called()
+        mock_delete.assert_called_once()
+
+
+class TestGeneralAPIs:
+    @patch("httpx.get")
+    def test_get_general(self, mock_get, client):
+        mock_get.return_value = _ok_response()
+
+        client.get_general()
+
+        assert mock_get.call_args[0][0] == "http://localhost:8080/api/admin/general"
+
+    @patch("httpx.put")
+    def test_update_general_uses_put(self, mock_put, client):
+        mock_put.return_value = _ok_response()
+
+        client.update_general({"app_value": "x"})
+
+        assert mock_put.call_args[0][0] == "http://localhost:8080/api/admin/general"
+        assert mock_put.call_args[1]["json"] == {"app_value": "x"}
+
+    @patch("httpx.post")
+    def test_update_general_uses_post_on_fess14(self, mock_post, client_v14):
+        mock_post.return_value = _ok_response()
+
+        client_v14.update_general({"app_value": "x"})
+
+        assert mock_post.call_args[0][0] == "http://localhost:8080/api/admin/general"
+
+
+class TestPluginAPIs:
+    @patch("httpx.get")
+    def test_installed_and_available_urls(self, mock_get, client):
+        mock_get.return_value = _ok_response()
+
+        client.get_installed_plugins()
+        client.get_available_plugins()
+
+        assert [c[0][0] for c in mock_get.call_args_list] == [
+            "http://localhost:8080/api/admin/plugin/installed",
+            "http://localhost:8080/api/admin/plugin/available",
+        ]
+
+    @patch("httpx.post")
+    def test_install_plugin(self, mock_post, client):
+        mock_post.return_value = _ok_response()
+
+        client.install_plugin("fess-ds-csv", "15.9.0")
+
+        assert mock_post.call_args[0][0] == "http://localhost:8080/api/admin/plugin"
+        assert mock_post.call_args[1]["json"] == {"name": "fess-ds-csv", "version": "15.9.0"}
+
+    @patch("httpx.put")
+    def test_install_plugin_uses_put_on_fess14(self, mock_put, client_v14):
+        mock_put.return_value = _ok_response()
+
+        client_v14.install_plugin("fess-ds-csv", "14.19.2")
+
+        mock_put.assert_called_once()
+
+    @patch("httpx.request")
+    def test_uninstall_plugin_sends_delete_with_body(self, mock_request, client):
+        mock_request.return_value = _ok_response()
+
+        client.uninstall_plugin("fess-ds-csv", "15.9.0")
+
+        assert mock_request.call_args[0] == ("DELETE", "http://localhost:8080/api/admin/plugin")
+        assert mock_request.call_args[1]["json"] == {"name": "fess-ds-csv", "version": "15.9.0"}
+
+
+class TestStorageAPIs:
+    """Storage objects are addressed by the URL-safe Base64 of their path."""
+
+    @patch("httpx.get")
+    def test_list_root_has_no_id(self, mock_get, client):
+        mock_get.return_value = _ok_response()
+
+        client.get_storage_items()
+
+        assert mock_get.call_args[0][0] == "http://localhost:8080/api/admin/storage/list"
+
+    @patch("httpx.get")
+    def test_list_encodes_the_path(self, mock_get, client):
+        mock_get.return_value = _ok_response()
+
+        client.get_storage_items("docs/sub")
+
+        assert mock_get.call_args[0][0] == "http://localhost:8080/api/admin/storage/list/ZG9jcy9zdWI="
+
+    @patch("httpx.get")
+    def test_path_with_characters_unsafe_in_urls_uses_the_urlsafe_alphabet(self, mock_get, client):
+        mock_get.return_value = _ok_response()
+
+        client.get_storage_items("a?b>c")  # standard Base64 is "YT9iPmM=", with no '+' or '/'
+        client.get_storage_items("???>>>")  # standard Base64 "Pz8/Pj4+" has both
+
+        assert mock_get.call_args_list[1][0][0].endswith("/Pz8_Pj4-")
+
+    @patch("httpx.get")
+    def test_download_returns_the_raw_response(self, mock_get, client):
+        mock_get.return_value = _ok_response()
+
+        response = client.download_storage_file("docs/a.txt")
+
+        assert response is mock_get.return_value
+        assert mock_get.call_args[0][0] == "http://localhost:8080/api/admin/storage/download/ZG9jcy9hLnR4dA==/"
+
+    @patch("httpx.get")
+    def test_download_network_error(self, mock_get, client):
+        mock_get.side_effect = httpx.RequestError("Connection refused")
+
+        with pytest.raises(FessAPIClientError) as exc_info:
+            client.download_storage_file("a.txt")
+
+        assert exc_info.value.status_code == -1
+
+    @patch("httpx.delete")
+    def test_delete_storage_file(self, mock_delete, client):
+        mock_delete.return_value = _ok_response()
+
+        client.delete_storage_file("docs/a.txt")
+
+        assert mock_delete.call_args[0][0] == "http://localhost:8080/api/admin/storage/delete/ZG9jcy9hLnR4dA==/"
+
+    @pytest.mark.parametrize("version", ["14.19.2", "15.9.0"])
+    @patch("httpx.post")
+    def test_upload_posts_multipart(self, mock_post, version, mock_settings, tmp_path):
+        mock_settings.fess_version = version
+        mock_post.return_value = _ok_response()
+        source = tmp_path / "report.pdf"
+        source.write_bytes(b"pdf")
+
+        result = FessAPIClient(mock_settings).upload_storage_file(source, "docs")
+
+        assert result == {"response": {"status": 0}}
+        assert mock_post.call_args[0][0] == "http://localhost:8080/api/admin/storage/upload/"
+        kwargs = mock_post.call_args[1]
+        assert kwargs["data"] == {"path": "docs"}
+        assert kwargs["files"]["file"][0] == "report.pdf"
+        # the multipart Content-Type (with its boundary) must be left to httpx
+        assert kwargs["headers"] == {"Authorization": "Bearer test-token"}
+
+    @pytest.mark.parametrize("directory,expected", [("/a/b/c/", "a/b/c"), ("/x", "x"), ("", "")])
+    @patch("httpx.post")
+    def test_upload_strips_slashes_around_the_directory(self, mock_post, directory, expected, mock_settings, tmp_path):
+        """Fess 15.9 joins the directory and the name with a slash without normalising, so
+        a leading or trailing slash would store an object that cannot be read back."""
+        mock_settings.fess_version = "15.9.0"
+        mock_post.return_value = _ok_response()
+        source = tmp_path / "report.pdf"
+        source.write_bytes(b"pdf")
+
+        FessAPIClient(mock_settings).upload_storage_file(source, directory)
+
+        assert mock_post.call_args[1]["data"] == {"path": expected}
+
+    @pytest.mark.parametrize("version", ["15.6.1", "15.7.0", "15.8.0"])
+    @patch("httpx.request")
+    @patch("httpx.post")
+    @patch("httpx.put")
+    def test_upload_is_refused_where_fess_cannot_receive_it(self, mock_put, mock_post, mock_request, version, mock_settings, tmp_path):
+        mock_settings.fess_version = version
+        source = tmp_path / "report.pdf"
+        source.write_bytes(b"pdf")
+
+        result = FessAPIClient(mock_settings).upload_storage_file(source, "docs")
+
+        assert result["response"]["status"] == 1
+        assert "15.9" in result["response"]["message"]
+        mock_put.assert_not_called()
+        mock_post.assert_not_called()
+        mock_request.assert_not_called()

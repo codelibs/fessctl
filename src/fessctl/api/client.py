@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 import httpx
 
 from fessctl.config.settings import Settings
+from fessctl.utils import encode_to_urlsafe_base64
 
 
 class Action(Enum):
@@ -108,9 +109,15 @@ class FessAPIClient:
                         url, headers=headers, json=json_data, params=params, timeout=self.timeout
                     )
             elif action == Action.DELETE:
-                response = httpx.delete(
-                    url, headers=headers, params=params, timeout=self.timeout
-                )
+                if json_data is None:
+                    response = httpx.delete(
+                        url, headers=headers, params=params, timeout=self.timeout
+                    )
+                else:
+                    # httpx.delete cannot carry a body; some endpoints (plugin) bind it.
+                    response = httpx.request(
+                        "DELETE", url, headers=headers, params=params, json=json_data, timeout=self.timeout
+                    )
             elif action == Action.LIST:
                 # Fess admin list endpoints bind size, page and filters from the
                 # JSON request body and ignore the query string, so send both.
@@ -146,6 +153,9 @@ class FessAPIClient:
                 content=f"Network error: {str(e)}"
             ) from e
 
+        return self._parse_json(response)
+
+    def _parse_json(self, response) -> dict:
         # Parse JSON response - Fess API returns JSON even for errors
         try:
             return response.json()
@@ -862,6 +872,114 @@ class FessAPIClient:
         """
         url = f"{self.base_url}/api/admin/theme"
         return self.send_request(Action.CREATE, url, json_data={"name": name, "version": version})
+
+    # General APIs
+
+    def get_general(self) -> dict:
+        """
+        Retrieves the General system settings.
+        """
+        url = f"{self.base_url}/api/admin/general"
+        return self.send_request(Action.GET, url)
+
+    def update_general(self, setting: dict) -> dict:
+        """
+        Updates the General system settings. The server merges the request with the stored
+        settings: a key that is left out (or null) keeps its stored value.
+        """
+        url = f"{self.base_url}/api/admin/general"
+        return self.send_request(Action.EDIT, url, json_data=setting)
+
+    # Plugin APIs
+
+    def get_installed_plugins(self) -> dict:
+        """
+        Retrieves the installed plugins.
+        """
+        url = f"{self.base_url}/api/admin/plugin/installed"
+        return self.send_request(Action.GET, url)
+
+    def get_available_plugins(self) -> dict:
+        """
+        Retrieves the plugins that can be installed.
+        """
+        url = f"{self.base_url}/api/admin/plugin/available"
+        return self.send_request(Action.GET, url)
+
+    def install_plugin(self, name: str, version: str) -> dict:
+        """
+        Installs a plugin by name and version.
+        """
+        url = f"{self.base_url}/api/admin/plugin"
+        return self.send_request(Action.CREATE, url, json_data={"name": name, "version": version})
+
+    def uninstall_plugin(self, name: str, version: str) -> dict:
+        """
+        Uninstalls a plugin by name and version (the request carries a JSON body).
+        """
+        url = f"{self.base_url}/api/admin/plugin"
+        return self.send_request(Action.DELETE, url, json_data={"name": name, "version": version})
+
+    # Storage APIs
+    # The storage endpoints identify an object by the URL-safe Base64 of its path ("dir/file").
+
+    def get_storage_items(self, path: str = "") -> dict:
+        """
+        Lists the objects and directories under a path (the bucket root when empty).
+        """
+        url = f"{self.base_url}/api/admin/storage/list"
+        if path:
+            url = f"{url}/{encode_to_urlsafe_base64(path)}"
+        return self.send_request(Action.GET, url)
+
+    def download_storage_file(self, path: str) -> httpx.Response:
+        """
+        Downloads an object. Returns the raw response: the body is the object on success and a
+        JSON error otherwise, so the caller decides by Content-Type.
+        """
+        url = f"{self.base_url}/api/admin/storage/download/{encode_to_urlsafe_base64(path)}/"
+        try:
+            return httpx.get(url, headers=self.admin_api_headers, timeout=self.timeout)
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=f"Network error: {str(e)}"
+            ) from e
+
+    def delete_storage_file(self, path: str) -> dict:
+        """
+        Deletes an object.
+        """
+        url = f"{self.base_url}/api/admin/storage/delete/{encode_to_urlsafe_base64(path)}/"
+        return self.send_request(Action.DELETE, url)
+
+    def upload_storage_file(self, file_path: Path, directory: str = "") -> dict:
+        """
+        Uploads a local file as multipart/form-data into a directory of the storage.
+
+        Fess 15.6 to 15.8 declare the endpoint as PUT only and do not parse a multipart PUT
+        (the server answers "file is required."), so no request is sent there.
+        """
+        if (15, 6) <= (self._major_version, self._minor_version) <= (15, 8):
+            return {"response": {
+                "status": 1,
+                "message": "Fess 15.6 to 15.8 cannot receive uploads through the admin API (fixed in 15.9).",
+            }}
+        url = f"{self.base_url}/api/admin/storage/upload/"
+        # no Content-Type: httpx sets the multipart boundary
+        headers = {"Authorization": self.admin_api_headers["Authorization"]}
+        try:
+            with file_path.open("rb") as f:
+                response = httpx.post(
+                    url, headers=headers, data={"path": directory.strip("/")},
+                    files={"file": (file_path.name, f)}, timeout=self.timeout
+                )
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=f"Network error: {str(e)}"
+            ) from e
+        return self._parse_json(response)
 
     # SystemInfo / Stats APIs
 

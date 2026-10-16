@@ -198,4 +198,4 @@ fessctl badword create --suggest-word internal-test
 
 ## Out of scope (today)
 
-These recipes intentionally restrict themselves to features fessctl currently wraps. Operations that depend on `failureurl`, `plugin`, `searchlist`, `storage`, or `documents` are not represented here because fessctl 0.1.0 does not expose those subcommands. When fessctl adds them, update this file with the additional recipes.
+These recipes intentionally restrict themselves to features fessctl currently wraps. Operations that depend on `searchlist` or `documents` are not represented here because fessctl 0.1.0 does not expose those subcommands. When fessctl adds them, update this file with the additional recipes.
