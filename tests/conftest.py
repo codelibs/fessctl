@@ -7,13 +7,22 @@ import requests
 from testcontainers.compose import DockerCompose
 
 
+def fess_version_at_least(major: int, minor: int) -> bool:
+    """True when the Fess version under test (FESS_VERSION) is at least major.minor."""
+    try:
+        current = tuple(int(p) for p in os.getenv("FESS_VERSION", "15.9.0").split(".")[:2])
+    except ValueError:
+        return True  # e.g. a SNAPSHOT of the next release
+    return current >= (major, minor)
+
+
 @pytest.fixture(scope="session")
 def fess_service():
     project_root = Path(__file__).resolve().parent
     print(f"Project root: {project_root}")
     
     # Determine which compose file to use based on FESS_VERSION
-    fess_version = os.getenv("FESS_VERSION", "15.8.0")
+    fess_version = os.getenv("FESS_VERSION", "15.9.0")
     if fess_version.startswith("15."):
         compose_file = "compose-fess15.yaml"
     else:

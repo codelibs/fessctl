@@ -3,6 +3,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
+from conftest import fess_version_at_least
 from fessctl.commands.fileauth import fileauth_app
 from fessctl.commands.fileconfig import fileconfig_app
 
@@ -78,7 +79,11 @@ def test_fileauth_crud_flow(runner, fess_service, temp_fileconfig):
     assert result.exit_code == 0, f"Get after update failed: {result.stdout}"
     get_after = json.loads(result.stdout)
     setting_after = get_after["response"].get("setting", {})
-    assert setting_after.get("password") == new_password
+    if fess_version_at_least(15, 9):
+        # Fess 15.9+ never hands a stored password back through the admin API.
+        assert setting_after.get("password") is None
+    else:
+        assert setting_after.get("password") == new_password
 
     # 5) List fileauths and ensure the updated fileauth appears
     result = runner.invoke(

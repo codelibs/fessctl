@@ -513,6 +513,7 @@ class TestIsApiV2:
             ("15.7.0", True),
             ("15.7.3", True),
             ("15.8.0", True),
+            ("15.9.0", True),
             ("16.0.0", True),
             ("16.0.0-SNAPSHOT", True),
         ],

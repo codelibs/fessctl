@@ -3,12 +3,24 @@ import json
 import pytest
 from typer.testing import CliRunner
 
+from fessctl.commands.group import group_app
+from fessctl.commands.role import role_app
 from fessctl.commands.user import user_app
 
 
 @pytest.fixture(scope="module")
 def runner():
     return CliRunner()
+
+
+def _create_and_get_id(runner, app, name):
+    result = runner.invoke(app, ["create", name, "--output", "json"])
+    assert result.exit_code == 0, f"Create failed: {result.stdout}"
+    resp = json.loads(result.stdout)
+    assert resp.get("response", {}).get("status") == 0
+    resource_id = resp["response"].get("id")
+    assert resource_id, "No ID returned on create"
+    return resource_id
 
 
 def test_user_crud_flow(runner, fess_service):
@@ -49,8 +61,10 @@ def test_user_crud_flow(runner, fess_service):
     # 3) Update the user's password, attributes, roles, and groups
     new_password = "NewPass456"
     attribute_kv = "key1=val1"
-    role_name = "roleA"
-    group_name = "groupA"
+    # Fess 15.9+ rejects a role or group that is not registered, so create them
+    # first and refer to them by id (the id equals the name on Fess 14.x).
+    role_name = _create_and_get_id(runner, role_app, f"role-{uuid.uuid4().hex[:8]}")
+    group_name = _create_and_get_id(runner, group_app, f"group-{uuid.uuid4().hex[:8]}")
     result = runner.invoke(
         user_app,
         [
@@ -119,6 +133,11 @@ def test_user_crud_flow(runner, fess_service):
     )
     assert result.exit_code != 0
     assert "failed to retrieve user" in result.stdout.lower()
+
+    # 8) Clean up the role and group created for this test
+    for app, resource_id in ((role_app, role_name), (group_app, group_name)):
+        result = runner.invoke(app, ["delete", "--output", "json", "--", resource_id])
+        assert result.exit_code == 0, f"Cleanup failed: {result.stdout}"
 
 
 def test_getbyname_user(runner, fess_service):
