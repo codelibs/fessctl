@@ -1,6 +1,7 @@
 """
 Unit tests for fessctl.api.client module.
 """
+import inspect
 import json
 from types import SimpleNamespace
 from unittest.mock import Mock, patch, MagicMock
@@ -315,7 +316,11 @@ class TestListPaging:
 
     @pytest.mark.parametrize("method", LIST_METHODS)
     def test_every_list_method_puts_paging_in_body(self, client, http, method):
-        getattr(client, method)(page=2, size=1)
+        list_method = getattr(client, method)
+        # Some list methods also take a resource selector (e.g. a dictionary ID).
+        required = [p for p in inspect.signature(list_method).parameters.values()
+                    if p.default is p.empty]
+        list_method(*["x"] * len(required), page=2, size=1)
 
         http.get.assert_not_called()
         call_kwargs = http.request.call_args[1]

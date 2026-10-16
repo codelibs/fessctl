@@ -12,6 +12,7 @@ from fessctl.commands.badword import badword_app
 from fessctl.commands.boostdoc import boostdoc_app
 from fessctl.commands.crawlinginfo import crawlinginfo_app
 from fessctl.commands.dataconfig import dataconfig_app
+from fessctl.commands.dict import dict_app
 # from fessctl.commands.documents import documents_app
 from fessctl.commands.duplicatehost import duplicatehost_app
 from fessctl.commands.elevateword import elevateword_app
@@ -50,6 +51,7 @@ app.add_typer(badword_app, name="badword")
 app.add_typer(boostdoc_app, name="boostdoc")
 app.add_typer(crawlinginfo_app, name="crawlinginfo")
 app.add_typer(dataconfig_app, name="dataconfig")
+app.add_typer(dict_app, name="dict")
 # app.add_typer(documents_app, name="documents")
 app.add_typer(duplicatehost_app, name="duplicatehost")
 app.add_typer(elevateword_app, name="elevateword")
