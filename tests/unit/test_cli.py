@@ -2,6 +2,7 @@
 Unit tests for fessctl.cli module (ping command).
 """
 import json
+import re
 from unittest.mock import Mock, patch
 
 import pytest
@@ -362,6 +363,7 @@ class TestRequiredParameters:
         result = runner.invoke(app, args)
 
         assert result.exit_code == 2
-        assert missing in result.output
+        # CI forces colour, which splits the option name with escape sequences
+        assert missing in re.sub(r"\x1b\[[0-9;]*m", "", result.output)
         mock_httpx.post.assert_not_called()
         mock_httpx.put.assert_not_called()
