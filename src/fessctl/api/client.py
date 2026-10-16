@@ -1,4 +1,5 @@
 import json
+import os
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -16,6 +17,22 @@ class Action(Enum):
     GET = "get"
     START = "start"
     STOP = "stop"
+    UPLOAD = "upload"
+
+
+# Name of the multipart form field that carries the file, per dictionary type.
+DICT_UPLOAD_FIELDS = {
+    "synonym": "synonymFile",
+    "mapping": "charMappingFile",
+    "kuromoji": "kuromojiFile",
+    "stopwords": "stopwordsFile",
+    "protwords": "protwordsFile",
+    "stemmeroverride": "stemmerOverrideFile",
+}
+
+
+# Seconds to allow for uploading or downloading a dictionary file.
+FILE_TRANSFER_TIMEOUT = 60.0
 
 
 class FessAPIClientError(Exception):
@@ -68,6 +85,7 @@ class FessAPIClient:
         json_data: dict | None = None,
         params: dict | None = None,
         is_admin: bool = True,
+        files: dict | None = None,
     ) -> dict:
         headers = self.admin_api_headers if is_admin else self.search_api_headers
         try:
@@ -102,6 +120,14 @@ class FessAPIClient:
             elif action == Action.GET:
                 response = httpx.get(
                     url, headers=headers, params=params, timeout=self.timeout
+                )
+            elif action == Action.UPLOAD:
+                # httpx sets the multipart Content-Type (with its boundary) itself.
+                upload_headers = {
+                    k: v for k, v in headers.items() if k != "Content-Type"}
+                response = httpx.post(
+                    url, headers=upload_headers, files=files, params=params,
+                    timeout=max(self.timeout, FILE_TRANSFER_TIMEOUT)
                 )
             elif action == Action.START or action == Action.STOP:
                 if self._major_version <= 14:
@@ -184,6 +210,91 @@ class FessAPIClient:
         else:
             url = f"{self.base_url}/api/v1/health"
         return self.send_request(Action.GET, url, is_admin=False)
+
+    # Dictionary APIs
+
+    def get_dicts(self) -> dict:
+        """
+        Retrieves the dictionary files (type, id, path and timestamp).
+        """
+        url = f"{self.base_url}/api/admin/dict"
+        return self.send_request(Action.GET, url)
+
+    def list_dict_items(self, dict_type: str, dict_id: str, page: int = 1, size: int = 100) -> dict:
+        """
+        Retrieves a page of the entries of a dictionary file.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/settings/{dict_id}"
+        params = {"page": page, "size": size}
+        return self.send_request(Action.LIST, url, params=params)
+
+    def get_dict_item(self, dict_type: str, dict_id: str, item_id: int) -> dict:
+        """
+        Retrieves an entry of a dictionary file by ID.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}/{item_id}"
+        return self.send_request(Action.GET, url)
+
+    def create_dict_item(self, dict_type: str, dict_id: str, config: dict) -> dict:
+        """
+        Creates an entry in a dictionary file.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}"
+        return self.send_request(Action.CREATE, url, json_data=config)
+
+    def update_dict_item(self, dict_type: str, dict_id: str, config: dict) -> dict:
+        """
+        Replaces an entry of a dictionary file (config carries the entry's ID).
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}"
+        return self.send_request(Action.EDIT, url, json_data=config)
+
+    def delete_dict_item(self, dict_type: str, dict_id: str, item_id: int) -> dict:
+        """
+        Deletes an entry of a dictionary file by ID.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}/{item_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def upload_dict(self, dict_type: str, dict_id: str, file_path: str) -> dict:
+        """
+        Replaces a dictionary file with the content of a local file.
+
+        Fess 15.6 to 15.8 only route the upload as PUT and cannot read a multipart
+        PUT, so no upload is possible there (fixed in 15.9, which accepts POST).
+        """
+        if (15, 6) <= (self._major_version, self._minor_version) < (15, 9):
+            return {"response": {
+                "status": 1,
+                "message": "Dictionary upload is not supported by Fess 15.6 to 15.8 "
+                           "(the server cannot read a multipart PUT); it needs Fess 15.9 or 14.x.",
+            }}
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/upload/{dict_id}"
+        with open(file_path, "rb") as f:
+            files = {DICT_UPLOAD_FIELDS[dict_type]: (
+                os.path.basename(file_path), f.read(), "application/octet-stream")}
+        return self.send_request(Action.UPLOAD, url, files=files)
+
+    def download_dict(self, dict_type: str, dict_id: str) -> bytes:
+        """
+        Downloads a dictionary file. Raises FessAPIClientError when Fess does not
+        return the file (it answers with a JSON error instead).
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/download/{dict_id}"
+        try:
+            response = httpx.get(
+                url, headers=self.admin_api_headers,
+                timeout=max(self.timeout, FILE_TRANSFER_TIMEOUT))
+        except httpx.RequestError as e:
+            raise FessAPIClientError(
+                status_code=-1, content=f"Network error: {str(e)}") from e
+        if response.status_code != 200 or response.headers.get("content-type", "").startswith("application/json"):
+            try:
+                message = response.json().get("response", {}).get("message", "")
+            except ValueError:
+                message = response.text
+            raise FessAPIClientError(status_code=response.status_code, content=message)
+        return response.content
 
     # Role APIs
 
