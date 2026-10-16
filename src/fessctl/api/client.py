@@ -1,6 +1,7 @@
 import json
 import os
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import httpx
@@ -154,6 +155,45 @@ class FessAPIClient:
                 status_code=response.status_code,
                 content=f"Invalid JSON response (HTTP {response.status_code}): {response.text}"
             ) from e
+
+    def _download(self, url: str, dest: Path) -> dict:
+        """
+        Streams a file download to ``dest``.
+
+        Fess answers a failed download with a JSON error body, which is returned like any other
+        response; a successful download returns ``{"response": {"status": 0, "path": ..., "size": ...}}``.
+        The file is written next to ``dest`` first, so a failed transfer leaves no partial file.
+        """
+        part = dest.with_name(dest.name + ".part")
+        headers = {"Authorization": self.admin_api_headers["Authorization"]}
+        try:
+            with httpx.stream(
+                "GET", url, headers=headers, timeout=httpx.Timeout(self.timeout, read=60.0)
+            ) as response:
+                # A backup may itself be application/x-ndjson, so match the JSON error type exactly.
+                if response.status_code != 200 or response.headers.get("content-type", "").startswith("application/json"):
+                    response.read()
+                    try:
+                        return response.json()
+                    except json.decoder.JSONDecodeError as e:
+                        raise FessAPIClientError(
+                            status_code=response.status_code,
+                            content=f"Invalid JSON response (HTTP {response.status_code}): {response.text}"
+                        ) from e
+                size = 0
+                with part.open("wb") as f:
+                    for chunk in response.iter_bytes():
+                        f.write(chunk)
+                        size += len(chunk)
+            part.replace(dest)
+        except httpx.HTTPError as e:
+            raise FessAPIClientError(
+                status_code=-1,
+                content=f"Network error: {str(e)}"
+            ) from e
+        finally:
+            part.unlink(missing_ok=True)
+        return {"response": {"status": 0, "path": str(dest), "size": size}}
 
     def ping(self) -> dict:
         """
@@ -822,6 +862,86 @@ class FessAPIClient:
         """
         url = f"{self.base_url}/api/admin/theme"
         return self.send_request(Action.CREATE, url, json_data={"name": name, "version": version})
+
+    # SystemInfo / Stats APIs
+
+    def get_systeminfo(self) -> dict:
+        """
+        Retrieves the system information (bug report, environment, Fess and system properties).
+        """
+        url = f"{self.base_url}/api/admin/systeminfo"
+        return self.send_request(Action.GET, url)
+
+    def get_stats(self) -> dict:
+        """
+        Retrieves the server statistics (JVM, OS, process, engine and filesystem).
+        """
+        url = f"{self.base_url}/api/admin/stats"
+        return self.send_request(Action.GET, url)
+
+    # Log APIs
+
+    def get_log_files(self) -> dict:
+        """
+        Retrieves the log files in the log directory of the Fess server.
+        """
+        url = f"{self.base_url}/api/admin/log/files"
+        return self.send_request(Action.GET, url)
+
+    def download_log_file(self, log_id: str, dest: Path) -> dict:
+        """
+        Downloads a log file to ``dest``. ``log_id`` is the ``id`` returned by get_log_files.
+        """
+        url = f"{self.base_url}/api/admin/log/file/{log_id}"
+        return self._download(url, dest)
+
+    # Backup APIs
+
+    def get_backup_files(self) -> dict:
+        """
+        Retrieves the files that can be downloaded as a backup.
+        """
+        url = f"{self.base_url}/api/admin/backup/files"
+        return self.send_request(Action.GET, url)
+
+    def download_backup_file(self, backup_id: str, dest: Path) -> dict:
+        """
+        Downloads a backup file to ``dest``. ``backup_id`` is the ``id`` returned by get_backup_files.
+        """
+        # An id such as "fess_config.bulk" ends in an extension, and Fess answers such a path
+        # with a bare "404 Not Found." instead of running the action; the trailing slash avoids it.
+        url = f"{self.base_url}/api/admin/backup/file/{backup_id}/"
+        return self._download(url, dest)
+
+    # Suggest APIs
+
+    def get_suggest_info(self) -> dict:
+        """
+        Retrieves the number of words in the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest"
+        return self.send_request(Action.GET, url)
+
+    def delete_all_suggest_words(self) -> dict:
+        """
+        Deletes every word from the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest/all"
+        return self.send_request(Action.DELETE, url)
+
+    def delete_document_suggest_words(self) -> dict:
+        """
+        Deletes the words that come from documents from the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest/document"
+        return self.send_request(Action.DELETE, url)
+
+    def delete_query_suggest_words(self) -> dict:
+        """
+        Deletes the words that come from search queries from the suggest index.
+        """
+        url = f"{self.base_url}/api/admin/suggest/query"
+        return self.send_request(Action.DELETE, url)
 
     # WebAuth APIs
 
