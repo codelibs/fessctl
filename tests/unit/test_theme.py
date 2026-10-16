@@ -63,3 +63,17 @@ class TestThemeInstall:
 
         assert result.exit_code == 1
         assert "HTTP 404" in result.stdout
+
+
+class TestThemeTimeout:
+    @pytest.mark.parametrize("args", [["available"], ["install", "filesearch", "15.9.4"]])
+    @patch("fessctl.commands.theme.FessAPIClient")
+    def test_remote_calls_use_a_long_timeout(self, mock_client_class, runner, args):
+        mock_client = Mock()
+        mock_client.get_available_themes.return_value = {"response": {"status": 0, "themes": []}}
+        mock_client.install_theme.return_value = {"response": {"status": 0}}
+        mock_client_class.return_value = mock_client
+
+        runner.invoke(theme_app, args)
+
+        assert mock_client_class.call_args.kwargs["timeout"] >= 60
