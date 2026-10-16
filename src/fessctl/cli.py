@@ -15,7 +15,7 @@ from fessctl.commands.dataconfig import dataconfig_app
 # from fessctl.commands.documents import documents_app
 from fessctl.commands.duplicatehost import duplicatehost_app
 from fessctl.commands.elevateword import elevateword_app
-# from fessctl.commands.failureurl import failureurl_app
+from fessctl.commands.failureurl import failureurl_app
 from fessctl.commands.fileauth import fileauth_app
 from fessctl.commands.fileconfig import fileconfig_app
 # from fessctl.commands.general import general_app
@@ -36,6 +36,7 @@ from fessctl.commands.scheduler import scheduler_app
 # from fessctl.commands.storage import storage_app
 # from fessctl.commands.suggest import suggest_app
 from fessctl.commands.tagtype import tagtype_app
+from fessctl.commands.theme import theme_app
 # from fessctl.commands.systeminfo import systeminfo_app
 from fessctl.commands.user import user_app
 from fessctl.commands.webauth import webauth_app
@@ -52,7 +53,7 @@ app.add_typer(dataconfig_app, name="dataconfig")
 # app.add_typer(documents_app, name="documents")
 app.add_typer(duplicatehost_app, name="duplicatehost")
 app.add_typer(elevateword_app, name="elevateword")
-# app.add_typer(failureurl_app, name="failureurl")
+app.add_typer(failureurl_app, name="failureurl")
 app.add_typer(fileauth_app, name="fileauth")
 app.add_typer(fileconfig_app, name="fileconfig")
 # app.add_typer(general_app, name="general")
@@ -73,6 +74,7 @@ app.add_typer(scheduler_app, name="scheduler")
 # app.add_typer(storage_app, name="storage")
 # app.add_typer(suggest_app, name="suggest")
 app.add_typer(tagtype_app, name="tagtype")
+app.add_typer(theme_app, name="theme")
 # app.add_typer(systeminfo_app, name="systeminfo")
 app.add_typer(user_app, name="user")
 app.add_typer(webauth_app, name="webauth")

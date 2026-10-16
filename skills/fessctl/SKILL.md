@@ -1,6 +1,6 @@
 ---
 name: fessctl
-description: Operate Fess via fessctl CLI (admin API client). Use when managing webconfigs, file/data configs, schedulers, users/roles/groups, dictionaries, access tokens, or any Fess admin resource from Claude. Covers CRUD on 22 resource types and cross-feature workflows like initial crawl setup.
+description: Operate Fess via fessctl CLI (admin API client). Use when managing webconfigs, file/data configs, schedulers, users/roles/groups, dictionaries, access tokens, or any Fess admin resource from Claude. Covers 25 resource types and cross-feature workflows like initial crawl setup.
 license: Apache-2.0
 version: 0.1.0
 ---
@@ -53,12 +53,14 @@ Each file documents one Fess admin feature: what it is, when to use it, fessctl 
 | Crawl scheduler / jobs   | references/features/scheduler.md |
 | Job logs                 | references/features/joblog.md |
 | Crawling info            | references/features/crawlinginfo.md |
+| Failure URLs             | references/features/failureurl.md |
 | Users                    | references/features/user.md |
 | Roles                    | references/features/role.md |
 | Groups                   | references/features/group.md |
 | Access tokens            | references/features/accesstoken.md |
 | Label types              | references/features/labeltype.md |
 | User tags                | references/features/tagtype.md |
+| Themes                   | references/features/theme.md |
 | Key match                | references/features/keymatch.md |
 | Boost document           | references/features/boostdoc.md |
 | Elevate word             | references/features/elevateword.md |

@@ -664,6 +664,54 @@ class FessAPIClient:
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
 
+    # FailureUrl APIs
+
+    def delete_failureurl(self, failureurl_id: str) -> dict:
+        """
+        Deletes a FailureUrl by ID.
+        """
+        url = f"{self.base_url}/api/admin/failureurl/log/{failureurl_id}"
+        return self.send_request(Action.DELETE, url)
+
+    def delete_all_failureurls(self) -> dict:
+        """
+        Deletes all FailureUrls.
+        """
+        url = f"{self.base_url}/api/admin/failureurl/all"
+        return self.send_request(Action.DELETE, url)
+
+    def get_failureurl(self, failureurl_id: str) -> dict:
+        """
+        Retrieves a FailureUrl by ID.
+        """
+        url = f"{self.base_url}/api/admin/failureurl/log/{failureurl_id}"
+        return self.send_request(Action.GET, url)
+
+    def list_failureurls(self, page: int = 1, size: int = 100, filters: Optional[Dict[str, object]] = None) -> dict:
+        """
+        Retrieves a list of FailureUrls, optionally narrowed by url, error_name,
+        error_count_min and error_count_max.
+        """
+        url = f"{self.base_url}/api/admin/failureurl/logs"
+        params = {"page": page, "size": size, **(filters or {})}
+        return self.send_request(Action.LIST, url, params=params)
+
+    # Theme APIs
+
+    def get_available_themes(self) -> dict:
+        """
+        Retrieves the themes that can be installed (Fess 15.9+).
+        """
+        url = f"{self.base_url}/api/admin/theme/available"
+        return self.send_request(Action.GET, url)
+
+    def install_theme(self, name: str, version: str) -> dict:
+        """
+        Installs a theme by name and version (Fess 15.9+).
+        """
+        url = f"{self.base_url}/api/admin/theme"
+        return self.send_request(Action.CREATE, url, json_data={"name": name, "version": version})
+
     # WebAuth APIs
 
     def create_webauth(self, config: dict) -> dict:
