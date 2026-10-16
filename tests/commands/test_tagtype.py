@@ -20,7 +20,7 @@ def runner():
 @pytest.fixture(scope="module")
 def tagtype_api(fess_service):
     """
-    Skips when the Fess under test has no /api/admin/tagtype (not in Fess 15.9 or earlier).
+    Skips when the Fess under test has no /api/admin/tagtype (added in Fess 15.9.0; absent from earlier versions).
     """
     try:
         result = FessAPIClient(Settings()).list_tagtypes()

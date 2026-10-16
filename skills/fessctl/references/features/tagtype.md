@@ -3,7 +3,7 @@
 ## What it is
 A tag type is a named, user-owned list of document URLs. End users create and manage their own tags from the search UI; the admin API lets an administrator list, inspect, create, change, and delete any user's tags. Each tag has a `name`, an `owner` (user name), the tagged documents as `paths` (one URL per line), optional `permissions` (one per line; only the owner can see the tag when empty), an optional `virtual_host`, and a `sort_order`.
 
-Requires a Fess version that provides `/api/admin/tagtype` (introduced by fess#3551; not in Fess 15.9 or earlier).
+Requires a Fess version that provides `/api/admin/tagtype` (introduced by fess#3551 in Fess 15.9.0; absent from earlier versions).
 
 ## Subcommand surface
 | Subcommand | Purpose | Required arguments |
