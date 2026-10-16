@@ -15,7 +15,7 @@ resolve_fessctl() {
   FESSCTL="docker run --rm \
     -e FESS_ENDPOINT -e FESS_ACCESS_TOKEN -e FESS_VERSION \
     --add-host=host.docker.internal:host-gateway \
-    ghcr.io/codelibs/fessctl:0.3.0"
+    ghcr.io/codelibs/fessctl:0.4.0"
 }
 
 resolve_fessctl
@@ -53,7 +53,7 @@ docker run --rm \
   -e FESS_ACCESS_TOKEN="$FESS_ACCESS_TOKEN" \
   -e FESS_VERSION="$FESS_VERSION" \
   --add-host=host.docker.internal:host-gateway \
-  ghcr.io/codelibs/fessctl:0.3.0 \
+  ghcr.io/codelibs/fessctl:0.4.0 \
   ping
 ```
 
