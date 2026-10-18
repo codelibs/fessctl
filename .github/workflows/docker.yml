@@ -1,0 +1,141 @@
+name: docker
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - Dockerfile
+      - pyproject.toml
+      - src/**
+      - .github/workflows/docker.yml
+  workflow_dispatch:
+
+# Least-privilege: read-only by default; the jobs that push add packages: write.
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/codelibs/fessctl
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    # Each architecture is built on a native runner: building amd64 under QEMU
+    # on Apple Silicon segfaults in `uv pip install`.
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Assert tag trigger
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          case "${GITHUB_REF}" in
+            refs/tags/v*) ;;
+            *) echo "docker.yml workflow_dispatch requires a v* tag ref"; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v6
+
+      - name: Validate tag matches pyproject version
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PROJECT_VERSION=$(python3 -c \
+            "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "$TAG" != "$PROJECT_VERSION" ]; then
+            echo "::error::Tag v$TAG does not match pyproject.toml version $PROJECT_VERSION"
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to ghcr.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # On a pull request the image is only built, to check that the Dockerfile
+      # still works on both architectures. On a tag it is pushed by digest and
+      # the merge job assembles the multi-arch tag.
+      - name: Build
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p "${RUNNER_TEMP}/digests"
+          touch "${RUNNER_TEMP}/digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+
+      - name: Upload digest
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.runner }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+
+  merge:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: digests-*
+          path: ${{ runner.temp }}/digests
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v4
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          # Only the release tag: the docs tell users to always name a release tag.
+          flavor: latest=false
+          tags: type=semver,pattern={{version}}
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create the multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          set -euo pipefail
+          tag_args=()
+          while read -r tag; do tag_args+=(-t "$tag"); done < <(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          refs=()
+          for digest in *; do refs+=("${IMAGE}@sha256:${digest}"); done
+          docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
+
+      - name: Inspect the image
+        run: docker buildx imagetools inspect "${IMAGE}:${VERSION}"
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
