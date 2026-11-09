@@ -38,10 +38,10 @@ def http():
 
 class TestSearchlistClient:
     def test_search_sends_only_given_params_in_body_and_query(self, http):
-        _client("15.9.0").search_documents(query="foo", start=20, size=10, lang=["ja"])
+        _client("15.9.0").search_documents(query="foo", start=20, size=10, lang=["ja"], offset=7)
 
         assert http.request.call_args[0] == ("GET", "http://fess/api/admin/searchlist/docs")
-        expected = {"q": "foo", "start": 20, "size": 10, "lang": ["ja"]}
+        expected = {"q": "foo", "start": 20, "size": 10, "lang": ["ja"], "offset": 7}
         assert http.request.call_args[1]["json"] == expected
         assert http.request.call_args[1]["params"] == expected
 
@@ -103,13 +103,13 @@ class TestSearchlistSearch:
 
         result = runner.invoke(
             searchlist_app,
-            ["search", "foo", "--start", "10", "--size", "5", "--sort", "last_modified.desc", "--lang", "ja"],
+            ["search", "foo", "--start", "10", "--size", "5", "--sort", "last_modified.desc", "--lang", "ja", "--offset", "7"],
         )
 
         assert result.exit_code == 0
         assert "No documents found." in result.stdout
         mock_client.search_documents.assert_called_once_with(
-            query="foo", start=10, size=5, sort="last_modified.desc", lang=["ja"])
+            query="foo", start=10, size=5, sort="last_modified.desc", lang=["ja"], offset=7)
 
     @patch("fessctl.commands.searchlist.FessAPIClient")
     def test_search_without_options_sends_nothing(self, mock_client_class, runner):
@@ -119,7 +119,7 @@ class TestSearchlistSearch:
         runner.invoke(searchlist_app, ["search"])
 
         mock_client.search_documents.assert_called_once_with(
-            query=None, start=None, size=None, sort=None, lang=None)
+            query=None, start=None, size=None, sort=None, lang=None, offset=None)
 
     @patch("fessctl.commands.searchlist.FessAPIClient")
     def test_search_text_output(self, mock_client_class, runner):
@@ -134,6 +134,18 @@ class TestSearchlistSearch:
         assert result.exit_code == 0
         assert "## Documents (1-1 of 42)" in result.stdout
         assert "| d1 | T | http://e/a | 2026-10-16T00:00:00.000Z |" in result.stdout
+
+    @patch("fessctl.commands.searchlist.FessAPIClient")
+    def test_search_text_output_names_the_offset_to_send_back(self, mock_client_class, runner):
+        mock_client = mock_client_class.return_value
+        mock_client.search_documents.return_value = {"response": {
+            "status": 0, "record_count": 42, "start_record_number": 1, "end_record_number": 1, "offset": 7,
+            "docs": [{"doc_id": "d1", "title": "T", "url": "http://e/a", "last_modified": "2026-10-16T00:00:00.000Z"}],
+        }}
+
+        result = runner.invoke(searchlist_app, ["search", "foo"])
+
+        assert "## Documents (1-1 of 42, offset 7)" in result.stdout
 
     @patch("fessctl.commands.searchlist.FessAPIClient")
     @pytest.mark.parametrize("output", ["text", "json", "yaml"])
