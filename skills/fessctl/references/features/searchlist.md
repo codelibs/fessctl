@@ -13,7 +13,7 @@ Available in every Fess version fessctl supports (14.19.2, 15.6.1, 15.7.0, 15.8.
 ## Subcommand surface
 | Subcommand | Purpose | Required arguments |
 | --- | --- | --- |
-| `search` | Search the index. `--start` is the 0-based offset, `--size` the page size, `--sort`, `--lang` (repeatable). | none (a blank query matches all documents) |
+| `search` | Search the index. `--start` is the 0-based offset, `--size` the page size, `--sort`, `--lang` (repeatable), `--offset` (see Gotchas). | none (a blank query matches all documents) |
 | `get` | Show one document. | `<doc_id>` |
 | `create` | Index a new document. | `--url`, `--title`, `--role` (repeatable); `--boost` defaults to 1.0 |
 | `update` | Change fields of a document; every field not given is kept. | `<doc_id>` and at least one field option |
@@ -48,6 +48,7 @@ Available in every Fess version fessctl supports (14.19.2, 15.6.1, 15.7.0, 15.8.
 - The server requires `url`, `title`, `role` and `boost` on every create and update request (`index.admin.required.fields`). `update` reads the stored document first and sends those four back unchanged, so you only give what changes. A stored document that lacks one of them (for example one without a title) is refused unless you set it in the same call.
 - `--role` is stored as given: `Rguest` is the guest role, and a document is searchable by a user only when it shares a role with them. The document's index `_id` is derived from its URL and role list, so changing `--url` or `--role` moves the document to a new `_id`; the old one is removed and the `doc_id` stays the same.
 - `search` does not take `--page`; this API pages with `--start` and `--size`. The server caps `--size` at 100 (`paging.search.page.max.size`; 0 or less also means 100) and refuses an offset beyond `indexer.max.result.window.size` (10000 by default) with "Could not process the specified query".
+- With rank fusion on the server, a page after the first is exact only when the previous response's `offset` is sent back as `--offset` together with `--start` (the `response.offset` field of `--output json`, and shown in the text header when it is above 0; 0 when the results are not fused). Without it, a deep page can skip or repeat up to that many documents.
 - `--sort` accepts only sortable index fields such as `last_modified.desc`, `created`, `timestamp`, `content_length` and `click_count`; `title.desc` is refused.
 - Documents are searchable about a second after they are written (index refresh). Poll `search` or `get` after `create`, `update` or a bulk index instead of expecting the result at once. The same delay applies to deletes: for a moment after `delete`, a second `delete` of the same `doc_id` can still report success.
 - `create` does not fill defaults: `last_modified`, `timestamp`, `content_length`, `click_count` and `favorite_count` are absent unless you pass them with `--field` (`documents bulk` does fill them).

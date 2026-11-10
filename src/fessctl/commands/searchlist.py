@@ -81,6 +81,10 @@ def search_documents(
         None, "--sort", help="Sort expression, e.g. last_modified.desc"),
     lang: List[str] = typer.Option(
         None, "--lang", help="Restrict to a language (repeatable)"),
+    offset: int = typer.Option(
+        None, "--offset",
+        help="The offset the previous response reported; send it back with --start above 0 "
+             "so pages stay exact when Fess fuses rank lists"),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),
@@ -89,7 +93,8 @@ def search_documents(
     Search the indexed documents (admin document browser).
     """
     client = FessAPIClient(Settings())
-    result = client.search_documents(query=query, start=start, size=size, sort=sort, lang=lang or None)
+    result = client.search_documents(
+        query=query, start=start, size=size, sort=sort, lang=lang or None, offset=offset)
     response = result.get("response", {})
     status = response.get("status", 1)
 
@@ -99,9 +104,10 @@ def search_documents(
             if not docs:
                 typer.echo("No documents found.")
             else:
+                shift = f", offset {response['offset']}" if response.get("offset") else ""
                 typer.echo(format_list_markdown(
                     f"Documents ({response.get('start_record_number')}-{response.get('end_record_number')}"
-                    f" of {response.get('record_count')})",
+                    f" of {response.get('record_count')}{shift})",
                     docs,
                     [
                         ("DOC ID", "doc_id"),

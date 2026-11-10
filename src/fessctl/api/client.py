@@ -882,10 +882,13 @@ class FessAPIClient:
         size: Optional[int] = None,
         sort: Optional[str] = None,
         lang: Optional[List[str]] = None,
+        offset: Optional[int] = None,
     ) -> dict:
         """
         Searches the indexed documents. start is the 0-based offset of the first hit;
         the server caps size at paging.search.page.max.size (100 by default).
+        offset is the "offset" the previous response reported: with rank fusion the
+        pages after the first are exact only when it is sent back (0 when not fused).
         """
         url = f"{self.base_url}/api/admin/searchlist/docs"
         params = {
@@ -896,6 +899,7 @@ class FessAPIClient:
                 ("size", size),
                 ("sort", sort),
                 ("lang", lang),
+                ("offset", offset),
             )
             if value is not None
         }
