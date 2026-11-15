@@ -28,6 +28,14 @@ See `references/authentication.md` for token issuance.
 
 Before invoking any subcommand the assistant has not seen recently, run `fessctl <subcommand> --help` to confirm the current option surface — fessctl evolves with Fess and `--help` is the source of truth.
 
+## Scripting notes
+
+- Branch on the exit code (`1` failure, `3` unauthorized; equals `response.status`), never on the message text, which the server localizes. See `references/conventions.md`.
+- An ID that starts with `-` needs `--` before it: `fessctl webconfig get -- -abc123`.
+- `-o json` / `-o yaml` escape non-ASCII characters as `\uXXXX`; `jq -r` decodes them.
+- `list` returns 100 rows by default and exposes only `--page` / `--size` (plus a few filters); check `.response.total`.
+- `get` / `list` of schedulers and web/file/data configs return `available` as the string `"true"` / `"false"`.
+
 ## Index — common references
 
 | Topic | File |

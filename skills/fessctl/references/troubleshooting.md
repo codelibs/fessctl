@@ -2,11 +2,13 @@
 
 Symptoms and recoveries for the errors fessctl users hit most often. Each section starts with what the user sees, then likely causes and fixes.
 
-## `401 Unauthorized` / `403 Forbidden`
+## `401 Unauthorized`
 
 ```
-HTTP 401: Unauthorized
+{"response": {"message": "Unauthorized request.", "status": 3}}
 ```
+
+The admin API answers `HTTP 401` with `response.status` `3`, and fessctl exits with code `3`, for a missing, wrong, expired or revoked token and for a token without admin permission. It does not answer `403`.
 
 Causes:
 
@@ -25,11 +27,13 @@ fessctl accesstoken create --name claude-cli --permission "{role}admin"
 export FESS_ACCESS_TOKEN=<new value>
 ```
 
-## `404 Not Found`
+## Unknown ID (`The data ... is not found.`)
 
 ```
-HTTP 404: Not Found
+{"response": {"message": "The data <id> is not found.", "status": 1}}
 ```
+
+The admin API reports an unknown ID as a failure (`HTTP 400`, `response.status` `1`, fessctl exit code `1`), not as `404`. `delete` of a missing ID fails the same way.
 
 Causes:
 
@@ -78,10 +82,11 @@ Cause: `FESS_VERSION` does not match the running server's major.minor. fessctl s
 Recovery:
 
 ```bash
-# Confirm the endpoint is reachable; cluster_name and status come back here,
+# Confirm the endpoint is reachable; the engine status comes back here,
 # but the Fess server version is not in this payload — get it from the
 # admin UI footer or from the codelibs/fess release tag your operator deployed.
-curl -fsS "${FESS_ENDPOINT}/api/v1/health" | jq .
+# (/api/v1/health was removed in Fess 15.7; older servers still use it.)
+curl -fsS "${FESS_ENDPOINT}/api/v2/health" | jq .
 export FESS_VERSION=<the deployed Fess major.minor>
 ```
 

@@ -37,7 +37,7 @@ Always reconfirm with `fessctl reqheader <sub> --help`.
   "updated_time": 1735689600000
 }
 ```
-Required on create: `name` (max 100), `value` (max 1000), `web_config_id` (max 1000). `crud_mode` is set automatically by fessctl (`1` for create, `2` for update). On `get`, the response also exposes audit fields (`id`, `version_no`) and may surface auxiliary fields rendered by the detail formatter (`hostname`, `port`, `auth_realm`, `protocol_scheme`, `username`, `password`, `parameters`).
+Required on create: `name` (max 100), `value` (max 1000), `web_config_id` (max 1000). `crud_mode` is set automatically by fessctl (`1` for create, `2` for update). `get` shows `id`, `name`, `value`, `web_config_id`, `version_no` and the audit columns (`created_by`, `created_time`, `updated_by`, `updated_time`); nothing else.
 
 ## Relationships
 - Depends on `webconfig`: the `--web-config-id` MUST point to an existing Web Crawl Configuration (`fessctl webconfig list`). The header only fires for crawls run by that web config.

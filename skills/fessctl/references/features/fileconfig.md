@@ -35,10 +35,10 @@ Always reconfirm with `fessctl fileconfig <sub> --help`.
   "num_of_thread": 1,                 // optional, default 1
   "interval_time": 10000,             // optional, default 10000 (ms)
   "boost": 1.0,                       // optional, default 1.0
-  "available": true,                  // optional, default true
+  "available": true,                  // optional, default true (get/list return the string "true" / "false")
   "sort_order": 1,                    // optional, default 1
   "description": "",                  // optional, default ""
-  "label_type_ids": [],               // optional, default []
+  "label_type_ids": [],               // accepted by the CLI but NOT stored by the admin API
   "included_paths": "",               // optional, newline-joined regex list
   "excluded_paths": "",               // optional, newline-joined regex list
   "included_doc_paths": "",           // optional, newline-joined regex list
@@ -56,11 +56,11 @@ Always reconfirm with `fessctl fileconfig <sub> --help`.
 Repeated CLI flags (for example multiple `--path` or `--config-parameter` arguments) are joined with newlines before being sent to the API, mirroring how the admin form serializes textarea fields.
 
 ## Relationships
-- **`labeltype`**: `--label-type-id` values must exist as Label Type IDs; create them first via `fessctl labeltype create` so search results can be filtered by label.
+- **`labeltype`**: `--label-type-id` is accepted but the admin API does not store it (`get` after `create` shows no `label_type_ids`). Labels attach to documents through the label type's own `--included-path`; see `references/features/labeltype.md`.
 - **`fileauth`**: SMB/FTP/SFTP/S3/GCS sources that need credentials require a matching File Authentication record (`fessctl fileauth ...`) keyed by the same hostname/scheme.
 - **`scheduler`**: Only configs with `available=true` are picked up by the default crawler job. Use `fessctl scheduler` to inspect or trigger that job.
 - **`role` / `group` / `user`**: Strings in `--permission` (`{role}...`, `{group}...`, `{user}...`) must reference identities managed by the corresponding `fessctl` resource commands.
-- **`webconfig` / `dataconfig`**: Sibling crawl-source resources; they share scheduler and label-type wiring but use different paths/clients.
+- **`webconfig` / `dataconfig`**: Sibling crawl-source resources; they share scheduler wiring but use different paths/clients.
 
 ## Gotchas
 - Path scheme matters: use `file:/absolute/path` for local filesystems, `smb://HOST/Share/` for Windows shares, `s3://bucket/`, or `gcs://bucket/`. Trailing slashes are recommended for directories so the include/exclude regex anchors behave predictably.

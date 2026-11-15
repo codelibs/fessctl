@@ -29,19 +29,24 @@ Rows are returned under `response.logs` (list) or `response.log` (single).
   "thread_name": "Crawler-20260503120000-1-2",
   "error_name": "org.codelibs.fess.crawler.exception.CrawlingAccessException",
   "error_log": "...stack trace...",
-  "error_count": 3,
-  "last_access_time": 1714723200000,
+  "error_count": "3",
+  "last_access_time": "1714723200000",
+  "content_length": "335",
+  "mime_type": "text/html",
+  "http_status_code": "404",
   "config_id": "W_x1..."
 }
 ```
+`error_count`, `last_access_time`, `content_length` and `http_status_code` are returned as strings; `content_length`, `mime_type` and `http_status_code` are present when the crawler recorded them. Convert with `tonumber` in `jq` before comparing.
 
 ## Gotchas
+- `--url` and `--error-name` are **wildcard** matches against the whole value, not substring matches: `--url '*missing*'` matches, a plain `missing` matches nothing, and `--error-name` needs the full class name or `'*NotFound*'`.
 - `delete-all` removes every row, not just those shown by a filter; there is no filtered delete.
 
 ## Examples
 ```bash
 fessctl failureurl list --error-count-min 3
-fessctl failureurl list --url "https://www.example.com/missing.html" --output json
+fessctl failureurl list --url "*missing*" --output json
 fessctl failureurl get FAILURE_ID
 fessctl failureurl delete FAILURE_ID
 fessctl failureurl delete-all --yes

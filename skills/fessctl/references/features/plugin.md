@@ -33,6 +33,7 @@ Always reconfirm with `fessctl plugin <sub> --help`.
 - `install` and `uninstall` only report that the request was accepted: Fess downloads or deletes the jar in a background thread and logs any failure instead of reporting it. Check `plugin installed` afterwards (it can take a few seconds), and a plugin that is not installed can still be "uninstalled" successfully.
 - A new plugin is active only after Fess is restarted; so is the removal of one.
 - `install` makes the Fess server download the jar, so the server needs outbound access to the plugin repository. A name/version pair that is not in `available` is rejected with `invalid name or version`.
+- `available` lists only plugins whose version matches the running Fess (the version prefix, or `plugin.version.filter`). On an unreleased Fess snapshot it therefore lists little or nothing unless `plugin.repositories` includes the snapshot repository.
 - Installing a plugin also deletes other installed versions of the same plugin.
 - `uninstall` needs the exact installed version; check `plugin installed`.
 

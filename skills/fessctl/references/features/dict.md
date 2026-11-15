@@ -48,6 +48,8 @@ A repeatable option is sent as one value per line (`inputs` is `"a\nb"`).
 - `update` reads the entry first and sends it back with only the given options changed (the API's PUT replaces the whole entry). A repeatable option such as `--target` replaces all the values; it does not append.
 - `list` and `get` of an unknown `<dict_id>`: `list` shows nothing (exit 0), `get` fails. `create` in an unknown dictionary fails on 15.9 but reports success without storing anything on earlier versions.
 - Fess validates entries: synonym and mapping sources may not contain `,` or `=>` (15.9), a mapping source may not already exist, a kuromoji token may be registered once, and the number of words in `--segmentation` and `--reading` must match.
+- `list` returns 100 entries by default (`--size 100`) while a dictionary can hold far more (a mapping dictionary can have over 1000); check `.response.total` and raise `--size` or page through.
+- `upload` of a file the server cannot parse is still reported as "replaced successfully" and can leave the dictionary empty (verified with an unparseable line for `stemmeroverride`). Keep a `download` copy first and check with `list` afterwards.
 - Error messages of `download` and `upload` on a bad `<dict_id>` mention "protwords" for every type; that is the server's wording.
 
 ## Examples

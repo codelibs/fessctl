@@ -35,10 +35,10 @@ Always reconfirm with `fessctl webconfig <sub> --help`.
   "num_of_thread": 1,                       // optional, default 1
   "interval_time": 10000,                   // optional, default 10000 (ms)
   "boost": 1.0,                              // optional, default 1.0
-  "available": true,                         // optional, default true
+  "available": true,                         // optional, default true (get/list return the string "true" / "false")
   "sort_order": 1,                           // optional, default 1
   "description": "",                        // optional
-  "label_type_ids": [],                     // optional, list of label type IDs
+  "label_type_ids": [],                     // accepted by the CLI but NOT stored by the admin API
   "included_urls": "",                      // optional, newline-joined regex list
   "excluded_urls": "(?i).*(css|js|jpeg|jpg|gif|png|bmp|wmv|xml|ico|exe)", // optional, default shown
   "included_doc_urls": "",                  // optional
@@ -55,7 +55,7 @@ Always reconfirm with `fessctl webconfig <sub> --help`.
 
 ## Relationships
 
-- **Label Type** (`fessctl labeltype`): attach via `--label-type-id` to surface this site under a label filter in search results.
+- **Label Type** (`fessctl labeltype`): `--label-type-id` is accepted but the admin API does not store it (`get` after `create` shows no `label_type_ids`). Labels attach to documents through the label type's own `--included-path`; see `references/features/labeltype.md`.
 - **Web Authentication** (`fessctl webauth`): for protected sites (BASIC, DIGEST, NTLM, Form), create the Web Config first and then bind a Web Auth entry to it by name.
 - **Scheduler** (`fessctl scheduler`): the default crawler job picks up entries with `available: true`. Disable a config instead of deleting it to skip a single run.
 - **Role / Group / User** (`fessctl role`, `group`, `user`): values referenced by `--permission` (`{role}name`, `{group}name`, `{user}name`) must exist for permissions to take effect.
@@ -93,7 +93,7 @@ fessctl webconfig update W1a2b3c4d5 \
 ```bash
 # List all configs and filter the disabled ones for review
 fessctl webconfig list --size 200 --output json \
-  | jq '.response.settings[] | select(.available == false) | {id, name, sort_order}'
+  | jq '.response.settings[] | select(.available == "false") | {id, name, sort_order}'
 ```
 
 ## See also

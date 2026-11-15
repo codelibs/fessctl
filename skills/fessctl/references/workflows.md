@@ -8,7 +8,7 @@ Conventions used below:
 
 - Resource IDs are **positional arguments**, not `--id` flags.
 - `--output json` returns the raw Fess admin API payload — list rows live at `.response.settings[]` (or `.response.logs[]` for `joblog` / `crawlinginfo`); single rows at `.response.setting`.
-- Several `create` commands require `--version-no` for optimistic-locking (use `1` for new rows). Confirm with `fessctl <resource> create --help`.
+- `--version-no` is optional on `create` (default `0`; Fess ignores it). Confirm required options with `fessctl <resource> create --help`.
 
 ---
 
@@ -141,10 +141,12 @@ fessctl role create search-admin
 fessctl group create platform-team
 
 # 3. The user. `name` and `password` are positional; --role and --group are
-#    singular flags that may be repeated.
+#    singular flags that may be repeated and take the IDs (not the names)
+#    shown by `role list` / `group list`.
+fessctl role list --output json | jq -r '.response.settings[] | "\(.id)  \(.name)"'
 fessctl user create alice '<initial password>' \
-  --role search-admin \
-  --group platform-team
+  --role <role id of search-admin> \
+  --group <group id of platform-team>
 
 # 4. Verify.
 fessctl user list --output json \
@@ -159,7 +161,7 @@ fessctl user list --output json \
 
 **Goal:** Ensure that searches for "release notes" surface a curated document and demote noisy hits.
 
-These `create` commands require fields that are easy to forget — `--version-no 1` for new rows, `--sort-order` for boostdoc, `--max-size` and `--boost` for keymatch. `relatedquery --queries` accepts a single newline-separated string (use `$'a\nb'` shell quoting).
+These `create` commands require fields that are easy to forget — `--sort-order` for boostdoc, `--max-size` and `--boost` for keymatch. `relatedquery --queries` accepts a single newline-separated string (use `$'a\nb'` shell quoting).
 
 ```bash
 # 1. Boost any document whose URL matches a regex.
@@ -173,20 +175,17 @@ fessctl keymatch create \
   --term 'release notes' \
   --query 'url:"https://docs.example.com/release/latest"' \
   --max-size 10 \
-  --boost 100.0 \
-  --version-no 1
+  --boost 100.0
 
 # 3. Promote a phrase in suggest output.
 fessctl elevateword create \
   --suggest-word 'release notes' \
-  --boost 100.0 \
-  --version-no 1
+  --boost 100.0
 
 # 4. Surface alternative queries when the user types the term.
 fessctl relatedquery create \
   --term 'release notes' \
-  --queries $'changelog\nwhat is new' \
-  --version-no 1
+  --queries $'changelog\nwhat is new'
 
 # 5. Suppress noise.
 fessctl badword create --suggest-word internal-test

@@ -19,7 +19,7 @@ In the Fess admin UI it is reached via **Crawler > Key Match**, where you can li
 
 | Subcommand | Purpose | Key arguments |
 | --- | --- | --- |
-| `create` | Register a new Key Match entry | `--term`, `--query`, `--max-size`, `--boost`, `--version-no`, `--virtual-host`, `--created-by`, `--created-time`, `--output` |
+| `create` | Register a new Key Match entry | `--term`, `--query`, `--max-size`, `--boost`, `--virtual-host`, `--created-by`, `--created-time`, `--output` |
 | `update` | Modify an existing entry by ID | `config_id` (positional); optional `--term`, `--query`, `--max-size`, `--boost`, `--version-no`, `--virtual-host`, `--updated-by`, `--updated-time`, `--output` |
 | `delete` | Remove a Key Match entry by ID | `config_id` (positional), `--output` |
 | `get` | Show full detail of one entry | `config_id` (positional), `--output` |
@@ -45,7 +45,7 @@ Always reconfirm with `fessctl keymatch <sub> --help`.
 }
 ```
 
-Required when creating: `term`, `query`, `max_size`, `boost`, `version_no`. `virtual_host` is optional and only sent when provided. `created_by` / `created_time` (and `updated_by` / `updated_time` on update) default to `admin` and the current UTC time in milliseconds.
+Required when creating: `term`, `query`, `max_size`, `boost`. `--version-no` is optional (default `0`; Fess ignores it on create). `virtual_host` is optional and only sent when provided. `created_by` / `created_time` (and `updated_by` / `updated_time` on update) default to `admin` and the current UTC time in milliseconds.
 
 ## Relationships
 
@@ -63,7 +63,7 @@ Required when creating: `term`, `query`, `max_size`, `boost`, `version_no`. `vir
 - `virtual_host` scopes an entry to one host. An entry without `virtual_host` applies broadly; mixing scoped and unscoped entries can produce surprising overlaps.
 - `max_size` caps the number of pinned documents; if the query matches more documents than `max_size`, only that many are elevated.
 - Very large `boost` values dominate the score and may hide otherwise relevant results; tune carefully.
-- `version_no` is required on `create` and used for optimistic locking on `update`; supply the value returned by `get` to avoid conflicts.
+- `--version-no` is not needed on `create` (default `0`, ignored by Fess); the server manages `version_no` for optimistic locking.
 
 ## Examples
 
@@ -74,8 +74,7 @@ fessctl keymatch create \
   --term "support" \
   --query "url:https://example.com/support/*" \
   --max-size 10 \
-  --boost 100 \
-  --version-no 1
+  --boost 100
 ```
 
 Update an existing entry (raise the boost and change the query):

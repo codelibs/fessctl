@@ -50,14 +50,14 @@ Required on create: `name` only. `attributes` is an optional free-form `key=valu
 
 ## Relationships
 
-- A **user** references group names (strings) via its `groups` array; see `references/features/user.md`.
+- A **user** references groups by ID (from `group list`, not the name) via its `groups` array; see `references/features/user.md`.
 - A **role** is an independent permission grant; groups and roles are parallel, not hierarchical. See `references/features/role.md`.
 - A group may be referenced by **permission strings** of the form `{group}<name>` inside the `permissions` field of webconfig, fileconfig, and dataconfig records, and inside the per-document `permissions` indexed by the crawler. The match is by name string, not by ID.
 - The full effective permission set of a logged-in user is the union of all `{role}...` and `{group}...` entries derived from their roles and groups.
 
 ## Gotchas
 
-- Group names are limited to 100 characters and are matched by **name string** everywhere they appear (user records, crawl-config permission lists, document permissions). Renaming a group therefore requires rewriting every reference; the admin API does not cascade renames.
+- Group names are limited to 100 characters and are matched by **name string** in crawl-config permission lists and document permissions, while user records reference the group **ID**. Renaming a group therefore requires rewriting every reference; the admin API does not cascade renames.
 - Deletion order matters: detach the group from every user (`fessctl user update ... --group ...`) and remove `{group}name` permission strings from any webconfig/fileconfig/dataconfig before deleting the group itself, otherwise you will leave dangling permission strings that grant no access but still appear in records.
 - `update` performs a read-modify-write: passing `--attribute` **replaces** the entire attribute map; omit the flag to keep the existing attributes untouched. There is no per-key delete flag.
 - `getbyname` works by URL-safe base64-encoding the name and delegating to `get`; if the encoded ID is unknown the call returns the same not-found error as `get`.
