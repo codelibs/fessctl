@@ -19,7 +19,7 @@ The `fessctl elevateword` subcommand group is a thin wrapper around the admin RE
 
 | Subcommand | Purpose | Key required inputs |
 |------------|---------|---------------------|
-| `create` | Create a new elevate word entry. | `--suggest-word`, `--boost`, `--version-no` |
+| `create` | Create a new elevate word entry. | `--suggest-word`, `--boost` |
 | `update` | Update an existing entry by ID; only provided fields are overwritten. | positional `config_id` (other flags optional) |
 | `delete` | Delete an entry by ID. | positional `config_id` |
 | `get` | Retrieve a single entry by ID. | positional `config_id` |
@@ -54,7 +54,8 @@ The payload sent to the admin API (and returned in `response.setting`) follows t
 Notes verified against `commands/elevateword.py`:
 
 - `permissions` is sent as a newline-joined string (the CLI joins repeated `--permission` flags with `\n`).
-- `label_type_ids` is a list, supplied via repeated `--label-type-id` flags.
+- `label_type_ids` is a list, supplied via repeated `--label-type-id` flags. It is stored and returned by `get`, but `list` shows it empty.
+- `--target-label` is accepted but the server does not return it: `get` shows `target_label` as `-`.
 - `created_time` / `updated_time` are epoch milliseconds (UTC); the CLI defaults to "now" if omitted.
 
 ## CSV import and export
@@ -91,7 +92,7 @@ Notes verified against `commands/elevateword.py`:
 - **`reading` vs surface form.** `suggest_word` is what users see; `reading` is used to match typed input (e.g., kana for Japanese). Omitting `reading` for non-ASCII terms can hurt matchability.
 - **Label / role scoping is restrictive.** If `target_label` or `permissions` are set, the word only surfaces for users whose context matches; an empty scope means "visible to all".
 - **Casing and tokenization** depend on the suggest analyzer; the literal `suggest_word` may be lowercased or otherwise normalized at index time.
-- **`version_no` is required on create** by this CLI even though it is conceptually optimistic-locking metadata; pass `1` for a brand-new entry.
+- **`--version-no` is optional on create** (default `0`; Fess ignores it); the server manages `version_no`.
 - **`update` is a merge.** The CLI fetches the current setting first, then overlays only the flags you provided, so you do not need to resend unchanged fields.
 - **`upload` is impossible on Fess 15.6 to 15.8.** Those servers route the upload only as PUT and cannot read a multipart PUT; 15.9 added POST and 14.x always used POST. `fessctl` refuses the upload there with an explanatory error; `download` works on every version.
 - **Permissions format.** Use the Fess permission syntax (e.g., `{role}admin`, `{user}alice`); repeat the `--permission` flag per entry.
@@ -103,8 +104,7 @@ Minimal create (promote `FessSearch` with boost `10.0`):
 ```bash
 fessctl elevateword create \
   --suggest-word "FessSearch" \
-  --boost 10.0 \
-  --version-no 1
+  --boost 10.0
 ```
 
 Update an existing entry to raise its boost and add a reading:

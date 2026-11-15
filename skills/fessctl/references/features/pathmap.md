@@ -33,7 +33,7 @@ Always reconfirm with `fessctl pathmap <sub> --help`.
 {
   "regex": "file:/srv/documents/",                       // required, Java regex
   "replacement": "http://fileserver.example.com/documents/", // optional but typically required
-  "process_type": "C",                                    // required: C=Crawling, D=Displaying, B=Both, E=Extracted URL
+  "process_type": "C",                                    // required: C=Crawling, D=Displaying, B=Both, R=Extracted URL
   "user_agent": "",                                       // optional, regex matched against UA; empty = all
   "sort_order": 0,                                        // optional, ascending application order
   "created_by": "admin",                                  // optional, default "admin"
@@ -41,7 +41,7 @@ Always reconfirm with `fessctl pathmap <sub> --help`.
 }
 ```
 
-The `process_type` field is sent verbatim as supplied on the command line. Acceptable values follow the admin UI semantics: Crawling, Displaying, Crawling/Displaying (Both), and Extracted URL Conversion. Confirm the exact code your Fess version expects via `fessctl pathmap get <id> --output json` against an entry created in the UI.
+The `process_type` field is sent verbatim as supplied on the command line. The codes are `R` (Extracted URL Conversion), `C` (Crawling), `D` (Displaying) and `B` (both Crawling and Displaying); there is no `E`. The server accepts any string, so a wrong code is stored without an error and the rule never applies.
 
 ## Relationships
 
@@ -56,7 +56,7 @@ The `process_type` field is sent verbatim as supplied on the command line. Accep
 - Changes to `Crawling` (or `Both`) mappings only affect documents indexed **after** the change. Existing documents keep their stored URL until re-crawled; trigger a recrawl to apply the new mapping retroactively.
 - Regex syntax is **Java** regex, not POSIX or PCRE. Special characters (`.`, `?`, `+`, `(`, `)`) must be escaped with backslashes; use back references like `$1`, `$2` in the replacement.
 - When passing patterns via shell, quote them in single quotes to prevent the shell from interpreting `$1`, backslashes, or parentheses. For example: `--regex 'http://old\.example\.com/(.*)' --replacement 'http://new.example.com/$1'`.
-- `process_type` is sent as a raw string. Provide the value your Fess version stores (typically a single letter such as `C`, `D`, `B`, `E`); verify by inspecting an existing UI-created entry with `--output json` first.
+- `process_type` is sent as a raw string and not validated (an invalid code such as `E` is stored silently). Use `R`, `C`, `D` or `B`. In the crawler, `C` and `B` rewrite the URL that is indexed for a document, while `R` rewrites only the links extracted from HTML pages (web crawler); `D` and `B` rewrite URLs when search results are displayed.
 - `user_agent` is itself a regex; an empty value matches all requests. Be precise to avoid unintentionally rewriting all crawler traffic.
 - `Extracted URL Conversion` does not change URLs already saved in the index; it only affects what gets enqueued for crawling.
 - `update` performs a read-modify-write: if the config ID does not exist, the command exits non-zero with a "not found" message.

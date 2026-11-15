@@ -19,7 +19,7 @@ The `fessctl relatedquery` command group wraps the `/api/admin/relatedquery` end
 
 | Subcommand | Purpose | Required input |
 |------------|---------|----------------|
-| `create` | Register a new related query entry. | `--term`, `--queries`, `--version-no` |
+| `create` | Register a new related query entry. | `--term`, `--queries` |
 | `update` | Modify an existing entry by ID, preserving untouched fields. | `config_id` argument; optional `--term`, `--queries`, `--virtual-host` |
 | `delete` | Remove an entry by ID. | `config_id` argument |
 | `get` | Fetch a single entry by ID. | `config_id` argument |
@@ -59,7 +59,7 @@ Always reconfirm with `fessctl relatedquery <sub> --help`.
 - The `term` is matched against the user query; casing and whitespace handling depend on Fess's matcher, so register the canonical form you observe in query logs.
 - `queries` is a single string field on the wire even though it represents a list. Use newline separators (`$'\n'` in bash, `\n` inside JSON) so the UI renders each alternative on its own line.
 - Related queries are not synonyms; they neither expand the underlying query nor rewrite tokens. If you need recall changes, use synonym/stopword dictionaries instead.
-- `--version-no` is mandatory on `create`; supply `1` for new entries and trust optimistic locking to bump it on subsequent updates.
+- `--version-no` is optional on `create` (default `0`; Fess ignores it); the server manages `version_no`.
 - `update` performs a read-modify-write cycle: the command first calls `get` and aborts if the ID is not found.
 
 ## Examples
@@ -68,8 +68,7 @@ Always reconfirm with `fessctl relatedquery <sub> --help`.
 # Minimal create: associate the term "fess" with two alternative queries.
 fessctl relatedquery create \
   --term "fess" \
-  --queries $'search engine\nfull text search' \
-  --version-no 1
+  --queries $'search engine\nfull text search'
 ```
 
 ```bash

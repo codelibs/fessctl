@@ -35,6 +35,7 @@ Most resources use opaque Fess-internal IDs (e.g. ULID-like strings). Treat them
   ```
   No fessctl subcommand accepts `--id`; if you see one, that is a typo.
 - IDs are discovered via `list`. With `--output json` the path is `.response.settings[].id` for most resources (`.response.logs[].id` for `joblog`/`crawlinginfo`).
+- Fess generates IDs as URL-safe base64, so about one in 64 starts with `-`, which the CLI parser reads as an option. Put the options first and `--` before the ID: `fessctl webconfig get --output json -- -abc123` (anything after `--` is a positional argument).
 - Do not hard-code IDs across environments. After importing settings into a new Fess server, IDs will be regenerated.
 
 ## Pagination
@@ -46,7 +47,9 @@ Most resources use opaque Fess-internal IDs (e.g. ULID-like strings). Treat them
 | `--page` / `-p` | `1` | 1-indexed page number. |
 | `--size` / `-s` | `100` | Page size. |
 
-A single `list` call returns one page. To enumerate all rows, increment `--page` until an empty page is returned. There is no `--all` shortcut at v0.1.0.
+A single `list` call returns one page. To enumerate all rows, increment `--page` until an empty page is returned (or compare `.response.total` with what you have read). There is no `--all` shortcut at v0.1.0.
+
+`list` exposes only `--page` / `--size`, apart from `failureurl list` (`--url`, `--error-name`, `--error-count-min`, `--error-count-max`) and `dict list` (`--type`); `searchlist` has `search` (a query plus `--start`/`--size`/`--sort`/`--lang`) instead of `list`. The server-side filters of the other list endpoints are not exposed, so filter with `jq`.
 
 ## Required vs optional fields
 
@@ -67,7 +70,11 @@ else
 fi
 ```
 
-`delete` is idempotent in spirit (deleting a missing ID yields a 404, but the end state is the same).
+`delete` is idempotent in spirit: deleting a missing ID fails with `response.status` `1` ("The data ... is not found."), but the end state is the same.
+
+## Errors and exit codes
+
+The exit code of fessctl equals `response.status` of the server reply in every output format (`text`, `json`, `yaml`): `0` success, `1` failure (validation error, unknown ID, ...), `3` unauthorized (missing, wrong, expired token or no admin permission; HTTP 401). Scripts should branch on the exit code or `.response.status`, never on the message text: server messages are localized by the server (the default locale of the Fess server, since fessctl sends no `Accept-Language`).
 
 ## Bulk operations
 
@@ -85,12 +92,11 @@ When deleting in bulk, capture a backup first (`fessctl <resource> list --output
 
 A high-level dependency map (each per-feature file restates the relevant edges):
 
-- `webconfig` → references `labeltype`, `webauth` by ID/name.
-- `fileconfig` → references `labeltype`, `fileauth`.
-- `dataconfig` → references `labeltype`.
+- `webconfig` → references `webauth` by ID/name (`--label-type-id` is not stored by the admin API).
+- `fileconfig` → references `fileauth` (`--label-type-id` is not stored either).
 - `scheduler` → triggers a `webconfig` / `fileconfig` / `dataconfig` crawl; produces `joblog` rows; populates `crawlinginfo` history.
 - `user` → references `role`, `group`.
 - `keymatch`, `boostdoc`, `elevateword`, `badword`, `relatedcontent`, `relatedquery` → tune search-time behavior; depend on indexed documents existing.
 - `accesstoken` → grants permissions for fessctl itself; deleting your own active token logs you out.
 
-When deleting, work outward from leaves: delete `user`s before the `role`s they reference, delete `webconfig`s before the `labeltype`s they cite (or accept that Fess will tolerate dangling references but log warnings).
+When deleting, work outward from leaves: delete `user`s before the `role`s they reference, delete `webconfig`s before the `webauth`/`reqheader` rows that point at them.

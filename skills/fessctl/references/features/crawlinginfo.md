@@ -7,12 +7,10 @@ runs. The Admin UI exposes it under **System → Crawling Info**, where each row
 represents a single crawl session identified by its `session_id`. The page is
 intended for observation and post-mortem analysis, not for authoring.
 
-Each session record collects timing and counter data that the crawler emits
-internally: when the overall crawl started and ended, when the web/file and
-data-store phases started and ended, how long indexing took, how many
-documents were indexed, and the final crawler status (success or failure).
-These values are written by the crawler subsystem itself; users do not
-populate them.
+Each session record identifies one crawl run: its `session_id`, a `name`,
+when it was created and when it expires. The crawler writes it itself; users do
+not populate it. The counters and phase timestamps the crawler keeps per
+session are separate records that the admin API does not return.
 
 Because rows are produced automatically by background scheduler runs, the
 `fessctl crawlinginfo` surface has no `create` or `update` verb — those
@@ -28,12 +26,13 @@ progress of the crawls that are running now with `progress`.
   number of documents processed so far (Fess 15.10+); list recent sessions to
   see whether the scheduled crawler started, and which phase it is currently in.
 - Post-mortem on a failed crawl: fetch the row for the failing `session_id`
-  to inspect the recorded crawler status, end time, and execution time.
+  to see when the session was created and when it expires, then read the
+  details in `joblog`.
 - Capacity / housekeeping: periodically delete old or expired session records
   so the `.crawler` indices do not grow without bound.
 - Correlate with `joblog`: combine the script-level run information from
-  `joblog` with the crawler-internal counters in `crawlinginfo` to build a
-  full picture of a scheduler invocation.
+  `joblog` with the session ids in `crawlinginfo` to tie a scheduler invocation to
+  its crawl session.
 
 ## Subcommand surface
 
@@ -56,11 +55,11 @@ The admin API returns rows under `response.logs` (list) or `response.log`
 
 ```json
 {
+  "crud_mode": 0,
   "id": "AY1n...e1Q",
-  "session_id": "20260503T120000-001",
-  "name": "CrawlerStartTime",
-  "value": "1714723200000",
-  "expired_time": 1717315200000,
+  "session_id": "20260503120000000",
+  "name": "system",
+  "expired_time": "1717315200000",
   "created_time": 1714723200000
 }
 ```
@@ -69,8 +68,13 @@ Notes:
 
 - `id` is the OpenSearch document id; pass it as `crawlinginfo_id` to `get`
   and `delete`.
-- `session_id` groups all rows for one crawl run; multiple `name`/`value`
-  pairs share a single `session_id`.
+- `session_id` identifies one crawl run (the timestamp-style id also shown in
+  the `joblog` `script_result`); `name` is the name given to the crawl
+  session, `system` when none was set.
+- The row carries only `id`, `session_id`, `name`, `expired_time` (a string)
+  and `created_time` (a number), plus a constant `crud_mode`. The per-session counters and phase timestamps the crawler
+  keeps are separate parameter records that the admin API does not return,
+  so there is no `value` field.
 - `expired_time` is the epoch-millis after which the row is eligible for
   automatic GC by Fess.
 
@@ -112,7 +116,7 @@ name of the crawl configuration) and their number in `response.total`.
   `Default Crawler`, `Default File Crawler`, etc.).
 - Complementary to `joblog`: `joblog` records the script-level run
   (start/end, exit status of the scheduled job), while `crawlinginfo`
-  records crawler-internal counters and phase timestamps.
+  records the crawl sessions.
 - Consumes data emitted by `webconfig`, `fileconfig`, and `dataconfig`
   targets that the scheduled crawler walked.
 - Stored alongside other crawler runtime state in the `.crawler` index
@@ -140,9 +144,9 @@ name of the crawl configuration) and their number in `response.total`.
 - `delete` removes a single row by id, not a whole `session_id`. To purge
   an entire crawl session you must iterate over every row that shares the
   session id, or use `delete-all` to clear everything but the running ones.
-- The `value` field is always a string in the JSON payload, even for
-  numeric counters and millisecond timestamps. Cast on the client side
-  when post-processing.
+- `get --output text` titles its table with `-` (it looks up a `job_name`
+  field that crawling-info rows do not have); the title carries no
+  information, use the `session_id` row.
 - Deleting a crawling-info row does not delete the indexed documents
   produced by that crawl; it only removes the telemetry record.
 
@@ -173,7 +177,7 @@ Bulk-delete every expired session row using `--output json | jq | xargs`:
 ```bash
 fessctl crawlinginfo list --size 1000 --output json \
   | jq -r --argjson now "$(date +%s000)" \
-      '.response.logs[] | select(.expired_time != null and .expired_time < $now) | .id' \
+      '.response.logs[] | select(.expired_time != null and (.expired_time | tonumber) < $now) | .id' \
   | xargs -n 1 -I {} fessctl crawlinginfo delete {}
 ```
 

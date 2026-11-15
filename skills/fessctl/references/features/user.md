@@ -34,12 +34,12 @@ Always reconfirm with `fessctl user <sub> --help`.
 ```json
 {
   "crud_mode": 2,
-  "id": "QWRtaW4",
+  "id": "YWxpY2U=",
   "name": "alice",
   "password": "PLAINTEXT_AT_SUBMIT",
   "confirm_password": "PLAINTEXT_AT_SUBMIT",
-  "roles": ["admin", "search-user"],
-  "groups": ["engineering"],
+  "roles": ["YWRtaW4=", "c2VhcmNoLXVzZXI="],
+  "groups": ["ZW5naW5lZXJpbmc="],
   "attributes": {
     "mail": "alice@example.com",
     "surname": "Doe",
@@ -58,19 +58,19 @@ Required on create: `name` and `password` (the CLI auto-fills `confirm_password`
 
 ## Relationships
 
-- A user references **role** names (strings) via the `roles` array. Each name must already exist as a Fess role; see `references/features/role.md`.
-- A user references **group** names (strings) via the `groups` array. Each name must already exist as a Fess group; see `references/features/group.md`.
+- A user references roles by **ID** via the `roles` array (and `--role`). Use the `id` shown by `fessctl role list` (the URL-safe base64 of the role name, e.g. `YWRtaW4=` for `admin`), not the name; see `references/features/role.md`.
+- A user references groups by **ID** via the `groups` array (and `--group`). Use the `id` shown by `fessctl group list`; see `references/features/group.md`.
 - API tokens issued for this principal live in the access-token resource; see `references/features/accesstoken.md`.
 - Deletion order: delete (or reassign) the **users** first, then the role or group they reference. Removing a role or group that is still listed inside an active user record can leave dangling permission strings.
-- `roles` and `groups` are matched by **name string**, not by internal ID, so renaming a role/group requires updating every user that references it.
+- The server rejects a name or unknown ID with `... is not a registered role or group id. Use the id from the role or group list, not the name.`
 
 ## Gotchas
 
 - Passwords are submitted in plaintext over the admin API; always run against TLS-protected endpoints. Fess hashes them server-side per `fess_config.properties`.
+- **`create` with an existing name does not fail.** The ID is the base64 of the name, so Fess overwrites that account: the password is reset and its roles and groups are dropped. Check with `getbyname` first.
 - The built-in `admin` user is special: deleting it locks you out of the admin UI. Rotate its password with `update` instead of recreating it.
-- Password rotation is only possible through `update` (`--password`); there is no dedicated `passwd` subcommand. The CLI rejects passwords longer than 100 characters.
+- Password rotation is only possible through `update` (`--password`); there is no dedicated `passwd` subcommand. The server accepts at most 72 UTF-8 bytes (Fess 15.10) and applies its password policy (for example at least 8 characters); the CLI's own 100-character check is only a pre-check.
 - Deleting the user you are currently authenticated as immediately invalidates your session.
-- Role and group references are plain strings: a typo silently grants no permissions rather than erroring.
 - `update` performs read-modify-write: omitted flags fall back to the existing values, but explicitly passing `--role` or `--group` **replaces** the entire list, it does not append.
 - `getbyname` works by URL-safe base64-encoding the name and reusing `get`; it will fail the same way `get` does if the resulting ID is unknown.
 - `--updated-time` defaults to "now" in epoch milliseconds; only override it for deterministic reproductions or imports.
@@ -84,17 +84,17 @@ fessctl user create alice 'S3cret!Pass'
 
 ```bash
 # Typical update: rotate password and replace role/group assignment
-fessctl user update QWxpY2U \
+fessctl user update YWxpY2U= \
   --password 'N3wS3cret!' \
-  --role admin \
-  --role search-user \
-  --group engineering
+  --role YWRtaW4= \
+  --role c2VhcmNoLXVzZXI= \
+  --group ZW5naW5lZXJpbmc=
 ```
 
 ```bash
-# Audit: list users as JSON and show only those with the admin role
+# Audit: list users as JSON and show only those with the admin role (roles hold IDs)
 fessctl user list --size 500 --output json \
-  | jq '.response.settings[] | select(.roles | index("admin")) | {id, name, roles, groups}'
+  | jq '.response.settings[] | select(.roles | index("YWRtaW4=")) | {id, name, roles, groups}'
 ```
 
 ## See also

@@ -19,7 +19,7 @@ Defaults live in `src/fessctl/config/settings.py`. The defaults are conservative
 1. Browse to `${FESS_ENDPOINT}/admin/` and sign in with an admin account.
 2. Open **System → Access Token**.
 3. Click **Create New**, give the token a name (e.g. `claude-cli`), and pick a parameter name plus the permissions it should grant. Permissions are Fess permission strings of the form `{role}<role-name>`, `{group}<group-name>`, or `{user}<user-name>` — for full administrative access bind the token to a role that already has admin rights, for example `{role}admin`. The exact syntax is documented in `fess-docs/en/15.6/admin/accesstoken-guide.rst`.
-4. Save and copy the generated token value. It is shown only once.
+4. Save and copy the generated token value (an admin can read it again later, for example with `fessctl accesstoken get`).
 
 ### Via fessctl (after you already have one admin token)
 
@@ -28,6 +28,8 @@ fessctl accesstoken create \
   --name claude-cli \
   --permission "{role}admin"          # repeat --permission to grant more
 ```
+
+`create` prints only the new id, and the server generates the token value itself (`--token` is ignored). Read the value with `fessctl accesstoken get <id> --output json | jq -r '.response.setting.token'`.
 
 See `references/features/accesstoken.md` for the full subcommand surface (list, get, update, delete).
 
@@ -61,7 +63,7 @@ fessctl accesstoken list --output json \
 fessctl accesstoken delete <id>
 ```
 
-Most fessctl subcommands require admin-equivalent permission. A token bound to a non-admin role will succeed at `ping` and may succeed at some read-only `list` operations but will fail with `403 Forbidden` on `create`/`update`/`delete`.
+Most fessctl subcommands require admin-equivalent permission. A token bound to a non-admin role is rejected like a wrong token: Fess answers `HTTP 401` with `response.status` `3` and the message `Unauthorized request.` (the admin API never answers `403`). `ping` needs no token and still succeeds.
 
 ## Smoke test
 
@@ -77,6 +79,6 @@ Expected:
 - `ping` succeeds when `FESS_ENDPOINT` is reachable.
 - `user list --size 1` succeeds when both `FESS_ACCESS_TOKEN` and `FESS_VERSION` are correct and the token has admin permission.
 
-## Common 401 / 403 causes
+## Common 401 causes
 
-If `user list` fails after `ping` succeeds, the token is the problem. See `references/troubleshooting.md` for the full diagnostic flow; the short list is: token unset, token typo, token expired or revoked, or token issued for a role that lacks admin permissions.
+If `user list` fails after `ping` succeeds, the token is the problem: a missing, wrong, expired or revoked token, or one bound to a role without admin permissions, all give `HTTP 401`, `response.status` `3` and exit code `3`. See `references/troubleshooting.md` for the full diagnostic flow.

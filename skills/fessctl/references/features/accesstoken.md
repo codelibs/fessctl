@@ -19,8 +19,8 @@ Note that fessctl itself authenticates every privileged call with an access toke
 
 | Subcommand | Required arguments | Key options | Purpose |
 |------------|--------------------|-------------|---------|
-| `create`   | `--name`           | `--token`, `--permission` (repeatable), `--parameter-name`, `--expires`, `--created-by`, `--created-time`, `--output/-o` | Create a new access token. |
-| `update`   | `accesstoken_id` (positional) | `--name`, `--token`, `--permission` (repeatable), `--parameter-name`, `--expires`, `--updated-by`, `--updated-time`, `--output/-o` | Update an existing token in place. |
+| `create`   | `--name`           | `--token` (ignored), `--permission` (repeatable), `--parameter-name`, `--expires`, `--created-by`, `--created-time`, `--output/-o` | Create a new access token. |
+| `update`   | `accesstoken_id` (positional) | `--name`, `--token` (ignored), `--permission` (repeatable), `--parameter-name`, `--expires`, `--updated-by`, `--updated-time`, `--output/-o` | Update an existing token in place. |
 | `delete`   | `accesstoken_id` (positional) | `--output/-o` | Delete a token by ID. |
 | `get`      | `accesstoken_id` (positional) | `--output/-o` | Retrieve full details for a single token. |
 | `list`     | (none)             | `--page/-p`, `--size/-s`, `--output/-o` | List tokens with pagination. |
@@ -33,7 +33,7 @@ Always reconfirm with `fessctl accesstoken <sub> --help`.
 {
   "crud_mode": 1,
   "name": "ci-pipeline",
-  "token": "optional-explicit-token-string",
+  "token": "generated-by-the-server",
   "permissions": "{role}admin\n{group}developer",
   "parameter_name": null,
   "expires": "2026-12-31T23:59:59",
@@ -44,7 +44,7 @@ Always reconfirm with `fessctl accesstoken <sub> --help`.
 }
 ```
 
-Required by the CLI: `--name`. The Fess server typically also expects at least one `--permission` (passed as repeated flags, joined with newlines by fessctl) — without it the resulting token grants nothing useful, even though Typer accepts the call. `expires` is optional but recommended for non-service tokens; the CLI accepts `yyyy-MM-ddTHH:mm:ss`. `parameter_name` is optional and only meaningful for trusted internal embedding scenarios. `crud_mode` is set automatically (`1` for create, `2` for update).
+Required by the CLI: `--name`. `--token` is accepted but ignored on `create` and `update`: Fess always generates the token itself, so you cannot choose its value. The Fess server typically also expects at least one `--permission` (passed as repeated flags, joined with newlines by fessctl) — without it the resulting token grants nothing useful, even though Typer accepts the call. `expires` is optional but recommended for non-service tokens; the CLI accepts `yyyy-MM-ddTHH:mm:ss`. `parameter_name` is optional and only meaningful for trusted internal embedding scenarios. `crud_mode` is set automatically (`1` for create, `2` for update).
 
 ## Relationships
 
@@ -55,7 +55,7 @@ Required by the CLI: `--name`. The Fess server typically also expects at least o
 
 ## Gotchas
 
-- The full token value is shown only at creation time; if you discard it you must create a new token and delete the old one.
+- `create` prints only the new `id`, not the token. Read the generated token with `fessctl accesstoken get <id>` (also shown by `list`); `get`/`list` return the token value to any admin caller, so protect that access.
 - Deleting the token currently used by your fessctl session (the value in `FESS_ACCESS_TOKEN`) immediately invalidates that session and logs you out of subsequent API calls.
 - Permission strings are exact: use the documented `{user}name`, `{group}name`, `{role}name` form (for example `{role}admin-api`). Typos silently grant nothing.
 - Treat tokens as secrets: never commit them to git, never echo them into shared logs, and store them in a secrets manager or CI secret store.
@@ -71,6 +71,8 @@ fessctl accesstoken create \
   --name ci-pipeline \
   --permission '{role}admin-api' \
   --expires 2026-12-31T23:59:59
+# create prints only the id; read the server-generated token with get
+fessctl accesstoken get <ACCESSTOKEN_ID> --output json | jq -r '.response.setting.token'
 ```
 
 ```bash
