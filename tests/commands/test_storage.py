@@ -22,9 +22,11 @@ def runner():
 def test_storage_list_without_backend(runner, fess_service):
     result = runner.invoke(storage_app, ["list"])
     if fess_version_at_least(15, 9):
-        # 15.9 reports a storage it cannot reach; the message names the plugin to install
+        # 15.9 reports a storage it cannot reach as a failure. The server's message is localized and
+        # differs between a bare install and an image with a storage plugin, so check fessctl's own
+        # "Status code" line instead of the server's wording.
         assert result.exit_code != 0
-        assert "storage access error" in result.stdout.lower()
+        assert "Status code: 1" in result.stdout
     else:
         # earlier versions answer an unreachable storage with an empty list
         assert result.exit_code == 0
