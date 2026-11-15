@@ -26,7 +26,8 @@ def create_keymatch(
     max_size: int = typer.Option(..., "--max-size",
                                  help="Maximum result size"),
     boost: float = typer.Option(..., "--boost", help="Boost value"),
-    version_no: int = typer.Option(..., "--version-no", help="Version number"),
+    version_no: int = typer.Option(
+        0, "--version-no", help="Version number (ignored by Fess on create; kept for compatibility)"),
     virtual_host: Optional[str] = typer.Option(
         None, "--virtual-host", help="Virtual host condition"),
     created_by: str = typer.Option("admin", "--created-by", help="Created by"),

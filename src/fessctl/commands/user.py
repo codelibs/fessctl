@@ -16,7 +16,7 @@ user_app = typer.Typer()
 @user_app.command("create")
 def create_user(
     name: str = typer.Argument(..., help="Username (max 100 characters)"),
-    password: str = typer.Argument(..., help="Password (max 100 characters)"),
+    password: str = typer.Argument(..., help="Password (max 100 characters; Fess 15.10 also limits it to 72 UTF-8 bytes and applies its password policy)"),
     attributes: Optional[List[str]] = typer.Option(
         None,
         "--attribute",
@@ -87,7 +87,7 @@ def create_user(
 def update_user(
     user_id: str = typer.Argument(..., help="ID of the user to update"),
     password: Optional[str] = typer.Option(
-        None, "--password", "-p", help="Password (max 100 characters)"
+        None, "--password", "-p", help="Password (max 100 characters; Fess 15.10 also limits it to 72 UTF-8 bytes and applies its password policy)"
     ),
     attributes: Optional[List[str]] = typer.Option(
         None,

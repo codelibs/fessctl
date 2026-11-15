@@ -22,7 +22,8 @@ def create_elevateword(
     suggest_word: str = typer.Option(...,
                                      "--suggest-word", help="Suggest word"),
     boost: float = typer.Option(..., "--boost", help="Boost value"),
-    version_no: int = typer.Option(..., "--version-no", help="Version number"),
+    version_no: int = typer.Option(
+        0, "--version-no", help="Version number (ignored by Fess on create; kept for compatibility)"),
     label_type_ids: List[str] = typer.Option(
         [], "--label-type-id", help="Label type IDs"),
     reading: Optional[str] = typer.Option(

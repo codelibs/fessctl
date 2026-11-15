@@ -16,7 +16,8 @@ relatedquery_app = typer.Typer()
 def create_relatedquery(
     term: str = typer.Option(..., "--term", help="Search term"),
     queries: str = typer.Option(..., "--queries", help="Query expressions"),
-    version_no: int = typer.Option(..., "--version-no", help="Version number"),
+    version_no: int = typer.Option(
+        0, "--version-no", help="Version number (ignored by Fess on create; kept for compatibility)"),
     virtual_host: Optional[str] = typer.Option(
         None, "--virtual-host", help="Virtual host"),
     created_by: str = typer.Option("admin", "--created-by", help="Created by"),

@@ -33,6 +33,19 @@ class TestSchedulerStartJobLogId:
         assert "Job Log ID: abc123def456" in result.stdout
 
     @patch("fessctl.commands.scheduler.FessAPIClient")
+    def test_start_with_snake_case_job_log_id_text_output(self, mock_client_class, runner):
+        """Fess serializes the response in snake_case, so the id arrives as job_log_id."""
+        mock_client = Mock()
+        mock_client.start_scheduler.return_value = {
+            "response": {"status": 0, "job_log_id": "abc123def456"}
+        }
+        mock_client_class.return_value = mock_client
+
+        result = runner.invoke(scheduler_app, ["start", "sched-001"])
+        assert result.exit_code == 0
+        assert "Job Log ID: abc123def456" in result.stdout
+
+    @patch("fessctl.commands.scheduler.FessAPIClient")
     def test_start_without_job_log_id_text_output(self, mock_client_class, runner):
         """Test backward compatibility: no jobLogId field (old Fess)."""
         mock_client = Mock()
