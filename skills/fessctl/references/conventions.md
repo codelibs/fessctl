@@ -16,7 +16,7 @@ fessctl <resource> delete <ID>          # remove one resource by positional ID
 
 Exceptions:
 
-- **`crawlinginfo`** and **`joblog`** are effectively read-only history: they expose only `list`, `get`, `delete`. There is no `create` or `update`. Verify with `grep '@<name>_app.command' src/fessctl/commands/<name>.py` if in doubt.
+- **`crawlinginfo`** and **`joblog`** are effectively read-only history: they expose only `list`, `get`, `delete` (plus `crawlinginfo delete-all` and, on Fess 15.10+, `crawlinginfo progress`). There is no `create` or `update`. Verify with `grep '@<name>_app.command' src/fessctl/commands/<name>.py` if in doubt.
 - **`user`**, **`role`**, **`group`** add a `getbyname` verb — `fessctl user getbyname <NAME>` resolves the row by its human-readable name rather than its opaque ID.
 - **`scheduler`** adds `start <ID>` and `stop <ID>` for triggering or halting a job manually.
 - The top-level `fessctl ping` is not part of any resource group; it is the smoke test for endpoint reachability.

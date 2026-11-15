@@ -1,7 +1,9 @@
 import json
+
 import pytest
 from typer.testing import CliRunner
 
+from conftest import fess_version_at_least
 from fessctl.commands.crawlinginfo import crawlinginfo_app
 
 
@@ -117,3 +119,65 @@ def test_crawlinginfo_delete_nonexistent_json_output(runner, fess_service):
     # JSON output always returns, but status should indicate failure
     del_resp = json.loads(result.stdout)
     assert del_resp.get("response", {}).get("status") != 0
+
+
+@pytest.fixture
+def progress_api(fess_service):
+    """
+    Skips when the Fess under test has no /api/admin/crawlinginfo/progress (added in Fess 15.10).
+    """
+    if not fess_version_at_least(15, 10):
+        pytest.skip("Fess under test does not provide /api/admin/crawlinginfo/progress")
+
+
+def test_crawlinginfo_progress(runner, progress_api):
+    """
+    Whether a crawl is running is up to the Fess under test, so only the shape is checked.
+    """
+    result = runner.invoke(crawlinginfo_app, ["progress", "--output", "json"])
+    assert result.exit_code == 0, f"Progress failed: {result.stdout}"
+    resp = json.loads(result.stdout)["response"]
+    assert resp["status"] == 0
+    assert resp["total"] == len(resp["progress"])
+    for entry in resp["progress"]:
+        assert {"config_id", "name", "count", "last_count", "updated_time"} <= set(entry)
+
+    result = runner.invoke(crawlinginfo_app, ["progress"])
+    assert result.exit_code == 0, f"Progress failed: {result.stdout}"
+    assert "No running crawls found." in result.stdout or "| NAME | CONFIG ID |" in result.stdout
+
+    result = runner.invoke(crawlinginfo_app, ["progress", "--output", "yaml"])
+    assert result.exit_code == 0
+    assert "progress:" in result.stdout
+
+
+def test_crawlinginfo_progress_rejects_a_bad_token(runner, progress_api, monkeypatch):
+    monkeypatch.setenv("FESS_ACCESS_TOKEN", "no-such-token")
+    result = runner.invoke(crawlinginfo_app, ["progress", "--output", "json"])
+    assert result.exit_code != 0
+    assert json.loads(result.stdout)["response"]["status"] != 0
+
+
+def test_crawlinginfo_delete_all_aborts_without_confirmation(runner, fess_service):
+    result = runner.invoke(crawlinginfo_app, ["delete-all"], input="n\n")
+    assert result.exit_code != 0
+
+
+def test_crawlinginfo_delete_all(runner, fess_service):
+    """
+    Deletes every session that is not running; the sessions go after the index refresh.
+    """
+    result = runner.invoke(crawlinginfo_app, ["delete-all", "--yes", "--output", "json"])
+    assert result.exit_code == 0, f"Delete all failed: {result.stdout}"
+    assert json.loads(result.stdout)["response"]["status"] == 0
+
+    result = runner.invoke(crawlinginfo_app, ["delete-all", "--yes"])
+    assert result.exit_code == 0
+    assert "deleted successfully" in result.stdout
+
+
+def test_crawlinginfo_delete_all_rejects_a_bad_token(runner, fess_service, monkeypatch):
+    monkeypatch.setenv("FESS_ACCESS_TOKEN", "no-such-token")
+    result = runner.invoke(crawlinginfo_app, ["delete-all", "--yes", "--output", "json"])
+    assert result.exit_code != 0
+    assert json.loads(result.stdout)["response"]["status"] != 0
