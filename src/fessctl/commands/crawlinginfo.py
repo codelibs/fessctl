@@ -38,6 +38,39 @@ def delete_crawlinginfo(
         raise typer.Exit(code=status)
 
 
+@crawlinginfo_app.command("delete-all")
+def delete_all_crawlinginfos(
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Skip the confirmation prompt"
+    ),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"
+    ),
+):
+    """
+    Delete all CrawlingInfo sessions except the running ones.
+    """
+    if not yes:
+        typer.confirm("Delete all CrawlingInfo sessions except the running ones?", abort=True)
+
+    client = FessAPIClient(Settings())
+    result = client.delete_all_crawlinginfos()
+    status = result.get("response", {}).get("status", 1)
+
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            typer.echo(format_result_markdown(True, "All CrawlingInfo sessions except the running ones deleted successfully.", "CrawlingInfo", "delete-all"))
+        else:
+            message: str = result.get("response", {}).get("message", "")
+            typer.echo(format_result_markdown(False, f"Failed to delete all CrawlingInfos. {message} Status code: {status}", "CrawlingInfo", "delete-all"))
+    if status != 0:
+        raise typer.Exit(code=status)
+
+
 @crawlinginfo_app.command("get")
 def get_crawlinginfo(
     crawlinginfo_id: str = typer.Argument(..., help="CrawlingInfo ID"),
@@ -113,5 +146,50 @@ def list_crawlinginfos(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list CrawlingInfos. {message} Status code: {status}", "CrawlingInfo", "list"))
+    if status != 0:
+        raise typer.Exit(code=status)
+
+
+@crawlinginfo_app.command("progress")
+def progress_crawlinginfo(
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"
+    ),
+):
+    """
+    Show the progress of the running crawls (Fess 15.10 and later).
+    """
+    client = FessAPIClient(Settings())
+    result = client.get_crawlinginfo_progress()
+    status = result.get("response", {}).get("status", 1)
+
+    if output == "json":
+        typer.echo(json.dumps(result, indent=2))
+    elif output == "yaml":
+        typer.echo(yaml.dump(result))
+    else:
+        if status == 0:
+            running = result.get("response", {}).get("progress", [])
+            if not running:
+                typer.echo("No running crawls found.")
+            else:
+                display_items = []
+                for item in running:
+                    d = dict(item)
+                    # percent is left out when there is no previous completed crawl to compare with
+                    d["percent_display"] = f"{item['percent']}%" if item.get("percent") is not None else None
+                    d["updated_time_display"] = to_utc_iso8601(item.get("updated_time"))
+                    display_items.append(d)
+                typer.echo(format_list_markdown("Running crawls", display_items, [
+                    ("NAME", "name"),
+                    ("CONFIG ID", "config_id"),
+                    ("COUNT", "count"),
+                    ("LAST COUNT", "last_count"),
+                    ("PERCENT", "percent_display"),
+                    ("UPDATED TIME", "updated_time_display"),
+                ]))
+        else:
+            message: str = result.get("response", {}).get("message", "")
+            typer.echo(format_result_markdown(False, f"Failed to retrieve the progress of crawls. {message} Status code: {status}", "CrawlingInfo", "progress"))
     if status != 0:
         raise typer.Exit(code=status)

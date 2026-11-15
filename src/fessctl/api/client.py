@@ -813,6 +813,20 @@ class FessAPIClient:
 
     # CrawlingInfo APIs
 
+    def get_crawlinginfo_progress(self) -> dict:
+        """
+        Retrieves the progress of the running crawls (Fess 15.10 and later).
+        """
+        url = f"{self.base_url}/api/admin/crawlinginfo/progress"
+        return self.send_request(Action.GET, url)
+
+    def delete_all_crawlinginfos(self) -> dict:
+        """
+        Deletes every CrawlingInfo session except the running ones.
+        """
+        url = f"{self.base_url}/api/admin/crawlinginfo/all"
+        return self.send_request(Action.DELETE, url)
+
     def delete_crawlinginfo(self, crawlinginfo_id: str) -> dict:
         """
         Deletes a CrawlingInfo by ID.
