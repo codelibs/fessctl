@@ -19,7 +19,7 @@ def create_dataconfig(
                                      "--handler-name", help="Handler name"),
     boost: float = typer.Option(1.0, "--boost", help="Boost value"),
     available: bool = typer.Option(
-        True, "--available", help="Availability (true/false)"),
+        True, "--available/--no-available", help="Whether the config is enabled; use --no-available to disable it"),
     sort_order: int = typer.Option(1, "--sort-order", help="Sort order"),
     description: str = typer.Option("", "--description", help="Description"),
     handler_parameter: str = typer.Option(
@@ -84,7 +84,7 @@ def update_dataconfig(
         None, "--handler-name", help="Handler name"),
     boost: Optional[float] = typer.Option(None, "--boost", help="Boost value"),
     available: Optional[bool] = typer.Option(
-        None, "--available", help="Availability (true/false)"),
+        None, "--available/--no-available", help="Enable or disable the config; omit to keep the current value"),
     sort_order: Optional[int] = typer.Option(
         None, "--sort-order", help="Sort order"),
     description: Optional[str] = typer.Option(

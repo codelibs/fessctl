@@ -12,7 +12,7 @@ The default Fess install ships a "Default Crawler" job which is what most operat
 
 - Schedule a recurring crawl (e.g. nightly at 02:00) against a fixed set of webconfig / fileconfig / dataconfig IDs.
 - Trigger a one-off crawl ad-hoc without waiting for the cron tick (`scheduler start`).
-- Disable a recurring job during maintenance windows without deleting it (`scheduler update --available false`).
+- Disable a recurring job during maintenance windows without deleting it (`scheduler update --no-available`).
 - Stop an in-flight job that is misbehaving or consuming too many resources (`scheduler stop`).
 - Inspect or export the script body of an existing job before editing it via `scheduler get -o yaml`.
 
@@ -91,7 +91,7 @@ fessctl scheduler create \
 ```bash
 # Typical update: temporarily disable a job and shift its schedule to weekends only
 fessctl scheduler update <scheduler_id> \
-  --available false \
+  --no-available \
   --cron-expression "0 0 3 ? * SAT,SUN"
 ```
 

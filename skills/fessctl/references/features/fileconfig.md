@@ -10,7 +10,7 @@ The `fessctl fileconfig` subcommands are a one-to-one wrapper over the correspon
 ## When to use
 - Onboarding a new shared folder, S3 bucket, or GCS bucket that should be searchable from Fess.
 - Tightening or widening crawl scope by editing include/exclude regex without touching the UI.
-- Bulk-disabling a noisy file source by flipping `--available false` ahead of the next scheduled job.
+- Bulk-disabling a noisy file source by flipping `--no-available` ahead of the next scheduled job.
 - Exporting an existing file config (`get -o yaml`) so it can be version-controlled or replayed in another environment.
 
 ## Subcommand surface
@@ -87,7 +87,7 @@ fessctl fileconfig update FCONFIG_ID \
   --excluded-path ".*\.tmp$" \
   --num-of-thread 2 \
   --interval-time 5000 \
-  --available true
+  --available
 ```
 
 ```bash

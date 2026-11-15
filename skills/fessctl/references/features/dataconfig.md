@@ -85,7 +85,7 @@ fessctl dataconfig create \
 ```bash
 # Toggle an existing datastore off and bump its sort order.
 fessctl dataconfig update <config-id> \
-  --available false \
+  --no-available \
   --sort-order 50 \
   --description "Disabled pending schema migration"
 ```
