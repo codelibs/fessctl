@@ -51,3 +51,19 @@ def test_create_without_version_no(module, app, args, method):
 
         assert result.exit_code == 0, result.stdout
         assert getattr(client, method).call_args[0][0]["version_no"] == 0
+
+
+def test_user_list_messages_talk_about_users():
+    from fessctl.commands.user import user_app
+
+    with patch("fessctl.commands.user.FessAPIClient") as client_class:
+        client = Mock()
+        client_class.return_value = client
+
+        client.list_users.return_value = {"response": {"status": 0, "settings": []}}
+        empty = runner.invoke(user_app, ["list"])
+        assert "No users found." in empty.stdout
+
+        client.list_users.return_value = {"response": {"status": 1, "message": "boom"}}
+        failed = runner.invoke(user_app, ["list"])
+        assert "Failed to list users." in failed.stdout

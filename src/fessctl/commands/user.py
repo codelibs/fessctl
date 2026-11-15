@@ -289,7 +289,7 @@ def list_users(
     ),
 ):
     """
-    List web authentication users in Fess.
+    List users in Fess.
     """
     client = FessAPIClient(Settings())
 
@@ -305,7 +305,7 @@ def list_users(
             if status == 0:
                 users = result.get("response", {}).get("settings", [])
                 if not users:
-                    typer.echo("No web authentication users found.")
+                    typer.echo("No users found.")
                 else:
                     display_items = []
                     for item in users:
@@ -327,7 +327,7 @@ def list_users(
                     ]))
             else:
                 message: str = result.get("response", {}).get("message", "")
-                typer.echo(format_result_markdown(False, f"Failed to list web authentication users. {message} Status code: {status}", "User", "list"))
+                typer.echo(format_result_markdown(False, f"Failed to list users. {message} Status code: {status}", "User", "list"))
         if status != 0:
             raise typer.Exit(code=status)
     except typer.Exit:
