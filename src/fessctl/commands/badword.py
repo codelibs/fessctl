@@ -52,7 +52,8 @@ def create_badword(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create BadWord. {message} Status code: {status}", "BadWord", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @badword_app.command("update")
@@ -100,7 +101,8 @@ def update_badword(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update BadWord. {message} Status code: {status}", "BadWord", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @badword_app.command("delete")
@@ -126,7 +128,8 @@ def delete_badword(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete BadWord. {message} Status code: {status}", "BadWord", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @badword_app.command("get")
@@ -167,7 +170,8 @@ def get_badword(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve BadWord. {message} Status code: {status}", "BadWord", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @badword_app.command("list")
@@ -206,7 +210,8 @@ def list_badwords(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list BadWords. {message} Status code: {status}", "BadWord", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 # TODO upload
 # TODO download

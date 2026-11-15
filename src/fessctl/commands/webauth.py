@@ -79,7 +79,8 @@ def create_webauth(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create WebAuth. {message} Status code: {status}", "WebAuth", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webauth_app.command("update")
@@ -153,7 +154,8 @@ def update_webauth(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update WebAuth. {message} Status code: {status}", "WebAuth", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webauth_app.command("delete")
@@ -179,7 +181,8 @@ def delete_webauth(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete WebAuth. {message} Status code: {status}", "WebAuth", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webauth_app.command("get")
@@ -227,7 +230,8 @@ def get_webauth(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve WebAuth. {message} Status code: {status}", "WebAuth", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webauth_app.command("list")
@@ -264,4 +268,5 @@ def list_webauths(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list WebAuths. {message} Status code: {status}", "WebAuth", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

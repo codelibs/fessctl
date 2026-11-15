@@ -62,7 +62,8 @@ def create_tagtype(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create TagType. {message} Status code: {status}", "TagType", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @tagtype_app.command("update")
@@ -124,7 +125,8 @@ def update_tagtype(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update TagType. {message} Status code: {status}", "TagType", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @tagtype_app.command("delete")
@@ -150,7 +152,8 @@ def delete_tagtype(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete TagType. {message} Status code: {status}", "TagType", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @tagtype_app.command("get")
@@ -191,7 +194,8 @@ def get_tagtype(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve TagType. {message} Status code: {status}", "TagType", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @tagtype_app.command("list")
@@ -224,4 +228,5 @@ def list_tagtypes(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list TagTypes. {message} Status code: {status}", "TagType", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

@@ -79,7 +79,8 @@ def create_labeltype(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create LabelType. {message} Status code: {status}", "LabelType", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @labeltype_app.command("update")
@@ -153,7 +154,8 @@ def update_labeltype(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update LabelType. {message} Status code: {status}", "LabelType", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @labeltype_app.command("delete")
@@ -179,7 +181,8 @@ def delete_labeltype(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete LabelType. {message} Status code: {status}", "LabelType", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @labeltype_app.command("get")
@@ -226,7 +229,8 @@ def get_labeltype(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve LabelType. {message} Status code: {status}", "LabelType", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @labeltype_app.command("list")
@@ -259,4 +263,5 @@ def list_labeltypes(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list LabelTypes. {message} Status code: {status}", "LabelType", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

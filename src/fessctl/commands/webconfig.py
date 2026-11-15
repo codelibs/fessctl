@@ -116,7 +116,8 @@ def create_webconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "WebConfig", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webconfig_app.command("update")
@@ -251,7 +252,8 @@ def update_webconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "WebConfig", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webconfig_app.command("delete")
@@ -277,7 +279,8 @@ def delete_webconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete WebConfig. {message} Status code: {status}", "WebConfig", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webconfig_app.command("get")
@@ -336,7 +339,8 @@ def get_webconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve WebConfig. {message} Status code: {status}", "WebConfig", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @webconfig_app.command("list")
@@ -368,4 +372,5 @@ def list_webconfigs(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list WebConfigs. {message} Status code: {status}", "WebConfig", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

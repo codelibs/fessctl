@@ -55,7 +55,8 @@ def create_role(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to create role. {message} Status code: {status}", "Role", "create"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -119,7 +120,8 @@ def update_role(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update role. {message} Status code: {status}", "Role", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @role_app.command("delete")
@@ -148,7 +150,8 @@ def delete_role(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to delete role. {message} Status code: {status}", "Role", "delete"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -210,7 +213,8 @@ def get_role(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to retrieve role. {message} Status code: {status}", "Role", "get"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -262,7 +266,8 @@ def list_roles(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to list roles. {message} Status code: {status}", "Role", "list"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:

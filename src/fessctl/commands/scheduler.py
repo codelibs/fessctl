@@ -67,7 +67,8 @@ def create_scheduler(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "Scheduler", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @scheduler_app.command("update")
@@ -147,7 +148,8 @@ def update_scheduler(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "Scheduler", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @scheduler_app.command("delete")
@@ -173,7 +175,8 @@ def delete_scheduler(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete Scheduler. {message} Status code: {status}", "Scheduler", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @scheduler_app.command("get")
@@ -222,7 +225,8 @@ def get_scheduler(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve Scheduler. {message} Status code: {status}", "Scheduler", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @scheduler_app.command("list")
@@ -256,7 +260,8 @@ def list_schedulers(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list Schedulers. {message} Status code: {status}", "Scheduler", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @scheduler_app.command("start")
@@ -288,7 +293,8 @@ def start_scheduler(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to start Scheduler. {message} Status code: {status}", "Scheduler", "start"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @scheduler_app.command("stop")
@@ -314,4 +320,5 @@ def stop_scheduler(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to stop Scheduler. {message} Status code: {status}", "Scheduler", "stop"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

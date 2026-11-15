@@ -33,7 +33,8 @@ def delete_joblog(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete JobLog. {message} Status code: {status}", "JobLog", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @joblog_app.command("get")
@@ -75,7 +76,8 @@ def get_joblog(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve JobLog. {message} Status code: {status}", "JobLog", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @joblog_app.command("list")
@@ -117,4 +119,5 @@ def list_joblogs(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list JobLogs. {message} Status code: {status}", "JobLog", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

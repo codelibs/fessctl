@@ -73,7 +73,8 @@ def create_dataconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "DataConfig", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @dataconfig_app.command("update")
@@ -156,7 +157,8 @@ def update_dataconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "DataConfig", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @dataconfig_app.command("delete")
@@ -182,7 +184,8 @@ def delete_dataconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete DataConfig. {message} Status code: {status}", "DataConfig", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @dataconfig_app.command("get")
@@ -232,7 +235,8 @@ def get_dataconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve DataConfig. {message} Status code: {status}", "DataConfig", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @dataconfig_app.command("list")
@@ -265,4 +269,5 @@ def list_dataconfigs(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list DataConfigs. {message} Status code: {status}", "DataConfig", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

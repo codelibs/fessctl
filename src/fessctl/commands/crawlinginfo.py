@@ -34,7 +34,8 @@ def delete_crawlinginfo(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete CrawlingInfo. {message} Status code: {status}", "CrawlingInfo", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @crawlinginfo_app.command("get")
@@ -71,7 +72,8 @@ def get_crawlinginfo(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve CrawlingInfo. {message} Status code: {status}", "CrawlingInfo", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @crawlinginfo_app.command("list")
@@ -111,4 +113,5 @@ def list_crawlinginfos(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list CrawlingInfos. {message} Status code: {status}", "CrawlingInfo", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

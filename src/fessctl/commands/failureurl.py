@@ -34,7 +34,8 @@ def delete_failureurl(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete FailureUrl. {message} Status code: {status}", "FailureUrl", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @failureurl_app.command("delete-all")
@@ -66,7 +67,8 @@ def delete_all_failureurls(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete all FailureUrls. {message} Status code: {status}", "FailureUrl", "delete-all"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @failureurl_app.command("get")
@@ -108,7 +110,8 @@ def get_failureurl(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve FailureUrl. {message} Status code: {status}", "FailureUrl", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @failureurl_app.command("list")
@@ -168,4 +171,5 @@ def list_failureurls(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list FailureUrls. {message} Status code: {status}", "FailureUrl", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
