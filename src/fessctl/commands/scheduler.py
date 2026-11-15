@@ -278,7 +278,9 @@ def start_scheduler(
         typer.echo(yaml.dump(result))
     else:
         if status == 0:
-            job_log_id = result.get("response", {}).get("jobLogId")
+            response = result.get("response", {})
+            # Fess serializes request/response beans in snake_case; older releases used camelCase.
+            job_log_id = response.get("job_log_id") or response.get("jobLogId")
             message = f"Scheduler '{scheduler_id}' started successfully."
             if job_log_id:
                 message += f" Job Log ID: {job_log_id}"

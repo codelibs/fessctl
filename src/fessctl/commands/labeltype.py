@@ -21,7 +21,8 @@ labeltype_app = typer.Typer()
 def create_labeltype(
     name: str = typer.Option(..., "--name", help="LabelType name"),
     value: str = typer.Option(..., "--value", help="Label value"),
-    version_no: int = typer.Option(..., "--version-no", help="Version number"),
+    version_no: int = typer.Option(
+        0, "--version-no", help="Version number (ignored by Fess on create; kept for compatibility)"),
     sort_order: int = typer.Option(0, "--sort-order", help="Sort order"),
     included_paths: Optional[List[str]] = typer.Option(
         [], "--included-path", help="Included paths"),
