@@ -3,7 +3,7 @@ import json
 import typer
 import yaml
 
-from fessctl.api.client import FessAPIClient
+from fessctl.api.client import FessAPIClient, FessAPIClientError
 from fessctl.config.settings import Settings
 from fessctl.utils import format_result_markdown, output_error
 from fessctl.commands.accesstoken import accesstoken_app
@@ -137,8 +137,22 @@ def ping(
         raise typer.Exit(code=1)
 
 
+# A server error page can be several kilobytes of HTML; keep the message readable.
+MAX_ERROR_LENGTH = 300
+
+
 def main():
-    app()
+    try:
+        app()
+    except FessAPIClientError as e:
+        # A request that never produced a Fess JSON answer (connection refused, timeout,
+        # a proxy or non-Fess server replying with HTML). Without this the user gets a
+        # Python traceback instead of a message.
+        message = str(e)
+        if len(message) > MAX_ERROR_LENGTH:
+            message = message[:MAX_ERROR_LENGTH] + "..."
+        typer.secho(f"Error: {message}", err=True, fg=typer.colors.RED)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

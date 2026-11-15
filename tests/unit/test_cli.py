@@ -367,3 +367,39 @@ class TestRequiredParameters:
         assert missing in re.sub(r"\x1b\[[0-9;]*m", "", result.output)
         mock_httpx.post.assert_not_called()
         mock_httpx.put.assert_not_called()
+
+
+class TestMainErrorHandling:
+    """main() turns a request that never produced a Fess answer into a message, not a traceback."""
+
+    def _run_main(self, argv, capsys):
+        from fessctl.cli import main
+        with patch("sys.argv", ["fessctl", *argv]):
+            with pytest.raises(SystemExit) as exc:
+                main()
+        return exc.value.code, capsys.readouterr()
+
+    def test_connection_failure_is_a_clean_error(self, capsys):
+        import httpx
+        with patch("fessctl.api.client.httpx.request", side_effect=httpx.ConnectError("Connection refused")):
+            code, captured = self._run_main(["webconfig", "list"], capsys)
+        assert code == 1
+        assert "Network error" in captured.err
+        assert "Traceback" not in captured.err + captured.out
+
+    def test_non_json_response_is_a_clean_error(self, capsys):
+        response = Mock(status_code=502, text="<html>Bad Gateway</html>")
+        response.json.side_effect = json.JSONDecodeError("Expecting value", "<html>", 0)
+        with patch("fessctl.api.client.httpx.request", return_value=response):
+            code, captured = self._run_main(["webconfig", "list"], capsys)
+        assert code == 1
+        assert "HTTP 502" in captured.err
+        assert "Traceback" not in captured.err + captured.out
+
+    def test_long_error_body_is_truncated(self, capsys):
+        response = Mock(status_code=400, text="x" * 5000)
+        response.json.side_effect = json.JSONDecodeError("Expecting value", "x", 0)
+        with patch("fessctl.api.client.httpx.request", return_value=response):
+            code, captured = self._run_main(["webconfig", "list"], capsys)
+        assert code == 1
+        assert len(captured.err) < 600
