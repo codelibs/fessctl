@@ -10,7 +10,7 @@ The `fessctl webconfig` subcommand is a thin CRUD wrapper over the Fess admin AP
 
 - Bootstrapping a new Fess instance with a fixed set of sites (Infra-as-Code style).
 - Tuning crawl parameters (`--num-of-thread`, `--interval-time`, `--depth`) without clicking through the admin UI.
-- Disabling a site temporarily for maintenance via `--available false` instead of deleting it.
+- Disabling a site temporarily for maintenance via `--no-available` instead of deleting it.
 - Diffing or backing up Web Config definitions by piping `list`/`get` output through `--output json | jq`.
 
 ## Subcommand surface
@@ -67,7 +67,7 @@ Always reconfirm with `fessctl webconfig <sub> --help`.
 - `update` performs a read-modify-write: if the config ID does not exist the command exits non-zero. Fields not specified retain their current value.
 - The default `excluded_urls` regex blocks common static assets. If you actually need to crawl JS/CSS/images, override it explicitly with `--excluded-url ""` (or a narrower pattern).
 - Included/Excluded URL patterns are Java regular expressions (per the admin guide), not glob patterns.
-- `--available false` removes the entry from the next default crawler run but preserves already-indexed documents; `delete` only removes the configuration record, not the indexed data.
+- `--no-available` removes the entry from the next default crawler run but preserves already-indexed documents; `delete` only removes the configuration record, not the indexed data.
 - The `permissions` value must exactly match the Fess permission syntax (`{role}guest`, `{user}alice`, `{group}dev`); free-form names are silently ignored at search time.
 - All admin-API calls require an authenticated admin user as configured in `fessctl` settings.
 - Virtual host values are matched against incoming search request hosts; see the Fess virtual host documentation before populating this field.

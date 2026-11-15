@@ -25,7 +25,7 @@ def create_scheduler(
     job_logging: str = typer.Option(
         "", "--job-logging", help="Job logging settings"),
     available: bool = typer.Option(
-        True, "--available", help="Availability (true/false)"),
+        True, "--available/--no-available", help="Whether the job is enabled; use --no-available to disable it"),
     created_by: str = typer.Option("admin", "--created-by", help="Created by"),
     created_time: int = typer.Option(
         int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000),
@@ -87,7 +87,7 @@ def update_scheduler(
     job_logging: Optional[str] = typer.Option(
         None, "--job-logging", help="Job logging settings"),
     available: Optional[bool] = typer.Option(
-        None, "--available", help="Availability (true/false)"),
+        None, "--available/--no-available", help="Enable or disable the job; omit to keep the current value"),
     sort_order: Optional[int] = typer.Option(
         None, "--sort-order", help="Sort order"),
     updated_by: str = typer.Option("admin", "--updated-by", help="Updated by"),
