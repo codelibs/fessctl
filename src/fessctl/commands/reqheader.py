@@ -57,7 +57,8 @@ def create_reqheader(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create ReqHeader. {message} Status code: {status}", "ReqHeader", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @reqheader_app.command("update")
@@ -113,7 +114,8 @@ def update_reqheader(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update ReqHeader. {message} Status code: {status}", "ReqHeader", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @reqheader_app.command("delete")
@@ -139,7 +141,8 @@ def delete_reqheader(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete ReqHeader. {message} Status code: {status}", "ReqHeader", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @reqheader_app.command("get")
@@ -181,7 +184,8 @@ def get_reqheader(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve ReqHeader. {message} Status code: {status}", "ReqHeader", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @reqheader_app.command("list")
@@ -218,4 +222,5 @@ def list_reqheaders(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list ReqHeaders. {message} Status code: {status}", "ReqHeader", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

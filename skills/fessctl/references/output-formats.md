@@ -86,6 +86,7 @@ Round-trip restore requires composing several commands; do not assume a single-f
 
 ## Caveats
 
+- A failed call exits non-zero (the API status code) regardless of `--output`; `json` and `yaml` still print the full response first, so check `$?` and `.response.status` in scripts.
 - `text` output is rendered for humans only. Scripts that grep markdown will break the next time the table layout shifts.
 - `json` field names track the Fess admin API directly, so they may differ subtly between Fess versions. Pin `FESS_VERSION` and rerun if you see unexpected keys.
 - `yaml` output preserves nesting from the underlying API but does not include comments. If you serialize and then re-import, expect identifier and timestamp fields to need stripping.

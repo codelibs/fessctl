@@ -60,7 +60,8 @@ def create_relatedquery(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create RelatedQuery. {message} Status code: {status}", "RelatedQuery", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedquery_app.command("update")
@@ -116,7 +117,8 @@ def update_relatedquery(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update RelatedQuery. {message} Status code: {status}", "RelatedQuery", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedquery_app.command("delete")
@@ -142,7 +144,8 @@ def delete_relatedquery(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete RelatedQuery. {message} Status code: {status}", "RelatedQuery", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedquery_app.command("get")
@@ -185,7 +188,8 @@ def get_relatedquery(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve RelatedQuery. {message} Status code: {status}", "RelatedQuery", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedquery_app.command("list")
@@ -222,4 +226,5 @@ def list_relatedqueries(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list RelatedQueries. {message} Status code: {status}", "RelatedQuery", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

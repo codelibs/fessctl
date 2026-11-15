@@ -56,7 +56,8 @@ def create_group(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to create group. {message} Status code: {status}", "Group", "create"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -121,7 +122,8 @@ def update_group(
             else:
                 message = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to update group. {message} Status code: {status}", "Group", "update"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -155,7 +157,8 @@ def delete_group(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to delete group. {message} Status code: {status}", "Group", "delete"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -217,7 +220,8 @@ def get_group(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to retrieve group. {message} Status code: {status}", "Group", "get"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -269,7 +273,8 @@ def list_groups(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to list groups. {message} Status code: {status}", "Group", "list"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:

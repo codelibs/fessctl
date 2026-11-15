@@ -114,7 +114,8 @@ def create_fileconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "FileConfig", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @fileconfig_app.command("update")
@@ -242,7 +243,8 @@ def update_fileconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Operation failed. {message} Status code: {status}", "FileConfig", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @fileconfig_app.command("delete")
@@ -268,7 +270,8 @@ def delete_fileconfig(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete FileConfig. {message} Status code: {status}", "FileConfig", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @fileconfig_app.command("get")
@@ -328,7 +331,8 @@ def get_fileconfig(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to retrieve FileConfig. {message} Status code: {status}", "FileConfig", "get"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -366,4 +370,5 @@ def list_fileconfigs(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list FileConfigs. {message} Status code: {status}", "FileConfig", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

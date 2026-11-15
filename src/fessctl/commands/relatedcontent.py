@@ -56,7 +56,8 @@ def create_relatedcontent(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create RelatedContent. {message} Status code: {status}", "RelatedContent", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedcontent_app.command("update")
@@ -115,7 +116,8 @@ def update_relatedcontent(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update RelatedContent. {message} Status code: {status}", "RelatedContent", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedcontent_app.command("delete")
@@ -141,7 +143,8 @@ def delete_relatedcontent(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete RelatedContent. {message} Status code: {status}", "RelatedContent", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedcontent_app.command("get")
@@ -185,7 +188,8 @@ def get_relatedcontent(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve RelatedContent. {message} Status code: {status}", "RelatedContent", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @relatedcontent_app.command("list")
@@ -222,4 +226,5 @@ def list_relatedcontents(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list RelatedContents. {message} Status code: {status}", "RelatedContent", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

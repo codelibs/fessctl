@@ -56,7 +56,8 @@ def create_boostdoc(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create BoostDoc. {message} Status code: {status}", "BoostDoc", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @boostdoc_app.command("update")
@@ -112,7 +113,8 @@ def update_boostdoc(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update BoostDoc. {message} Status code: {status}", "BoostDoc", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @boostdoc_app.command("delete")
@@ -138,7 +140,8 @@ def delete_boostdoc(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete BoostDoc. {message} Status code: {status}", "BoostDoc", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @boostdoc_app.command("get")
@@ -181,7 +184,8 @@ def get_boostdoc(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve BoostDoc. {message} Status code: {status}", "BoostDoc", "get"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @boostdoc_app.command("list")
@@ -221,4 +225,5 @@ def list_boostdocs(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list BoostDocs. {message} Status code: {status}", "BoostDoc", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

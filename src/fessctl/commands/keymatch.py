@@ -71,7 +71,8 @@ def create_keymatch(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create KeyMatch. {message} Status code: {status}", "KeyMatch", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @keymatch_app.command("update")
@@ -138,7 +139,8 @@ def update_keymatch(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update KeyMatch. {message} Status code: {status}", "KeyMatch", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @keymatch_app.command("delete")
@@ -164,7 +166,8 @@ def delete_keymatch(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete KeyMatch. {message} Status code: {status}", "KeyMatch", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @keymatch_app.command("get")
@@ -210,7 +213,8 @@ def get_keymatch(
             else:
                 message: str = result.get("response", {}).get("message", "")
                 typer.echo(format_result_markdown(False, f"Failed to retrieve KeyMatch. {message} Status code: {status}", "KeyMatch", "get"))
-                raise typer.Exit(code=status)
+        if status != 0:
+            raise typer.Exit(code=status)
     except typer.Exit:
         raise
     except Exception as e:
@@ -255,4 +259,5 @@ def list_keymatchs(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list KeyMatchs. {message} Status code: {status}", "KeyMatch", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

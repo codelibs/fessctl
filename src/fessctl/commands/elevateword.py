@@ -75,7 +75,8 @@ def create_elevateword(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to create ElevateWord. {message} Status code: {status}", "ElevateWord", "create"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @elevateword_app.command("update")
@@ -145,7 +146,8 @@ def update_elevateword(
         else:
             message = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to update ElevateWord. {message} Status code: {status}", "ElevateWord", "update"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @elevateword_app.command("delete")
@@ -171,7 +173,8 @@ def delete_elevateword(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to delete ElevateWord. {message} Status code: {status}", "ElevateWord", "delete"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @elevateword_app.command("get")
@@ -217,7 +220,8 @@ def get_elevateword(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to retrieve ElevateWord. {message} Status code: {status}", "ElevateWord", "get"))
-            raise typer.Exit(code=1)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @elevateword_app.command("list")
@@ -257,4 +261,5 @@ def list_elevatewords(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list ElevateWords. {message} Status code: {status}", "ElevateWord", "list"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)

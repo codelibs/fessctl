@@ -44,7 +44,8 @@ def available_themes(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to list Themes. {message} Status code: {status}", "Theme", "available"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
 
 
 @theme_app.command("install")
@@ -72,4 +73,5 @@ def install_theme(
         else:
             message: str = result.get("response", {}).get("message", "")
             typer.echo(format_result_markdown(False, f"Failed to install Theme. {message} Status code: {status}", "Theme", "install"))
-            raise typer.Exit(code=status)
+    if status != 0:
+        raise typer.Exit(code=status)
