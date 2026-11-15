@@ -266,9 +266,9 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/dict/{dict_type}/setting/{dict_id}/{item_id}"
         return self.send_request(Action.DELETE, url)
 
-    def upload_dict(self, dict_type: str, dict_id: str, file_path: str) -> dict:
+    def _upload_file(self, url: str, field: str, file_path: str, what: str) -> dict:
         """
-        Replaces a dictionary file with the content of a local file.
+        Uploads a local file as the multipart field ``field``.
 
         Fess 15.6 to 15.8 only route the upload as PUT and cannot read a multipart
         PUT, so no upload is possible there (fixed in 15.9, which accepts POST).
@@ -276,21 +276,18 @@ class FessAPIClient:
         if (15, 6) <= (self._major_version, self._minor_version) < (15, 9):
             return {"response": {
                 "status": 1,
-                "message": "Dictionary upload is not supported by Fess 15.6 to 15.8 "
+                "message": f"{what} upload is not supported by Fess 15.6 to 15.8 "
                            "(the server cannot read a multipart PUT); it needs Fess 15.9 or 14.x.",
             }}
-        url = f"{self.base_url}/api/admin/dict/{dict_type}/upload/{dict_id}"
         with open(file_path, "rb") as f:
-            files = {DICT_UPLOAD_FIELDS[dict_type]: (
-                os.path.basename(file_path), f.read(), "application/octet-stream")}
+            files = {field: (os.path.basename(file_path), f.read(), "application/octet-stream")}
         return self.send_request(Action.UPLOAD, url, files=files)
 
-    def download_dict(self, dict_type: str, dict_id: str) -> bytes:
+    def _download_bytes(self, url: str) -> bytes:
         """
-        Downloads a dictionary file. Raises FessAPIClientError when Fess does not
+        Downloads a file. Raises FessAPIClientError when Fess does not
         return the file (it answers with a JSON error instead).
         """
-        url = f"{self.base_url}/api/admin/dict/{dict_type}/download/{dict_id}"
         try:
             response = httpx.get(
                 url, headers=self.admin_api_headers,
@@ -305,6 +302,19 @@ class FessAPIClient:
                 message = response.text
             raise FessAPIClientError(status_code=response.status_code, content=message)
         return response.content
+
+    def upload_dict(self, dict_type: str, dict_id: str, file_path: str) -> dict:
+        """
+        Replaces a dictionary file with the content of a local file.
+        """
+        url = f"{self.base_url}/api/admin/dict/{dict_type}/upload/{dict_id}"
+        return self._upload_file(url, DICT_UPLOAD_FIELDS[dict_type], file_path, "Dictionary")
+
+    def download_dict(self, dict_type: str, dict_id: str) -> bytes:
+        """
+        Downloads a dictionary file.
+        """
+        return self._download_bytes(f"{self.base_url}/api/admin/dict/{dict_type}/download/{dict_id}")
 
     # Role APIs
 
@@ -1252,6 +1262,19 @@ class FessAPIClient:
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
 
+    def upload_badword(self, file_path: str) -> dict:
+        """
+        Imports BadWords from a local CSV file; Fess imports it in the background.
+        """
+        url = f"{self.base_url}/api/admin/badword/upload"
+        return self._upload_file(url, "badWordFile", file_path, "BadWord CSV")
+
+    def download_badword(self) -> bytes:
+        """
+        Downloads the BadWords as CSV.
+        """
+        return self._download_bytes(f"{self.base_url}/api/admin/badword/download")
+
     # BoostDoc APIs
 
     def create_boostdoc(self, config: dict) -> dict:
@@ -1365,6 +1388,19 @@ class FessAPIClient:
         url = f"{self.base_url}/api/admin/elevateword/settings"
         params = {"page": page, "size": size}
         return self.send_request(Action.LIST, url, params=params)
+
+    def upload_elevateword(self, file_path: str) -> dict:
+        """
+        Imports ElevateWords from a local CSV file; Fess imports it in the background.
+        """
+        url = f"{self.base_url}/api/admin/elevateword/upload"
+        return self._upload_file(url, "elevateWordFile", file_path, "ElevateWord CSV")
+
+    def download_elevateword(self) -> bytes:
+        """
+        Downloads the ElevateWords as CSV.
+        """
+        return self._download_bytes(f"{self.base_url}/api/admin/elevateword/download")
 
     # KeyMatch APIs
 

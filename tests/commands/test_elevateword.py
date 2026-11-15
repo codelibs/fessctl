@@ -1,8 +1,11 @@
-import uuid
 import json
+import time
+import uuid
+
 import pytest
 from typer.testing import CliRunner
 
+from conftest import fess_version_at_least
 from fessctl.commands.elevateword import elevateword_app
 
 
@@ -92,3 +95,82 @@ def test_elevateword_crud_flow(runner, fess_service):
     )
     assert result.exit_code != 0
     assert "failed to retrieve elevateword" in result.stdout.lower()
+
+
+def wait_until(predicate, timeout=30):
+    """Fess imports an uploaded CSV in the background; polls until predicate() holds."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if predicate():
+            return True
+        time.sleep(1)
+    return predicate()
+
+
+def download_text(runner):
+    result = runner.invoke(elevateword_app, ["download"])
+    assert result.exit_code == 0, f"Download failed: {result.stdout}"
+    return result.stdout_bytes.decode("utf-8")
+
+
+def delete_elevatewords_containing(runner, marker):
+    result = runner.invoke(elevateword_app, ["list", "--size", "1000", "--output", "json"])
+    for item in json.loads(result.stdout)["response"].get("settings", []):
+        if marker in item.get("suggest_word", ""):
+            runner.invoke(elevateword_app, ["delete", "--output", "json", "--", item["id"]])
+
+
+def test_elevateword_csv_download_and_upload(runner, fess_service, tmp_path):
+    """
+    Downloads the elevate words as CSV and imports a CSV (the import runs in the background).
+    """
+    marker = f"fctlcsv{uuid.uuid4().hex[:8]}"
+    unicode_word = f"{marker}日本語"
+
+    # download to a file: the CSV starts with its header, and an existing file needs --force
+    target = tmp_path / "elevate.csv"
+    result = runner.invoke(elevateword_app, ["download", "--file", str(target)])
+    assert result.exit_code == 0, f"Download failed: {result.stdout}"
+    assert target.read_text(encoding="utf-8").startswith('"SuggestWord","Reading","Permissions","Labels","Boost"')
+    result = runner.invoke(elevateword_app, ["download", "--file", str(target)])
+    assert result.exit_code != 0
+    assert "already exists" in result.stdout
+    result = runner.invoke(elevateword_app, ["download", "--file", str(target), "--force"])
+    assert result.exit_code == 0
+
+    source = tmp_path / "import.csv"
+    source.write_text(
+        "SuggestWord,Reading,Permissions,Labels,Boost\n"
+        f"{marker},yomi,,,5.5\n"
+        f"{unicode_word},にほんご,,,2\n",
+        encoding="utf-8")
+
+    # declining the confirmation sends nothing
+    result = runner.invoke(elevateword_app, ["upload", str(source)], input="n\n")
+    assert result.exit_code != 0
+
+    result = runner.invoke(elevateword_app, ["upload", str(tmp_path / "nope.csv"), "--yes"])
+    assert result.exit_code != 0
+    assert "not found" in result.stdout
+
+    if fess_version_at_least(15, 6) and not fess_version_at_least(15, 9):
+        # 15.6 to 15.8 cannot read a multipart PUT
+        result = runner.invoke(elevateword_app, ["upload", str(source), "--yes"])
+        assert result.exit_code != 0
+        assert "not supported" in result.stdout
+        return
+
+    try:
+        result = runner.invoke(elevateword_app, ["upload", str(source), "--yes", "--output", "json"])
+        assert result.exit_code == 0, f"Upload failed: {result.stdout}"
+        assert json.loads(result.stdout)["response"]["status"] == 0
+        assert wait_until(lambda: unicode_word in download_text(runner)), "The import did not finish"
+        assert f'"{marker}","yomi","","","5.5"' in download_text(runner)
+        assert f'"{unicode_word}","にほんご","","","2.0"' in download_text(runner)
+
+        # (Rows for existing words overwrite them and a row with neither reading nor boost deletes the
+        # word, but on some releases Fess then leaves such a word in the suggest index, which would break
+        # test_suggest, so only the plain import is exercised here.)
+    finally:
+        delete_elevatewords_containing(runner, marker)
+    assert marker not in download_text(runner)
