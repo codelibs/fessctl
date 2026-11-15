@@ -1,5 +1,6 @@
 import datetime
 import json
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -7,6 +8,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
+from fessctl.file_transfer import download_file, upload_file
 from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
 
 badword_app = typer.Typer()
@@ -213,5 +215,38 @@ def list_badwords(
     if status != 0:
         raise typer.Exit(code=status)
 
-# TODO upload
-# TODO download
+
+@badword_app.command("upload")
+def upload_badwords(
+    file: Path = typer.Argument(..., help="CSV file to import"),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Skip the confirmation prompt"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
+):
+    """
+    Import bad words from a local CSV file, one word per line (prefix a word with '--' to delete
+    it). The first line is always skipped as a header; words missing from the file are kept. Fess
+    imports the file in the background.
+    """
+    upload_file(
+        file, yes, output, "BadWord",
+        f"Import bad words from '{file}'? Existing words are kept; a row starting with '--' deletes that word.",
+        lambda path: FessAPIClient(Settings()).upload_badword(path))
+
+
+@badword_app.command("download")
+def download_badwords(
+    file: Optional[Path] = typer.Option(
+        None, "--file", "-f", help="Write to this file instead of standard output"),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite --file if it exists"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
+):
+    """
+    Download all bad words as CSV to standard output or to --file.
+    """
+    download_file(
+        file, force, output, "BadWord",
+        lambda: FessAPIClient(Settings()).download_badword())

@@ -20,11 +20,18 @@ MODULES = [
 ]
 
 
+# File transfers need a real file or return bytes; tests/unit/test_csv_transfer.py covers their exit codes.
+FILE_TRANSFERS = {("badword", "upload"), ("badword", "download"),
+                  ("elevateword", "upload"), ("elevateword", "download")}
+
+
 def _commands():
     cases = []
     for module in MODULES:
         app = getattr(importlib.import_module(f"fessctl.commands.{module}"), f"{module}_app")
         for name, command in typer.main.get_command(app).commands.items():
+            if (module, name) in FILE_TRANSFERS:
+                continue
             args = [name] + (["--yes"] if name == "delete-all" else [])
             for param in command.params:
                 if not param.required:

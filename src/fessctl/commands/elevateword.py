@@ -1,5 +1,6 @@
 import datetime
 import json
+from pathlib import Path
 from typing import List, Optional
 
 import typer
@@ -7,6 +8,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
+from fessctl.file_transfer import download_file, upload_file
 from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
@@ -263,3 +265,39 @@ def list_elevatewords(
             typer.echo(format_result_markdown(False, f"Failed to list ElevateWords. {message} Status code: {status}", "ElevateWord", "list"))
     if status != 0:
         raise typer.Exit(code=status)
+
+
+@elevateword_app.command("upload")
+def upload_elevatewords(
+    file: Path = typer.Argument(..., help="CSV file to import"),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Skip the confirmation prompt"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
+):
+    """
+    Import elevate words from a local CSV file (SuggestWord,Reading,Permissions,Labels,Boost). The
+    first line is always skipped as a header; words missing from the file are kept. Fess imports the
+    file in the background.
+    """
+    upload_file(
+        file, yes, output, "ElevateWord",
+        f"Import elevate words from '{file}'? Existing words are kept; a row for an existing word with an empty Reading and Boost deletes it.",
+        lambda path: FessAPIClient(Settings()).upload_elevateword(path))
+
+
+@elevateword_app.command("download")
+def download_elevatewords(
+    file: Optional[Path] = typer.Option(
+        None, "--file", "-f", help="Write to this file instead of standard output"),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite --file if it exists"),
+    output: str = typer.Option(
+        "text", "--output", "-o", help="Output format (text, json, yaml)"),
+):
+    """
+    Download all elevate words as CSV to standard output or to --file.
+    """
+    download_file(
+        file, force, output, "ElevateWord",
+        lambda: FessAPIClient(Settings()).download_elevateword())
