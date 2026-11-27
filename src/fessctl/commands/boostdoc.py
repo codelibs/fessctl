@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 boostdoc_app = typer.Typer()
 
@@ -62,7 +62,7 @@ def create_boostdoc(
 
 @boostdoc_app.command("update")
 def update_boostdoc(
-    config_id: str = typer.Argument(..., help="BoostDoc ID"),
+    config_id: str = typer.Argument(..., help=id_help("BoostDoc ID")),
     url_expr: Optional[str] = typer.Option(
         None, "--url-expr", help="URL expression"),
     boost_expr: Optional[str] = typer.Option(
@@ -119,7 +119,7 @@ def update_boostdoc(
 
 @boostdoc_app.command("delete")
 def delete_boostdoc(
-    config_id: str = typer.Argument(..., help="BoostDoc ID"),
+    config_id: str = typer.Argument(..., help=id_help("BoostDoc ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -146,7 +146,7 @@ def delete_boostdoc(
 
 @boostdoc_app.command("get")
 def get_boostdoc(
-    config_id: str = typer.Argument(..., help="BoostDoc ID"),
+    config_id: str = typer.Argument(..., help=id_help("BoostDoc ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

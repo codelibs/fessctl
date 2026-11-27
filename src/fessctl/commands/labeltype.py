@@ -11,6 +11,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     to_utc_iso8601,
 )
 
@@ -85,7 +86,7 @@ def create_labeltype(
 
 @labeltype_app.command("update")
 def update_labeltype(
-    config_id: str = typer.Argument(..., help="LabelType ID"),
+    config_id: str = typer.Argument(..., help=id_help("LabelType ID")),
     name: Optional[str] = typer.Option(None, "--name", help="LabelType name"),
     value: Optional[str] = typer.Option(None, "--value", help="Label value"),
     version_no: Optional[int] = typer.Option(
@@ -160,7 +161,7 @@ def update_labeltype(
 
 @labeltype_app.command("delete")
 def delete_labeltype(
-    config_id: str = typer.Argument(..., help="LabelType ID"),
+    config_id: str = typer.Argument(..., help=id_help("LabelType ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -187,7 +188,7 @@ def delete_labeltype(
 
 @labeltype_app.command("get")
 def get_labeltype(
-    config_id: str = typer.Argument(..., help="LabelType ID"),
+    config_id: str = typer.Argument(..., help=id_help("LabelType ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

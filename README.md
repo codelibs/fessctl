@@ -46,6 +46,8 @@ fessctl ping
 fessctl user list
 ```
 
+Resource IDs are positional arguments. Fess IDs are URL-safe Base64 and can start with `-`; put the options first and `--` before such an ID: `fessctl keymatch update --max-size 3 -- -abcDEF`.
+
 ### Method 2: Using Pre-built Docker Image
 
 If you prefer a container-based workflow, use the pre-built Docker image:

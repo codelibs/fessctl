@@ -11,6 +11,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     to_utc_iso8601,
 )
 
@@ -71,7 +72,7 @@ def create_duplicatehost(
 
 @duplicatehost_app.command("update")
 def update_duplicatehost(
-    config_id: str = typer.Argument(..., help="DuplicateHost ID"),
+    config_id: str = typer.Argument(..., help=id_help("DuplicateHost ID")),
     regular_name: Optional[str] = typer.Option(
         None, "--regular-name", help="Regular host name"
     ),
@@ -132,7 +133,7 @@ def update_duplicatehost(
 
 @duplicatehost_app.command("delete")
 def delete_duplicatehost(
-    config_id: str = typer.Argument(..., help="DuplicateHost ID"),
+    config_id: str = typer.Argument(..., help=id_help("DuplicateHost ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),
@@ -160,7 +161,7 @@ def delete_duplicatehost(
 
 @duplicatehost_app.command("get")
 def get_duplicatehost(
-    config_id: str = typer.Argument(..., help="DuplicateHost ID"),
+    config_id: str = typer.Argument(..., help=id_help("DuplicateHost ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),

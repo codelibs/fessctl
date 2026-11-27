@@ -13,6 +13,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     to_utc_iso8601,
 )
 
@@ -83,7 +84,7 @@ def create_elevateword(
 
 @elevateword_app.command("update")
 def update_elevateword(
-    config_id: str = typer.Argument(..., help="ElevateWord ID"),
+    config_id: str = typer.Argument(..., help=id_help("ElevateWord ID")),
     suggest_word: Optional[str] = typer.Option(
         None, "--suggest-word", help="Suggest word"),
     boost: Optional[float] = typer.Option(None, "--boost", help="Boost value"),
@@ -154,7 +155,7 @@ def update_elevateword(
 
 @elevateword_app.command("delete")
 def delete_elevateword(
-    config_id: str = typer.Argument(..., help="ElevateWord ID"),
+    config_id: str = typer.Argument(..., help=id_help("ElevateWord ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -181,7 +182,7 @@ def delete_elevateword(
 
 @elevateword_app.command("get")
 def get_elevateword(
-    config_id: str = typer.Argument(..., help="ElevateWord ID"),
+    config_id: str = typer.Argument(..., help=id_help("ElevateWord ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

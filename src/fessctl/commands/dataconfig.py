@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 dataconfig_app = typer.Typer()
 
@@ -79,7 +79,7 @@ def create_dataconfig(
 
 @dataconfig_app.command("update")
 def update_dataconfig(
-    config_id: str = typer.Argument(..., help="DataConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("DataConfig ID")),
     name: Optional[str] = typer.Option(None, "--name", help="DataConfig name"),
     handler_name: Optional[str] = typer.Option(
         None, "--handler-name", help="Handler name"),
@@ -163,7 +163,7 @@ def update_dataconfig(
 
 @dataconfig_app.command("delete")
 def delete_dataconfig(
-    config_id: str = typer.Argument(..., help="DataConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("DataConfig ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -190,7 +190,7 @@ def delete_dataconfig(
 
 @dataconfig_app.command("get")
 def get_dataconfig(
-    config_id: str = typer.Argument(..., help="DataConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("DataConfig ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):

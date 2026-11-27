@@ -11,6 +11,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     output_error,
     to_utc_iso8601,
 )
@@ -120,7 +121,7 @@ def create_fileconfig(
 
 @fileconfig_app.command("update")
 def update_fileconfig(
-    config_id: str = typer.Argument(..., help="FileConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("FileConfig ID")),
     name: Optional[str] = typer.Option(None, "--name", help="FileConfig name"),
     paths: Optional[List[str]] = typer.Option(
         None, "--path", help="Crawling target paths"
@@ -249,7 +250,7 @@ def update_fileconfig(
 
 @fileconfig_app.command("delete")
 def delete_fileconfig(
-    config_id: str = typer.Argument(..., help="FileConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("FileConfig ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -276,7 +277,7 @@ def delete_fileconfig(
 
 @fileconfig_app.command("get")
 def get_fileconfig(
-    config_id: str = typer.Argument(..., help="FileConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("FileConfig ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),

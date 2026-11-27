@@ -6,7 +6,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_list_markdown, format_result_markdown, output_error
+from fessctl.utils import format_list_markdown, format_result_markdown, id_help, output_error
 
 backup_app = typer.Typer()
 
@@ -53,7 +53,7 @@ def list_backup_files(
 
 @backup_app.command("download")
 def download_backup_file(
-    backup_id: str = typer.Argument(..., help="Backup file ID (the id shown by `backup list`)"),
+    backup_id: str = typer.Argument(..., help=id_help("Backup file ID (the id shown by `backup list`)")),
     dest: Path = typer.Option(..., "--dest", "-d", help="File to write the backup file to"),
     force: bool = typer.Option(
         False, "--force", "-f", help="Overwrite the destination file if it exists"

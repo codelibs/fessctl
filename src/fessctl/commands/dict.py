@@ -12,6 +12,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
 )
 
 dict_app = typer.Typer()
@@ -87,7 +88,7 @@ def _output_param() -> inspect.Parameter:
 
 
 def _dict_id_param() -> inspect.Parameter:
-    return _param("dict_id", str, typer.Argument(..., help="Dictionary ID (see `dict list`)"))
+    return _param("dict_id", str, typer.Argument(..., help=id_help("Dictionary ID (see `dict list`)")))
 
 
 def _item_id_param() -> inspect.Parameter:

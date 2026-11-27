@@ -5,14 +5,14 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 joblog_app = typer.Typer()
 
 
 @joblog_app.command("delete")
 def delete_joblog(
-    joblog_id: str = typer.Argument(..., help="JobLog ID"),
+    joblog_id: str = typer.Argument(..., help=id_help("JobLog ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -39,7 +39,7 @@ def delete_joblog(
 
 @joblog_app.command("get")
 def get_joblog(
-    joblog_id: str = typer.Argument(..., help="JobLog ID"),
+    joblog_id: str = typer.Argument(..., help=id_help("JobLog ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):

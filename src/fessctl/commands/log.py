@@ -6,7 +6,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_list_markdown, format_result_markdown, output_error
+from fessctl.utils import format_list_markdown, format_result_markdown, id_help, output_error
 
 log_app = typer.Typer()
 
@@ -54,7 +54,7 @@ def list_log_files(
 
 @log_app.command("download")
 def download_log_file(
-    log_id: str = typer.Argument(..., help="Log file ID (the id shown by `log list`)"),
+    log_id: str = typer.Argument(..., help=id_help("Log file ID (the id shown by `log list`)")),
     dest: Path = typer.Option(..., "--dest", "-d", help="File to write the log file to"),
     force: bool = typer.Option(
         False, "--force", "-f", help="Overwrite the destination file if it exists"

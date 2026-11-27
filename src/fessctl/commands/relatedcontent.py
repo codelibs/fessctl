@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 relatedcontent_app = typer.Typer()
 
@@ -62,7 +62,7 @@ def create_relatedcontent(
 
 @relatedcontent_app.command("update")
 def update_relatedcontent(
-    config_id: str = typer.Argument(..., help="RelatedContent ID"),
+    config_id: str = typer.Argument(..., help=id_help("RelatedContent ID")),
     term: Optional[str] = typer.Option(None, "--term", help="Search term"),
     content: Optional[str] = typer.Option(
         None, "--content", help="Related content"),
@@ -122,7 +122,7 @@ def update_relatedcontent(
 
 @relatedcontent_app.command("delete")
 def delete_relatedcontent(
-    config_id: str = typer.Argument(..., help="RelatedContent ID"),
+    config_id: str = typer.Argument(..., help=id_help("RelatedContent ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -149,7 +149,7 @@ def delete_relatedcontent(
 
 @relatedcontent_app.command("get")
 def get_relatedcontent(
-    config_id: str = typer.Argument(..., help="RelatedContent ID"),
+    config_id: str = typer.Argument(..., help=id_help("RelatedContent ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

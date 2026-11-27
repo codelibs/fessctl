@@ -9,7 +9,7 @@ import yaml
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
 from fessctl.file_transfer import download_file, upload_file
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 badword_app = typer.Typer()
 
@@ -60,7 +60,7 @@ def create_badword(
 
 @badword_app.command("update")
 def update_badword(
-    config_id: str = typer.Argument(..., help="BadWord ID"),
+    config_id: str = typer.Argument(..., help=id_help("BadWord ID")),
     suggest_word: Optional[str] = typer.Option(
         None, "--suggest-word", help="Suggested word"),
     updated_by: str = typer.Option("admin", "--updated-by", help="Updated by"),
@@ -109,7 +109,7 @@ def update_badword(
 
 @badword_app.command("delete")
 def delete_badword(
-    config_id: str = typer.Argument(..., help="BadWord ID"),
+    config_id: str = typer.Argument(..., help=id_help("BadWord ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -136,7 +136,7 @@ def delete_badword(
 
 @badword_app.command("get")
 def get_badword(
-    config_id: str = typer.Argument(..., help="BadWord ID"),
+    config_id: str = typer.Argument(..., help=id_help("BadWord ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

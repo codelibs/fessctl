@@ -10,6 +10,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
 )
 
 tagtype_app = typer.Typer()
@@ -68,7 +69,7 @@ def create_tagtype(
 
 @tagtype_app.command("update")
 def update_tagtype(
-    config_id: str = typer.Argument(..., help="TagType ID"),
+    config_id: str = typer.Argument(..., help=id_help("TagType ID")),
     name: Optional[str] = typer.Option(None, "--name", help="Tag name"),
     owner: Optional[str] = typer.Option(
         None, "--owner", help="User who owns the tag"),
@@ -131,7 +132,7 @@ def update_tagtype(
 
 @tagtype_app.command("delete")
 def delete_tagtype(
-    config_id: str = typer.Argument(..., help="TagType ID"),
+    config_id: str = typer.Argument(..., help=id_help("TagType ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -158,7 +159,7 @@ def delete_tagtype(
 
 @tagtype_app.command("get")
 def get_tagtype(
-    config_id: str = typer.Argument(..., help="TagType ID"),
+    config_id: str = typer.Argument(..., help=id_help("TagType ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

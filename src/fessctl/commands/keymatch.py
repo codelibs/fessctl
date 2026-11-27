@@ -11,6 +11,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     output_error,
     to_utc_iso8601,
 )
@@ -77,7 +78,7 @@ def create_keymatch(
 
 @keymatch_app.command("update")
 def update_keymatch(
-    config_id: str = typer.Argument(..., help="KeyMatch ID"),
+    config_id: str = typer.Argument(..., help=id_help("KeyMatch ID")),
     term: Optional[str] = typer.Option(
         None, "--term", help="Search term to match"),
     query: Optional[str] = typer.Option(
@@ -145,7 +146,7 @@ def update_keymatch(
 
 @keymatch_app.command("delete")
 def delete_keymatch(
-    config_id: str = typer.Argument(..., help="KeyMatch ID"),
+    config_id: str = typer.Argument(..., help=id_help("KeyMatch ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -172,7 +173,7 @@ def delete_keymatch(
 
 @keymatch_app.command("get")
 def get_keymatch(
-    config_id: str = typer.Argument(..., help="KeyMatch ID"),
+    config_id: str = typer.Argument(..., help=id_help("KeyMatch ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

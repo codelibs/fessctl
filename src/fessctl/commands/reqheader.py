@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 reqheader_app = typer.Typer()
 
@@ -63,7 +63,7 @@ def create_reqheader(
 
 @reqheader_app.command("update")
 def update_reqheader(
-    reqheader_id: str = typer.Argument(..., help="ReqHeader ID"),
+    reqheader_id: str = typer.Argument(..., help=id_help("ReqHeader ID")),
     name: Optional[str] = typer.Option(
         None, "--name", help="Name of the request header"),
     value: Optional[str] = typer.Option(
@@ -120,7 +120,7 @@ def update_reqheader(
 
 @reqheader_app.command("delete")
 def delete_reqheader(
-    reqheader_id: str = typer.Argument(..., help="ReqHeader ID"),
+    reqheader_id: str = typer.Argument(..., help=id_help("ReqHeader ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -147,7 +147,7 @@ def delete_reqheader(
 
 @reqheader_app.command("get")
 def get_reqheader(
-    reqheader_id: str = typer.Argument(..., help="ReqHeader ID"),
+    reqheader_id: str = typer.Argument(..., help=id_help("ReqHeader ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

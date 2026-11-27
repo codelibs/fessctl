@@ -50,6 +50,14 @@ fessctl <resource> list --output json | jq '.response.settings[] | {id,name}'
 
 Find the live ID, retry. Resource IDs do not survive an export/import — see `references/conventions.md`.
 
+## `No such option: -a` for an ID
+
+```
+Error: No such option: -a
+```
+
+The ID starts with `-` (Fess IDs are URL-safe Base64), so the parser reads it as options. Put the options first and `--` before the ID: `fessctl keymatch update --max-size 3 -- -abcDEF`. See `references/conventions.md`.
+
 ## `Connection refused` / DNS failure
 
 ```

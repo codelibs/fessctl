@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, output_error
+from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, id_help, output_error
 
 # Create a Typer sub-application for role commands
 role_app = typer.Typer()
@@ -66,7 +66,7 @@ def create_role(
 
 @role_app.command("update")
 def update_role(
-    role_id: str = typer.Argument(..., help="ID of the role to update"),
+    role_id: str = typer.Argument(..., help=id_help("ID of the role to update")),
     attributes: Optional[List[str]] = typer.Option(
         None, "--attribute", "-a", help="Attributes in key=value format"
     ),
@@ -126,7 +126,7 @@ def update_role(
 
 @role_app.command("delete")
 def delete_role(
-    role_id: str = typer.Argument(..., help="ID of the role to delete"),
+    role_id: str = typer.Argument(..., help=id_help("ID of the role to delete")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),
@@ -171,7 +171,7 @@ def get_role_by_name(
 
 @role_app.command("get")
 def get_role(
-    role_id: str = typer.Argument(..., help="ID of the role to retrieve"),
+    role_id: str = typer.Argument(..., help=id_help("ID of the role to retrieve")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),

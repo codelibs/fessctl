@@ -6,7 +6,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help
 
 searchlist_app = typer.Typer()
 
@@ -124,7 +124,7 @@ def search_documents(
 
 @searchlist_app.command("get")
 def get_document(
-    doc_id: str = typer.Argument(..., help="Document doc_id"),
+    doc_id: str = typer.Argument(..., help=id_help("Document doc_id")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),
@@ -204,7 +204,7 @@ def create_document(
 
 @searchlist_app.command("update")
 def update_document(
-    doc_id: str = typer.Argument(..., help="Document doc_id"),
+    doc_id: str = typer.Argument(..., help=id_help("Document doc_id")),
     url: str = typer.Option(None, "--url", help="New document URL"),
     title: str = typer.Option(None, "--title", help="New title"),
     content: str = typer.Option(None, "--content", help="New content"),
@@ -255,7 +255,7 @@ def update_document(
 
 @searchlist_app.command("delete")
 def delete_document(
-    doc_id: str = typer.Argument(..., help="Document doc_id"),
+    doc_id: str = typer.Argument(..., help=id_help("Document doc_id")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),

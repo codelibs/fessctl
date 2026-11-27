@@ -11,6 +11,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     to_utc_iso8601,
 )
 
@@ -74,7 +75,7 @@ def create_path(
 
 @pathmap_app.command("update")
 def update_pathmap(
-    config_id: str = typer.Argument(..., help="PathMap ID"),
+    config_id: str = typer.Argument(..., help=id_help("PathMap ID")),
     regex: Optional[str] = typer.Option(
         None, "--regex", help="Regex pattern to match"),
     process_type: Optional[str] = typer.Option(
@@ -138,7 +139,7 @@ def update_pathmap(
 
 @pathmap_app.command("delete")
 def delete_pathmap(
-    config_id: str = typer.Argument(..., help="PathMap ID"),
+    config_id: str = typer.Argument(..., help=id_help("PathMap ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -165,7 +166,7 @@ def delete_pathmap(
 
 @pathmap_app.command("get")
 def get_pathmap(
-    config_id: str = typer.Argument(..., help="PathMap ID"),
+    config_id: str = typer.Argument(..., help=id_help("PathMap ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):
