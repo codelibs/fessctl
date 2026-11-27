@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 accesstoken_app = typer.Typer()
 
@@ -74,7 +74,7 @@ def create_accesstoken(
 
 @accesstoken_app.command("update")
 def update_accesstoken(
-    accesstoken_id: str = typer.Argument(..., help="AccessToken ID"),
+    accesstoken_id: str = typer.Argument(..., help=id_help("AccessToken ID")),
     name: Optional[str] = typer.Option(
         None, "--name", help="AccessToken name"),
     token: Optional[str] = typer.Option(
@@ -145,7 +145,7 @@ def update_accesstoken(
 
 @accesstoken_app.command("delete")
 def delete_accesstoken(
-    accesstoken_id: str = typer.Argument(..., help="AccessToken ID"),
+    accesstoken_id: str = typer.Argument(..., help=id_help("AccessToken ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),
@@ -173,7 +173,7 @@ def delete_accesstoken(
 
 @accesstoken_app.command("get")
 def get_accesstoken(
-    accesstoken_id: str = typer.Argument(..., help="AccessToken ID"),
+    accesstoken_id: str = typer.Argument(..., help=id_help("AccessToken ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"
     ),

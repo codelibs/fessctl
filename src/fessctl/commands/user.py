@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, output_error
+from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, id_help, output_error
 
 # Create a Typer sub-application for role commands
 user_app = typer.Typer()
@@ -86,7 +86,7 @@ def create_user(
 
 @user_app.command("update")
 def update_user(
-    user_id: str = typer.Argument(..., help="ID of the user to update"),
+    user_id: str = typer.Argument(..., help=id_help("ID of the user to update")),
     password: Optional[str] = typer.Option(
         None, "--password", "-p", help="Password (max 100 characters; Fess 15.10 also limits it to 72 UTF-8 bytes and applies its password policy)"
     ),
@@ -184,7 +184,7 @@ def update_user(
 
 @user_app.command("delete")
 def delete_user(
-    user_id: str = typer.Argument(..., help="ID of the user to delete"),
+    user_id: str = typer.Argument(..., help=id_help("ID of the user to delete")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),
@@ -228,7 +228,7 @@ def get_user_by_name(
 
 @user_app.command("get")
 def get_user(
-    user_id: str = typer.Argument(..., help="ID of the user to retrieve"),
+    user_id: str = typer.Argument(..., help=id_help("ID of the user to retrieve")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),

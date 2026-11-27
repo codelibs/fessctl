@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, output_error
+from fessctl.utils import encode_to_urlsafe_base64, format_detail_markdown, format_list_markdown, format_result_markdown, id_help, output_error
 
 
 # Create a Typer sub-application for group commands
@@ -67,7 +67,7 @@ def create_group(
 
 @group_app.command("update")
 def update_group(
-    group_id: str = typer.Argument(..., help="ID of the group to update"),
+    group_id: str = typer.Argument(..., help=id_help("ID of the group to update")),
     attributes: Optional[List[str]] = typer.Option(
         None, "--attribute", "-a", help="Attributes in key=value format"
     ),
@@ -133,7 +133,7 @@ def update_group(
 
 @group_app.command("delete")
 def delete_group(
-    group_id: str = typer.Argument(..., help="ID of the group to delete"),
+    group_id: str = typer.Argument(..., help=id_help("ID of the group to delete")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),
@@ -178,7 +178,7 @@ def get_group_by_name(
 
 @group_app.command("get")
 def get_group(
-    group_id: str = typer.Argument(..., help="ID of the group to retrieve"),
+    group_id: str = typer.Argument(..., help=id_help("ID of the group to retrieve")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"
     ),

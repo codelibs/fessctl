@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 webconfig_app = typer.Typer()
 
@@ -122,7 +122,7 @@ def create_webconfig(
 
 @webconfig_app.command("update")
 def update_webconfig(
-    config_id: str = typer.Argument(..., help="WebConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("WebConfig ID")),
     name: Optional[str] = typer.Option(None, "--name", help="WebConfig name"),
     urls: Optional[List[str]] = typer.Option(
         None, "--url", help="Crawling target URLs"
@@ -258,7 +258,7 @@ def update_webconfig(
 
 @webconfig_app.command("delete")
 def delete_webconfig(
-    config_id: str = typer.Argument(..., help="WebConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("WebConfig ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -285,7 +285,7 @@ def delete_webconfig(
 
 @webconfig_app.command("get")
 def get_webconfig(
-    config_id: str = typer.Argument(..., help="WebConfig ID"),
+    config_id: str = typer.Argument(..., help=id_help("WebConfig ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):

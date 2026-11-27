@@ -14,6 +14,14 @@ def to_utc_iso8601(epoch_millis: Optional[int | str]) -> str:
     return dt.isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def id_help(text: str) -> str:
+    """
+    Help text for a positional ID argument. Fess IDs are URL-safe Base64 and may
+    start with '-', which the parser reads as an option unless it follows '--'.
+    """
+    return f"{text}. If the ID starts with '-', give the options first, then '--' and the ID."
+
+
 def encode_to_urlsafe_base64(text: str) -> str:
     """
     Converts the specified string to a UTF-8 byte array,

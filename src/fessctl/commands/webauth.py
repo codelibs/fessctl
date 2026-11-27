@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 webauth_app = typer.Typer()
 
@@ -85,7 +85,7 @@ def create_webauth(
 
 @webauth_app.command("update")
 def update_webauth(
-    config_id: str = typer.Argument(..., help="WebAuth ID"),
+    config_id: str = typer.Argument(..., help=id_help("WebAuth ID")),
     username: Optional[str] = typer.Option(
         None, "--username", help="Username for authentication"),
     password: Optional[str] = typer.Option(
@@ -160,7 +160,7 @@ def update_webauth(
 
 @webauth_app.command("delete")
 def delete_webauth(
-    config_id: str = typer.Argument(..., help="WebAuth ID"),
+    config_id: str = typer.Argument(..., help=id_help("WebAuth ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -187,7 +187,7 @@ def delete_webauth(
 
 @webauth_app.command("get")
 def get_webauth(
-    config_id: str = typer.Argument(..., help="WebAuth ID"),
+    config_id: str = typer.Argument(..., help=id_help("WebAuth ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):

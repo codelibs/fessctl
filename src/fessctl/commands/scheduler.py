@@ -7,7 +7,7 @@ import yaml
 
 from fessctl.api.client import FessAPIClient
 from fessctl.config.settings import Settings
-from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, to_utc_iso8601
+from fessctl.utils import format_detail_markdown, format_list_markdown, format_result_markdown, id_help, to_utc_iso8601
 
 scheduler_app = typer.Typer()
 
@@ -73,7 +73,7 @@ def create_scheduler(
 
 @scheduler_app.command("update")
 def update_scheduler(
-    scheduler_id: str = typer.Argument(..., help="Scheduler ID"),
+    scheduler_id: str = typer.Argument(..., help=id_help("Scheduler ID")),
     name: Optional[str] = typer.Option(None, "--name", help="Scheduler name"),
     target: Optional[str] = typer.Option(
         None, "--target", help="Scheduler target"),
@@ -154,7 +154,7 @@ def update_scheduler(
 
 @scheduler_app.command("delete")
 def delete_scheduler(
-    scheduler_id: str = typer.Argument(..., help="Scheduler ID"),
+    scheduler_id: str = typer.Argument(..., help=id_help("Scheduler ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -181,7 +181,7 @@ def delete_scheduler(
 
 @scheduler_app.command("get")
 def get_scheduler(
-    scheduler_id: str = typer.Argument(..., help="Scheduler ID"),
+    scheduler_id: str = typer.Argument(..., help=id_help("Scheduler ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -266,7 +266,7 @@ def list_schedulers(
 
 @scheduler_app.command("start")
 def start_scheduler(
-    scheduler_id: str = typer.Argument(..., help="Scheduler ID"),
+    scheduler_id: str = typer.Argument(..., help=id_help("Scheduler ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -299,7 +299,7 @@ def start_scheduler(
 
 @scheduler_app.command("stop")
 def stop_scheduler(
-    scheduler_id: str = typer.Argument(..., help="Scheduler ID"),
+    scheduler_id: str = typer.Argument(..., help=id_help("Scheduler ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):

@@ -11,6 +11,7 @@ from fessctl.utils import (
     format_detail_markdown,
     format_list_markdown,
     format_result_markdown,
+    id_help,
     output_error,
     to_utc_iso8601,
 )
@@ -86,7 +87,7 @@ def create_fileauth(
 
 @fileauth_app.command("update")
 def update_fileauth(
-    config_id: str = typer.Argument(..., help="FileAuth ID"),
+    config_id: str = typer.Argument(..., help=id_help("FileAuth ID")),
     username: Optional[str] = typer.Option(
         None, "--username", help="Username for authentication"),
     password: Optional[str] = typer.Option(
@@ -157,7 +158,7 @@ def update_fileauth(
 
 @fileauth_app.command("delete")
 def delete_fileauth(
-    config_id: str = typer.Argument(..., help="FileAuth ID"),
+    config_id: str = typer.Argument(..., help=id_help("FileAuth ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format (text, json, yaml)"),
 ):
@@ -184,7 +185,7 @@ def delete_fileauth(
 
 @fileauth_app.command("get")
 def get_fileauth(
-    config_id: str = typer.Argument(..., help="FileAuth ID"),
+    config_id: str = typer.Argument(..., help=id_help("FileAuth ID")),
     output: str = typer.Option(
         "text", "--output", "-o", help="Output format: text, json, yaml"),
 ):
